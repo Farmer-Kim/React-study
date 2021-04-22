@@ -1,0 +1,1072 @@
+// 배정대상조회
+import React from 'react';
+import {
+	 ComponentPanel, FlexPanel, FullPanel, SubFullPanel, SearchPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button, Label} from 'components';
+import {Radio, RangeInputCalendar, Selectbox, Grid} from 'components';
+import {ComLib, DataLib, newScrmObj, TransManager, DateLib,StrLib } from 'common';
+
+
+class View extends React.Component {
+	/*------------------------------------------------------------------------------------------------*/
+	// [1. Default State Zone]
+	/*------------------------------------------------------------------------------------------------*/
+
+	constructor(props) {
+		super();
+		this.gridDeAsgnVlaTgtApi = null;//미배정평가대상 gridApi
+		this.gridQaApi = null;//담당QA gridApi
+		this.gridAsgnVlaTgtApi = null;//배정평가대상 gridApi
+
+		this.gridQa = null;
+		this.gridAsgnVlaTgt = null;
+			
+		this.currentRowQa = '';  
+		this.currentRowTgt = ''; 
+		
+		this.state = {
+
+			dsDeAsgnVlaTgtList : DataLib.datalist.getInstance(),
+			dsQaList : DataLib.datalist.getInstance(),
+			dsAsgnVlaTgtList : DataLib.datalist.getInstance(),
+
+			dsSrchUsr : DataLib.datalist.getInstance([{CENT_CD: ComLib.setOrgComboValue("CENT_CD", false), 
+														TEAM_CD: ComLib.setOrgComboValue("TEAM_CD", false),
+														USR_CD: ComLib.setOrgComboValue("USR_CD", false),											
+														ASG_USR:"",}]), //센터 팀 상담원 select
+
+			dsSrchQA: DataLib.datalist.getInstance([{CENT_CD: ComLib.setOrgComboValue("CENT_CD", true), 
+													TEAM_CD: ComLib.setOrgComboValue("TEAM_CD", true),
+													USR_CD: ComLib.setOrgComboValue("USR_CD", true),									
+													ASG_USR:"",}]), //센터 팀 qa select
+
+			dsVlaStaCd : DataLib.datalist.getInstance([{VLA_STA_CD : "",}]), //평가상태 select
+											
+			rangeCalendarProps : {
+				label : '계약기간',
+				
+				id : 'iptRangeCalTest',
+				strtId : 'iptRangeCalTestStrt',
+				endId : 'iptRangeCalTestEnd',
+				startDate : DateLib.getAddMonth(DateLib.getToday(), -1),
+				endDate : DateLib.getToday(),
+				focusedInput : null
+			},
+
+			btnProps : {
+				btnSave : {
+					id : 'btnSave',
+					disabled : false,
+					value : '저장',
+					hidden : false
+				},
+				btnSearch : {
+					id : 'btnSearch',
+					disabled : false,
+					value : '조회',
+					hidden : false
+				}
+			},
+		
+			radioProps : {		
+				id : 'rdoAsgnStaCd',
+				dataset : [
+					{ key : 'A',        txt : '배정',},
+					{ key : 'D',        txt : '미배정',},
+	
+				],
+				keyProp : 'key',
+				value : 'txt',
+				readOnly : false,
+				disabled : false,
+				selected : 'D'
+			
+		
+			},
+
+			//센터 팀 상담원 select box
+			selectboxProps : {
+				selCenterListCns : {
+					id : 'selCenterListCns',
+					value : '',
+					width : 200,
+					selected : 1,
+					label : "센터",
+					disabled : false
+				},
+				selTeamListCns : {
+					id : 'selTeamListCns',
+					value : '',
+					width : 200,
+					selected : 1,
+					label : "팀",
+					disabled : false				
+
+				},
+				selUserListCns : {
+					id : 'selUserListCns',
+					width : 200,
+					selected : 1,
+					label : "상담원",
+					disabled : false				
+				},
+
+				//센터 팀 QAselect box
+				selCenterListQa : {
+					id : 'selCenterListQa',
+					value : '',
+					width : 200,
+					selected : 1,
+					label : "센터",
+					disabled : false
+				},
+				selTeamListQa : {
+					id : 'selTeamListQa',
+					value : '',
+					width : 200,
+					selected : 1,
+					label : "팀",
+					disabled : false				
+
+				},
+				selQaList : {
+					id : 'selQaList',
+					value : '',
+					width : 200,
+					selected : 0,
+					label : "QA",
+					disabled : false,		
+				},
+				selVlaStaList : {
+					id : 'selVlaStaList',
+					value : '',
+					width : 150,
+					selected : 0,
+					label : "평가상태",
+					disabled : false,		
+				}
+			},
+
+			gridProps : {
+				gridDeAsgnVlaTgt : {
+					id : 'gridDeAsgnVlaTgt',
+					label : '미배정 평가대상',
+
+					infoCheckBox :  {
+						use : true,
+						colId : 'CHK',					
+					},
+
+					header : [
+						{headerName: '계약자명',	field: 'CUS_NM',	colId: 'CUS_NM',editable: false,  width: '100',},
+						{headerName: '계약일자',		field: 'CTR_DT',		colId: 'CTR_DT',	editable: false, width: '110'},
+						{headerName: '계약번호',		field: 'CTR_NO',		colId: 'CTR_NO',	editable: false, width: '120'},
+						{headerName: '팀',		field: 'TEAM_NM',		colId: 'TEAM_NM',	editable: false, width: '90'},
+						{headerName: '상담원',		field: 'USR_NM',		colId: 'USR_NM',	editable: false,  width: '90'},
+						{headerName: '담당 QA',		field: 'QAA',		colId: 'QAA',	editable: false,   width: '100',resizable: false, },
+						{headerName: 'VLA_TGT_NO',		field: 'VLA_TGT_NO',		colId: 'VLA_TGT_NO', hide: true, },
+						{headerName: '평가상태',		field: 'VLA_STA_CD',		colId: 'VLA_STA_CD', width: '130',resizable: false,
+							valueFormatter : (params) => { return ComLib.getComCodeName('VLA_STA_CD', params.value, 'TYPE') }
+						},
+						{headerName: 'VLA_BRD_CD',		field: 'VLA_BRD_CD',		colId: 'VLA_BRD_CD', hide: true, },
+						{headerName: 'VLA_BRD_VERS',		field: 'VLA_BRD_VERS',		colId: 'VLA_BRD_VERS', hide: true, },
+					],
+							
+				},
+				gridQa : {
+					id : 'gridQa',
+					label : '담당 QA',
+					header : [
+						{headerName: 'QA',	field: 'QA',	colId: 'QA',editable: false,  width: '100'},
+						{headerName: '전체',		field: 'TOTAL',		colId: 'TOTAL',	editable: false, width: '100', },
+						{headerName: '대기',		field: 'WAITING',		colId: 'WAITING',	editable: false, width: '90',},
+						{headerName: '심사중',		field: 'VLA',		colId: 'VLA',	editable: false, width: '90', },
+						{headerName: '보완요청',		field: 'REQ',		colId: 'REQ',	editable: false, width: '110',},
+						{headerName: '보완완료',		field: 'REQDONE',		colId: 'REQDONE',	editable: false, width: '110', },
+						{headerName: '거절',		field: 'DENIED',		colId: 'DENIED',	editable: false, width: '100', },
+						{headerName: '완료',		field: 'VLADONE',		colId: 'VLADONE',	editable: false,  width: '100',resizable: false, },
+						{headerName: 'VLA_TGT_NO',		field: 'VLA_TGT_NO',		colId: 'VLA_TGT_NO', hide: true, },
+						{headerName: 'ASG_USR',	field: 'ASG_USR',	colId: 'ASG_USR',editable: false, hide: true,},
+					],
+				},
+				gridAsgnVlaTgt : {
+					id : 'gridAsgnVlaTgt',
+					label : '배정 평가대상',
+					infoCheckBox :  {
+						use : true,
+						colId : 'CHK1',					
+					},
+					header : [
+						{headerName: '계약자명',	field: 'CUS_NM',	colId: 'CUS_NM',editable: false,  width: '200'},
+						{headerName: '계약일자',		field: 'CTR_DT',		colId: 'CTR_DT',	editable: false, width: '100'},
+						{headerName: '계약번호',		field: 'CTR_NO',		colId: 'CTR_NO',	editable: false, width: '100'},
+						{headerName: '팀',		field: 'TEAM_NM',		colId: 'TEAM_NM',	editable: false, width: '100'},
+						{headerName: '상담원',		field: 'USR_NM',		colId: 'USR_NM  ',	editable: false,  width: '100'},
+						{headerName: '담당 QA',		field: 'QAA',		colId: 'QAA',	editable: false, width: '100', resizalbe: false,},
+						{headerName: 'VLA_TGT_NO',		field: 'VLA_TGT_NO',		colId: 'VLA_TGT_NO', hide: true, },
+						{headerName: 'VLA_TGT_NO',		field: 'VLA_TGT_NO',		colId: 'VLA_TGT_NO', hide: true, },
+						{headerName: 'ASG_USR',	field: 'ASG_USR',	colId: 'ASG_USR',editable: false, hide: true,},
+					],
+
+				},
+			}
+		}
+		this.event.button.onClick   = this.event.button.onClick.bind(this);
+		this.event.inputcalendar.onChange = this.event.inputcalendar.onChange.bind(this);
+		this.event.selectbox.onChange = this.event.selectbox.onChange.bind(this);
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [2. OnLoad Event Zone]
+	/*------------------------------------------------------------------------------------------------*/
+	/*------------------------------------------------------------------------------------------------*
+		1) componentDidMount () => init 함수 개념으로 이해하는게 빠름
+		=> 컴포넌트가 마운트된 직후, 호출 ->  해당 함수에서 this.setState를 수행할 시, 갱신이 두번 일어나 render()함수가 두번 발생 -> 성능 저하 가능성
+	 ------------------------------------------------------------------------------------------------*/
+	 componentDidMount () {
+		
+	}
+	/*------------------------------------------------------------------------------------------------*
+			2) componentDidUpdate () => 갱신이 일어나 직후에 호춮 (최초 렌더링 시에는 호출되지 않음)
+			=> prevProps와 현재 props를 비교할 수 있음 -> 조건문으로 감싸지 않고 setState를 실행할 시, 무한 반복 가능성 -> 반드시 setState를 쓰려면 조건문으로 작성
+	------------------------------------------------------------------------------------------------*/
+	 componentDidUpdate (prevProps, prevState, snapshot) {
+	}
+	/*------------------------------------------------------------------------------------------------*
+			3) componentWillUnmount () => 컴포넌트가 마운트 해제되어 제거되기 직전에 호출
+			=> 타이머 제거, 네트워크 요청 취소 등 수행 -> 마운트가 해제되기 때문에 setState를 호출하면 안됨
+	------------------------------------------------------------------------------------------------*/
+	 componentWillUnmount () {
+
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	//   QAM040000_R01 배정 평가 대상 조회
+	//   QAM040000_R02 담당Qa 조회
+	//   QAM040000_H01 배정 저장
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (serviceid) => {
+		switch (serviceid) {
+		case 'QAM040000_R01':
+			const stId = this.state.rangeCalendarProps.startDate;
+			const endId = this.state.rangeCalendarProps.endDate;
+
+			if(StrLib.isNull(stId) || StrLib.isNull(endId))  {
+				ComLib.openDialog('A', 'COME0004', ['시작일자', '종료일자']);
+				return false;
+			}
+			//검색기간한달
+
+			if(DateLib.getDiffDate(stId, endId) > 31){
+				ComLib.openDialog('A', 'SYSI0010', ['검색기간이 31일을 넘어갈 수 없습니다.']);
+				return false;
+			}
+			
+			break;
+			
+		case 'QAM040000_R02':
+				
+			break;
+
+		case 'tempAdd':
+			let cnt = 0;
+
+			this.state.dsDeAsgnVlaTgtList.records.forEach((item) => {
+				if(item.CHK === 'Y') {
+					cnt++;
+				}
+			})
+			if(cnt === 0) {
+				ComLib.openDialog('A', 'COME0008', ['미배정 평가대상']);//선택하셔야합니다
+
+				return false;
+			}
+			break;
+		case 'tempMinus':
+			cnt = 0;
+			this.state.dsAsgnVlaTgtList.records.forEach((item) => {
+				if(item.CHK1 === 'Y') {
+					cnt++;
+				}
+			})
+			if(cnt === 0) {
+				ComLib.openDialog('A', 'COME0008', ['제외할 배정 평가대상']);//선택하셔야합니다
+
+				return false;
+			}
+			break;
+		case 'QAM040000_H01':
+			//본인 배정대상 선택 후, 본인에게 재 배정 하는 경우
+			for(let i = 0; i < this.gridAsgnVlaTgtApi.getSelectedRows().length; i++) {
+				for(let j = 0; j < this.gridQaApi.getSelectedRows().length; j++) {
+
+					let asgn = this.gridAsgnVlaTgtApi.getSelectedRows()[i].ASG_USR;
+					let qa = this.gridQaApi.getSelectedRows()[j].ASG_USR;
+					let qaIndex = this.gridQaApi.getSelectedRows()[0].recid;
+				
+					if(asgn === qa) {
+						ComLib.openDialog('A', 'SYSI0010', ['이미 배정된 평가대상입니다.']);
+						//ComLib.openDialog('A', 'COME0012', [Number(i + 1), Number(qaIndex), '담당QA']);
+						
+						return false;
+					}
+				}
+			
+			
+			}
+			if(this.state.dsAsgnVlaTgtList.records.length === 0) {
+				ComLib.openDialog('A', 'COME0009',['저장할 배정 평가대상이 ']);//없습니다
+
+				return false;
+			}
+			else if (this.gridQaApi.getSelectedRows().length < 1) {		
+				ComLib.openDialog('A', 'COME0008', ['담당 QA']);//선택하셔야합니다
+				return false;	
+			}	
+		
+			else if(this.gridAsgnVlaTgtApi.getSelectedRows().length < 1) {
+				ComLib.openDialog('A', 'COME0008', ['저장할 배정 평가대상']);//선택하셔야합니다
+
+				return false;
+			}
+			 
+			break;
+
+		default: break;
+		}
+		return true;
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	//   QAM040000_R01 배정 평가 대상 조회
+	//   QAM040000_R02 담당Qa 조회
+	//   QAM040000_H01 배정 저장
+	/*------------------------------------------------------------------------------------------------*/
+	
+	transaction = (...params) => {
+		let serviceid = params[0];
+		let transManager = new TransManager();
+		//const user = ComLib.getSession("gdsUserInfo")[0].USR_CD;
+		const user = ComLib.getSession("gdsUserInfo")[0].CENT_CD;
+		const userAuth = ComLib.getSession("gdsUserInfo")[0].AUTH_LV;
+
+		try  {
+			switch (serviceid) {
+			case 'QAM040000_R01':	
+				transManager.setTransId (serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);			
+
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getDeAsgnVlaTgtList",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsDeAsgnVlaTgtList",//미배정평가대상리스트
+				});
+				transManager.addDataset('dsSearchParam', [{
+						"START_DATE" : this.state.rangeCalendarProps.startDate, 
+						"END_DATE" : this.state.rangeCalendarProps.endDate,
+						//센터 팀 상담원
+						"CENT_CD_USR": this.state.dsSrchUsr.records[0]["CENT_CD"], 
+						"TEAM_CD_USR": this.state.dsSrchUsr.records[0]["TEAM_CD"], 
+						"USR_CD": this.state.dsSrchUsr.records[0]["USR_CD"],
+								
+						"ASG_USR": this.state.radioProps.selected, //배정, 미배정 (A, D) 
+
+						//센터 팀 QA
+						"CENT_CD_QA": this.state.dsSrchQA.records[0]["CENT_CD"],
+						"TEAM_CD_QA": this.state.dsSrchQA.records[0]["TEAM_CD"],	
+						"QAA": 		this.state.dsSrchQA.records[0]["USR_CD"],
+						"VLA_STA_CD" : this.state.dsVlaStaCd.records[0]["VLA_STA_CD"]
+					}]);
+				transManager.agent();			
+				break;
+
+			case 'QAM040000_R02':	
+				transManager.setTransId (serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);		
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getQaList",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsQaList",
+				});
+				transManager.addDataset('dsSearchParam', [{			
+					"ASG_USR": this.state.radioProps.selected, //배정, 미배정 (A, D)
+					//센터 팀 QA
+					"CENT_CD_QA": this.state.dsSrchQA.records[0]["CENT_CD"],
+					"TEAM_CD_QA": this.state.dsSrchQA.records[0]["TEAM_CD"],	
+					"USR_CD": this.state.dsSrchQA.records[0]["USR_CD"],	
+					"USR_CENT_INFO" : user,
+					"USR_AUTH_INFO" : userAuth,
+					
+				}]);
+				transManager.agent();
+				
+				break;
+
+			case 'QAM040000_H01': 
+				transManager.setTransId (serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);		
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.create,
+					sqlmapid   : "QAM.C_handleDeAsgnVlaTgtQA",
+					datasetsend: "dsDeAsgnVlaTgtListUpdate",
+				});	
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.create,
+					sqlmapid   : "QAM.C_handleDeAsgnVlaTgtAsgUsr",
+					datasetsend: "dsDeAsgnVlaTgtListUpdate",
+				});	
+	
+				let temp = [];
+				for ( let i = 0; i < this.gridAsgnVlaTgt.gridDataset.records.length; i ++ ) {			
+					temp.push({ 
+						VLA_TGT_NO : this.gridAsgnVlaTgtApi.getSelectedRows()[i].VLA_TGT_NO,
+						ASG_USR : this.gridQaApi.getSelectedRows()[0].ASG_USR,					
+						QAA : this.gridQaApi.getSelectedRows()[0].ASG_USR,
+						VLA_BRD_CD : this.gridAsgnVlaTgtApi.getSelectedRows()[0].VLA_BRD_CD,
+						VLA_BRD_VERS : this.gridAsgnVlaTgtApi.getSelectedRows()[0].VLA_BRD_VERS,
+						
+					});
+				 }
+				 transManager.addDataset('dsDeAsgnVlaTgtListUpdate',  temp );
+				 transManager.agent();			
+				break;
+			default: break;
+			}
+		} catch (err) {
+
+		}
+	}
+	
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	
+
+			
+	callback = (res) => {
+		switch (res.id) {
+		case 'QAM040000_R01':
+
+			// 미배정
+			if((this.state.radioProps.selected === 'D') && res.data.dsDeAsgnVlaTgtList.length > 0) {
+		
+				ComLib.setStateInitRecords(this, "dsDeAsgnVlaTgtList", res.data.dsDeAsgnVlaTgtList); // 미배정 평가 데이터셋
+				ComLib.setStateInitRecords(this, "dsAsgnVlaTgtList", []);	
+			}
+
+			// 배정
+			else if((this.state.radioProps.selected === 'A') &&( res.data.dsDeAsgnVlaTgtList.length > 0)){
+
+				ComLib.setStateInitRecords(this, "dsDeAsgnVlaTgtList", res.data.dsDeAsgnVlaTgtList); // 배정 평가 데이터셋
+				ComLib.setStateInitRecords(this, "dsAsgnVlaTgtList", []);
+				
+			}
+		
+			else {
+				ComLib.setStateRecords(this, "dsDeAsgnVlaTgtList", []);
+			}
+			break;
+
+		case 'QAM040000_R02':
+
+			if( res.data.dsQaList.length > 0) {
+				ComLib.setStateInitRecords(this, "dsQaList", res.data.dsQaList);			
+			}
+			else {
+				ComLib.setStateRecords(this, "dsQaList", []);
+			}
+			break;
+
+		case 'QAM040000_H01':
+			ComLib.openDialog('A', 'COMI0003');//저장이 완료되었습니다.
+			ComLib.setStateInitRecords(this, "dsAsgnVlaTgtList", []);
+			ComLib.setStateInitRecords(this, "dsDeAsgnVlaTgtList",this.gridDeAsgnVlaTgt.gridDataset.records);
+			this.transaction("QAM040000_R01");
+			this.transaction("QAM040000_R02");
+			break;
+		default: break;
+		}
+	}
+	
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {
+		button : {
+			onClick : (e) => {	
+				switch (e.target.id) {
+				case "btnSearch":
+					if(this.validation("QAM040000_R01")) this.transaction("QAM040000_R01");
+					if(this.validation("QAM040000_R02")) this.transaction("QAM040000_R02");
+					
+					break;
+
+				case 'btnSave':
+					if(this.validation("QAM040000_H01")) this.transaction("QAM040000_H01");	
+
+					break;		
+				case 'tempAdd':
+				if(this.validation("tempAdd")) {
+					let addData = [];					
+					let remainDataDeAsgn = [];
+		
+					this.state.dsDeAsgnVlaTgtList.records.forEach((item, index) => {
+						if(item.CHK === 'Y') { //미배정평가대상grid :CHK
+							let row;
+							row =  item;
+							row.CHK1 = 'Y'; //배정평가대상grid :CHK1
+							item.CHK = 'N';
+							addData.push(row);						
+						} else {							
+							remainDataDeAsgn.push(item);
+						}								
+					})			
+														
+					const arrRecordsAdd = this.state.dsAsgnVlaTgtList.records.concat(addData);
+					let api = this.gridAsgnVlaTgtApi;
+
+					ComLib.setStateRecords(this, "dsAsgnVlaTgtList", arrRecordsAdd, function () {
+						api.forEachNode((node) =>{
+							if (node['data']['CHK1'] === 'Y') {																
+								node.setSelected(true);	
+							} else {
+
+								node.setSelected(false); 
+								
+							}
+						});
+						api = null;
+					});					
+									
+					ComLib.setStateRecords(this, "dsDeAsgnVlaTgtList", remainDataDeAsgn);
+				}
+				break;
+				case 'tempMinus':
+				if(this.validation("tempMinus")) {
+					let remainDataAsgn = [];					
+					let deleteData = [];
+
+					this.state.dsAsgnVlaTgtList.records.forEach((item, index) => { 
+						if(item.CHK1 === 'Y') {  //배정평가대상CHK
+				
+							deleteData.push(item);	
+							
+						} else  {		
+							
+							remainDataAsgn.push(item);
+						}
+					
+					})	
+					const arrRecordsDel = this.state.dsDeAsgnVlaTgtList.records.concat(deleteData);
+					let api = this.gridAsgnVlaTgtApi;
+					ComLib.setStateRecords(this, "dsAsgnVlaTgtList", arrRecordsDel, function () {
+						api.forEachNode((node) =>{
+							if (node['data']['CHK1'] === 'N') {																
+								node.setSelected(true);	
+							} else {
+								node.setSelected(false); 
+							}
+						});
+						api = null;
+					});			
+
+					ComLib.setStateRecords(this, "dsDeAsgnVlaTgtList", arrRecordsDel);
+					ComLib.setStateRecords(this, "dsAsgnVlaTgtList", remainDataAsgn);
+				
+				}
+				break;
+				default: break;		
+				}
+			}
+		},
+		selectbox : {
+			onChange : (e) => {
+				switch (e.id) {
+
+				case 'selCenterListCns':
+					ComLib.setStateValue(this, "dsSrchUsr", 0, "CENT_CD", e.target.value);
+					ComLib.setStateValue(this, "dsSrchUsr", 0, "TEAM_CD", "");
+					ComLib.setStateValue(this, "dsSrchUsr", 0, "USR_CD", "");
+					break;
+				case 'selTeamListCns':
+					ComLib.setStateValue(this, "dsSrchUsr", 0, "TEAM_CD", e.target.value);
+					ComLib.setStateValue(this, "dsSrchUsr", 0, "USR_CD", "");
+					break;
+				case 'selUserListCns':
+					ComLib.setStateValue(this, "dsSrchUsr", 0, "USR_CD", e.target.value);
+					break;
+				case 'selCenterListQa':
+					ComLib.setStateValue(this, "dsSrchQA", 0, "CENT_CD", e.target.value);
+					ComLib.setStateValue(this, "dsSrchQA", 0, "TEAM_CD", '');
+					ComLib.setStateValue(this, "dsSrchQA", 0, "USR_CD", '');
+					break;
+				case 'selTeamListQa':
+					ComLib.setStateValue(this, "dsSrchQA", 0, "TEAM_CD", e.target.value);
+					ComLib.setStateValue(this, "dsSrchQA", 0, "USR_CD", '');
+					break;
+				case 'selQaList':
+					ComLib.setStateValue(this, "dsSrchQA", 0, "USR_CD", e.target.value);	
+					break;		
+				case 'selVlaStaList':
+					ComLib.setStateValue(this, "dsVlaStaCd", 0, "VLA_STA_CD", e.target.value);	
+					break;
+				default : break;
+				}
+			}
+		
+		},
+		radio : {
+			onChange : (e) => {
+				switch(e.id) {
+			
+				case 'rdoAsgnStaCd':
+					this.setState({...this.state, radioProps : {...this.state.radioProps, selected :e.value}}, () => this.transaction('QAM040000_R01') );
+					this.setState({...this.state, radioProps : {...this.state.radioProps, selected :e.value}}, () => this.transaction('QAM040000_R02') );
+					break;
+				default: break;
+				}
+			}
+		},
+		
+		inputcalendar : {
+			onCalendarClose : (e) => {
+				switch (e.target.id) {
+					case 'iptRangeCalStrt' :
+						break;
+					default : break;
+				}
+			},
+
+			onCalendarOpen : (e) => {
+				switch (e.target.id) {
+					case 'iptRangeCalEnd' :
+						break;
+					default : break;
+				}
+			},
+			
+			onChange : (e) => {       
+				this.setState({...this.state, rangeCalendarProps : {...this.state.rangeCalendarProps, startDate : e.startDate, endDate : e.endDate}});
+			},
+			onFocusChange : (e) => {
+				switch (e.target.id) {
+				case 'iptRangeCalTest' :
+					this.setState({...this.state, rangeCalendarProps : {...this.state.rangeCalendarProps, focusedInput : e.focusedInput}});
+					break;
+				default : break;
+				}
+			}
+		
+		},
+
+		grid: {
+			onGridReady : (e) => {
+				switch (e.id) {
+					case "gridDeAsgnVlaTgt":
+						this.gridDeAsgnVlaTgtApi = e.gridApi;
+						this.gridDeAsgnVlaTgt = e.grid;
+						break;
+
+					case "gridQa":
+						this.gridQaApi = e.gridApi;
+						this.gridQa = e.grid;
+						break;
+					case "gridAsgnVlaTgt":
+						this.gridAsgnVlaTgtApi = e.gridApi;
+						this.gridAsgnVlaTgt = e.grid;
+						break;
+					
+					default: break;
+				}
+			},
+			onRowClicked: (e) => {
+				switch (e.id) {
+				case "gridQa":
+					break;
+				case "gridAsgnVlaTgt":
+					break;
+				case "gridDeAsgnVlaTgt":		
+					break;
+				default: break;
+				}
+			},
+
+			onCellFocused: (e) => {
+				
+			},
+			onCellClicked: (e) => {
+				
+			},
+		
+		
+			onSelectionChanged: (e) => {
+				switch(e.id) {
+				case "gridDeAsgnVlaTgt"://미배정 grid
+					let selectedRowDeAsgn = [];
+
+					this.gridDeAsgnVlaTgtApi.getSelectedNodes().forEach((node) => {
+						selectedRowDeAsgn.push(node.rowIndex);
+					})
+
+					this.state.dsDeAsgnVlaTgtList.records.forEach((item, index) => { 							
+						item.CHK = 'N';
+
+						selectedRowDeAsgn.forEach((rowItem, rowIndex) => {
+							if(rowItem === index) {
+								item.CHK = 'Y';									
+							} 
+						})
+					})
+
+				break;
+
+				case "gridAsgnVlaTgt":	//배정그리드
+				
+					let selectedRowAsgn = [];
+
+					this.gridAsgnVlaTgtApi.getSelectedNodes().forEach((node) => {
+						selectedRowAsgn.push(node.rowIndex);
+					})
+					this.state.dsAsgnVlaTgtList.records.forEach((item, index) => { 							
+						item.CHK1 = 'N';
+						selectedRowAsgn.forEach((rowItem, rowIndex) => {
+							if(rowItem === index) {
+								item.CHK1 = 'Y';									
+							} 
+						})
+					})
+
+				break;
+				default: break;	
+				}
+
+
+			},
+		
+		}
+	}
+	
+	/*------------------------------------------------------------------------------------------------*/
+	// [7. render Zone]
+	//  - 화면 관련 내용 작성
+	/*------------------------------------------------------------------------------------------------*/
+	render () {
+		
+		return (
+			<React.Fragment>
+				<FullPanel>
+				<SearchPanel>
+					<div style={{display:"flow-root"}}>
+							<LFloatArea>
+							<FlexPanel>
+							<div style={{width : "80px", marginLeft: "10px"}} >
+									<Label value="계약일자" req={true}/>
+							</div>
+								<RangeInputCalendar
+									id = {this.state.rangeCalendarProps.id} 
+									strtId  = {this.state.rangeCalendarProps.strtId}
+									endId  = {this.state.rangeCalendarProps.endId}
+									startDate = {this.state.rangeCalendarProps.startDate} 
+									endDate = {this.state.rangeCalendarProps.endDate} 
+									onChange = {this.event.inputcalendar.onChange}
+									width = {200}
+								/>
+								<div style={{width : "80px", marginLeft: "10px"}} >
+									<Label value="센터"/>
+								</div>
+								<Selectbox
+									id = {this.state.selectboxProps.selCenterListCns.id}
+									dataset = {ComLib.convComboList(ComLib.getCentList(), newScrmObj.constants.select.argument.all)}
+									value = {this.state.dsSrchUsr.records[0]["CENT_CD"]}
+									width = {200}
+									disabled = {false}
+									onChange = {this.event.selectbox.onChange}
+									controlOrgCombo = {'CENT'}
+									isQaCombo = {false}
+								/>
+								<div style={{width : "80px", marginLeft: "10px"}} >
+									<Label value="팀"/>
+								</div>
+								<Selectbox
+									id = {this.state.selectboxProps.selTeamListCns.id}
+									dataset = {ComLib.convComboList(ComLib.getTeamList(this.state.dsSrchUsr, newScrmObj.constants.select.dataType.cns), newScrmObj.constants.select.argument.all)}
+									value = {this.state.dsSrchUsr.records[0]["TEAM_CD"]}
+									width = {200}
+									disabled = {false}
+									onChange = {this.event.selectbox.onChange}
+									controlOrgCombo = {'TEAM'}
+									isQaCombo = {false}
+								/>
+								<div style={{width : "80px", marginLeft: "10px"}} >
+									<Label value="상담원"/>
+								</div>
+								<Selectbox
+									id = {this.state.selectboxProps.selUserListCns.id}
+									dataset = {ComLib.convComboList(ComLib.getUserList(this.state.dsSrchUsr, true).filter(usr =>  usr.AUTH_LV === 4 ),newScrmObj.constants.select.argument.all)}
+									value = {this.state.dsSrchUsr.records[0]["USR_CD"]}
+									width = {200}
+									disabled = {false}
+									onChange = {this.event.selectbox.onChange}
+									controlOrgCombo = {'USER'}
+									isQaCombo = {false}
+								/>								
+							</FlexPanel>
+
+
+							<FlexPanel>
+							<div style={{width : "80px", marginLeft: "10px"}} >
+									<Label value="배정상태"/>
+							</div>
+					
+							<Radio
+									id = {this.state.radioProps.id}
+									dataset = {this.state.radioProps.dataset}
+									keyProp = {this.state.radioProps.keyProp}
+									value = {this.state.radioProps.value}
+									disabled = {this.state.radioProps.disabled}
+									defaultSelected = {1}
+									selected = {this.state.radioProps.selected}
+									data = {this.state.radioProps.data}
+									onChange = {this.event.radio.onChange}
+									width = {253}
+								
+							/>
+							<div style={{width : "80px", marginLeft: "8px"}} >
+									<Label value="센터"/>
+							</div>
+								<Selectbox
+									id = {this.state.selectboxProps.selCenterListQa.id}
+									dataset = {ComLib.convComboList(ComLib.getCentList(), newScrmObj.constants.select.argument.all)}
+									value = {this.state.dsSrchQA.records[0]["CENT_CD"]}
+									width = {200}
+									disabled = {false}
+									onChange = {this.event.selectbox.onChange}
+									controlOrgCombo = {'CENT'}
+									isQaCombo = {true}
+								/>
+								<div style={{width : "80px", marginLeft: "10px"}} >
+									<Label value="팀"/>
+								</div>
+					
+							
+								<Selectbox
+									id = {this.state.selectboxProps.selTeamListQa.id}
+									dataset = {ComLib.convComboList(ComLib.getTeamList(this.state.dsSrchQA,  newScrmObj.constants.select.dataType.qa),  newScrmObj.constants.select.argument.all)}
+									value = {this.state.dsSrchQA.records[0]["TEAM_CD"]}
+									width = {200}
+									disabled = {false}
+									onChange = {this.event.selectbox.onChange}
+									controlOrgCombo = {'TEAM'}
+									isQaCombo = {true}
+								/>
+
+								<div style={{width : "80px", marginLeft: "10px"}} >
+									<Label value="QA"/>
+								</div>							
+								<Selectbox
+									id = {this.state.selectboxProps.selQaList.id}
+									dataset = {ComLib.convComboList(ComLib.getUserList(this.state.dsSrchQA).filter(usr =>  usr.AUTH_LV === 5), newScrmObj.constants.select.argument.all)}
+									value = {this.state.dsSrchQA.records[0]["USR_CD"]}
+									width = {200}
+									disabled = {false}
+									onChange = {this.event.selectbox.onChange}
+									controlOrgCombo = {'USER'}
+									isQaCombo = {true}
+								/>
+
+
+								<div style={{width : "80px", marginLeft: "10px",}} >
+									<Label value="평가상태"/>
+								</div>
+								<Selectbox
+									id = {this.state.selectboxProps.selVlaStaList.id}
+									dataset = {ComLib.convComboList(ComLib.getCommCodeList('VLA_STA_CD').filter(item => item['CODE'] !== '100'), newScrmObj.constants.select.argument.all)}
+									value = {this.state.dsVlaStaCd.records[0]["VLA_STA_CD"]}
+									width = {150}
+									disabled = {false}
+									onChange = {this.event.selectbox.onChange}
+									isQaCombo = {false}
+								/>				
+													
+							</FlexPanel>
+							</LFloatArea>
+							
+							<RFloatArea>
+								<div style={{
+									}}>	
+									<Button
+											
+										id = {this.state.btnProps.btnSearch.id}
+										value = {this.state.btnProps.btnSearch.value}
+										disabled = {this.state.btnProps.btnSearch.disabled}
+										hidden = {this.state.btnProps.btnSearch.hidden}
+										onClick = {this.event.button.onClick}
+										color="blue" fiiled="o" innerImage={true} icon = {'srch'} 
+										
+										mt={45}	
+								 />
+								 </div>
+							</RFloatArea>
+
+						
+							</div>
+					</SearchPanel>
+					<FlexPanel>
+					
+						<ComponentPanel >
+						
+							<div>	
+							{this.state.radioProps.selected === 'D' ?
+							<Grid
+								id = {this.state.gridProps.gridDeAsgnVlaTgt.id}							
+								areaName = {this.state.gridProps.gridDeAsgnVlaTgt.label} 
+								height= "600px"	
+								data = {this.state.dsDeAsgnVlaTgtList}							
+								header = {this.state.gridProps.gridDeAsgnVlaTgt.header}
+								rowNum = {true}
+								addRowBtn = {false}
+								delRowBtn = {false}
+								rowSelection = 'multiple'
+								suppressRowClickSelection = {true}
+								infoCheckBox = {{
+									use : true
+								}}
+								onGridReady = {this.event.grid.onGridReady}
+								onRowClicked = {this.event.grid.onRowClicked}
+								onCellFocused = {this.event.grid.onCellFocused}
+								onCellClicked = {this.event.grid.onCellClicked}
+								onSelectionChanged = {this.event.grid.onSelectionChanged}
+							/>
+							:
+
+							<Grid
+								id = {this.state.gridProps.gridDeAsgnVlaTgt.id}							
+								areaName = {this.state.gridProps.gridAsgnVlaTgt.label} // 배정평가대상
+								height= "600px"	
+								data = {this.state.dsDeAsgnVlaTgtList}		
+								header = {this.state.gridProps.gridDeAsgnVlaTgt.header}
+								rowNum = {true}
+								addRowBtn = {false}
+								delRowBtn = {false}
+								rowSelection = 'multiple'
+								suppressRowClickSelection = {true}
+								infoCheckBox = {{
+									use : true
+								}}
+								onGridReady = {this.event.grid.onGridReady}
+								onRowClicked = {this.event.grid.onRowClicked}
+								onCellFocused = {this.event.grid.onCellFocused}
+								onCellClicked = {this.event.grid.onCellClicked}
+								onSelectionChanged = {this.event.grid.onSelectionChanged}
+							/>
+						}
+						</div>
+							
+						</ComponentPanel>
+						
+						{/*<tempStyle>*/}	
+						<div style={{position:'relative'
+									, width : '4%'
+									, flex: 'reverse'
+									, display:"block"
+									, margin : "auto"
+									}}>					
+							<Button
+							id = {'tempAdd'}
+							value = {'추가▶'}
+							onClick = {this.event.button.onClick}
+							mb = {10}	
+							mr = {10}
+							color= 'purple'
+							fiiled= {true}
+							/>
+							<Button
+							id = {'tempMinus'}
+							value = {'◀삭제'}
+							onClick = {this.event.button.onClick}
+							color= 'purple'
+							mr = {10}
+							fiiled= {true}
+							/>
+							</div>
+						{/*</tempStyle>*/}
+						<RelativeGroup>
+							<ComponentPanel>
+								<Grid
+									id = {this.state.gridProps.gridQa.id}
+									height= "248px"
+									data = {this.state.dsQaList}
+									addRowBtn = {false}
+									delRowBtn = {false}
+									areaName = {this.state.gridProps.gridQa.label}
+									header = {this.state.gridProps.gridQa.header}
+									rowNum = {true}
+									onGridReady = {this.event.grid.onGridReady}
+									onRowClicked = {this.event.grid.onRowClicked}
+									onCellFocused = {this.event.grid.onCellFocused}
+									onCellClicked = {this.event.grid.onCellClicked}
+									onSelectionChanged = {this.event.grid.onSelectionChanged}
+								/>
+							</ComponentPanel>
+							<SubFullPanel>
+								<ComponentPanel>
+									<Grid
+										id = {this.state.gridProps.gridAsgnVlaTgt.id}
+										height= "248px"
+										addRowBtn = {false}
+										delRowBtn = {false}
+										data = {this.state.dsAsgnVlaTgtList}
+										areaName = {this.state.gridProps.gridAsgnVlaTgt.label} //배정평가대상
+										header = {this.state.gridProps.gridAsgnVlaTgt.header}
+										rowNum = {true}
+										rowSelection = 'multiple'
+										suppressRowClickSelection = {true}
+										infoCheckBox = {{
+											use : true
+										}}
+										onGridReady = {this.event.grid.onGridReady}
+										onRowClicked = {this.event.grid.onRowClicked}
+										onCellFocused = {this.event.grid.onCellFocused}
+										onCellClicked = {this.event.grid.onCellClicked}
+										onSelectionChanged = {this.event.grid.onSelectionChanged}
+									/>
+
+									<RelativeGroup>			
+										<RFloatArea>
+											<Button 
+												id = {this.state.btnProps.btnSave.id}
+												value = {this.state.btnProps.btnSave.value}
+												disabled = {this.state.btnProps.btnSave.disabled}
+												hidden = {this.state.btnProps.btnSave.hidden}
+												onClick = {this.event.button.onClick}
+												color="purple" fiiled="o" mt="5px"
+											/>
+										</RFloatArea>
+									</RelativeGroup>
+									
+								</ComponentPanel>
+							</SubFullPanel>
+						</RelativeGroup>
+					</FlexPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

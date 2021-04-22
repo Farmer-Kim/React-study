@@ -1,0 +1,28 @@
+{
+  "files": {
+    "main.css": "/public/css/main.5c1f83ab.chunk.css",
+    "main.js": "/public/js/main.33d9ddb8.chunk.js",
+    "main.js.map": "/public/js/main.33d9ddb8.chunk.js.map",
+    "runtime-main.js": "/public/js/runtime-main.5c143c31.js",
+    "runtime-main.js.map": "/public/js/runtime-main.5c143c31.js.map",
+    "public/css/2.c80746c8.chunk.css": "/public/css/2.c80746c8.chunk.css",
+    "public/js/2.02c2b2d5.chunk.js": "/public/js/2.02c2b2d5.chunk.js",
+    "public/js/2.02c2b2d5.chunk.js.map": "/public/js/2.02c2b2d5.chunk.js.map",
+    "index.html": "/index.html",
+    "precache-manifest.4272620b7dbcff067f075973c2414463.js": "/precache-manifest.4272620b7dbcff067f075973c2414463.js",
+    "public/css/2.c80746c8.chunk.css.map": "/public/css/2.c80746c8.chunk.css.map",
+    "public/css/main.5c1f83ab.chunk.css.map": "/public/css/main.5c1f83ab.chunk.css.map",
+    "public/js/2.02c2b2d5.chunk.js.LICENSE.txt": "/public/js/2.02c2b2d5.chunk.js.LICENSE.txt",
+    "public/media/fileUpload.css": "/public/media/trash-outline.720e54b7.svg",
+    "public/media/component.css": "/public/media/user.890462d5.svg",
+    "public/media/slick-theme.css": "/public/media/slick.f97e3bbf.svg",
+    "service-worker.js": "/service-worker.js"
+  },
+  "entrypoints": [
+    "public/js/runtime-main.5c143c31.js",
+    "public/css/2.c80746c8.chunk.css",
+    "public/js/2.02c2b2d5.chunk.js",
+    "public/css/main.5c1f83ab.chunk.css",
+    "public/js/main.33d9ddb8.chunk.js"
+  ]
+}

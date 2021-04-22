@@ -1,0 +1,680 @@
+// 통화이력관리
+import React from 'react';
+import {
+	ComponentPanel, FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button, Label} from 'components';
+import {Radio, Textfield, RangeInputCalendar, Selectbox} from 'components';
+import {Grid} from 'components';
+import {StrLib, DateLib, TransManager, ComLib, DataLib} from 'common';
+
+
+// import {QAM0500001} from 'QAM050001'
+
+class View extends React.Component {
+
+	constructor(props) {
+		super();
+		this.state = {
+
+			buttonSearchProps : {
+				id : 'qam05BtnSearch',
+				disabled : false,
+				value : '조회',
+				hidden : false
+			},
+			buttonDupleCheckProps : {
+				id : 'evaluateInputCheckBtn',
+
+
+
+				disabled : false,
+				value : '중복확인',
+				hidden : false
+			},
+
+			buttonSaveProps : {
+				id : 'evaluateCallCeactBtn',
+				disabled : false,
+				value : '저장',
+				hidden : false
+			},
+
+
+			radioEvaluteNumberProps : {
+				id : 'radioEvaluteNumber',
+				label : '평가대상번호 생성 규칙',
+				dataset : [
+					{ key : 'userInput',         txt : '수동입력'},
+					{ key : 'divideAuto',         txt : '건별자동'},
+					{ key : 'everyAuto',  		 txt : '전건자동'}
+				],
+				keyProp : 'key',
+				value : 'txt',
+				readOnly : false,
+				disabled : false,
+				selected : 'userInput'
+			},
+			
+			rangeCalendarProps : {
+				label : '통화일자',
+				stId : 'searchDateStart',
+				endId : 'searchDateEnd',
+				startDate : DateLib.getToday(),
+				endDate : DateLib.getToday(),
+			},	
+
+			
+			//input 창
+			textFieldProps : {
+				label : '평가대상번호 수동 입력',
+				string : {
+					id : 'evaluateCreateInput',
+					name : 'evaluateCreateInput',
+					value : '',
+					placeholder : '',
+					minLength : 30,
+					maxLength : 30,
+					readOnly : false,
+					disabled : false
+				},
+			},
+
+			//그리드
+			callHistoryList : {			
+				gridId : 'callHistoryList',
+				gridLabel : '통화이력 리스트',
+				gridHeader : 
+				[				
+					{headerName: 'No',			 field: 'recid',			colId: 'recid',	width:15		},
+					{headerName: '',			 field: 'CHK',				colId: 'CHK',	cellRenderer : 'checkbox', width:10 },
+					{headerName: '센터',		 field: 'CENT_NM',			colId: 'CENT_NM',		},
+					{headerName: '팀',			 field: 'TEAM_NM',			colId: 'TEAM_NM',		},
+					{headerName: '상담원ID',	 field: 'USR_CD',			colId: 'USR_CD',		},
+					{headerName: '상담원명',	 field: 'USR_NM',			colId: 'USR_NM',		},
+					{headerName: '통화시작',  	 field: 'CALL_STRT_DTM',	colId: 'CALL_STRT_DTM', },
+					{headerName: '센터CD',  	 field: 'CENT_CD',			colId: 'CENT_CD',		hide:true },
+					{headerName: '팀CD',  		 field: 'TEAM_CD',			colId: 'TEAM_CD',		hide:true },
+					{headerName: '고객관리번호',  field: 'CUS_MNGNO',		colId: 'CUS_MNGNO',		hide:true },
+					{headerName: '통화종료일시',  field: 'TEL_CONN_DTM',	colId: 'TEL_CONN_DTM',	hide:true },
+					{headerName: '녹취파일경로',  field: 'REC_FILE_PATH',	colId: 'REC_FILE_PATH',	hide:true },
+					{headerName: '녹취파일명칭',  field: 'REC_FILE_NM',		colId: 'REC_FILE_NM',	hide:true },
+					{headerName: '녹취아이디',    field: 'REC_ID',			colId: 'REC_ID',	hide:true },
+					{headerName: '등록자',  	  field: 'REG_ID',			colId: 'REG_ID',	hide:true },
+					{headerName: '등록일시',  	  field: 'REG_DTM',			colId: 'REG_DTM',	hide:true },
+					{headerName: '일련번호',  	  field: 'SEQ_NO',			colId: 'SEQ_NO',	hide:true },
+				],
+			},
+			
+			callEvaluateCreateCallHistoryList : {			
+				gridId : 'callEvaluateCreateCallHistoryList',
+				gridLable : '평가대상번호 생성 대상 통화이력',
+				gridHeader  : 
+				[
+					{headerName: 'No',			 field: 'recid',			colId: 'recid',	width:15		},
+					{headerName: '',			 field: 'CHK',				colId: 'CHK',	cellRenderer : 'checkbox', width:10 },
+					{headerName: '센터',		 field: 'CENT_NM',			colId: 'CENT_NM',		},
+					{headerName: '팀',			 field: 'TEAM_NM',			colId: 'TEAM_NM',		},
+					{headerName: '상담원ID',	 field: 'USR_CD',			colId: 'USR_CD',		},
+					{headerName: '상담원명',	 field: 'USR_NM',			colId: 'USR_NM',		},
+					{headerName: '통화시작',  	 field: 'CALL_STRT_DTM',	colId: 'CALL_STRT_DTM', },
+					{headerName: '센터CD',  	 field: 'CENT_CD',			colId: 'CENT_CD',		hide:true },
+					{headerName: '팀CD',  		 field: 'TEAM_CD',			colId: 'TEAM_CD',		hide:true },
+					{headerName: '고객관리번호',  field: 'CUS_MNGNO',		colId: 'CUS_MNGNO',		hide:true },
+					{headerName: '통화종료일시',  field: 'TEL_CONN_DTM',	colId: 'TEL_CONN_DTM',	hide:true },
+					{headerName: '녹취파일경로',  field: 'REC_FILE_PATH',	colId: 'REC_FILE_PATH',	hide:true },
+					{headerName: '녹취파일명칭',  field: 'REC_FILE_NM',		colId: 'REC_FILE_NM',	hide:true },
+					{headerName: '녹취아이디',    field: 'REC_ID',			colId: 'REC_ID',	hide:true },
+					{headerName: '등록자',  	  field: 'REG_ID',			colId: 'REG_ID',	hide:true },
+					{headerName: '등록일시',  	  field: 'REG_DTM',			colId: 'REG_DTM',	hide:true },
+					{headerName: '일련번호',  	  field: 'SEQ_NO',			colId: 'SEQ_NO',	hide:true },
+					{headerName: '평가대상번호',   field: 'VLA_TGT_NO',			colId: 'VLA_TGT_NO',	hide:true },
+				],
+			},				
+			dsCallSpList : DataLib.datalist.getInstance(),
+			dsValTgtCtrCallSp : DataLib.datalist.getInstance(),			
+			
+
+			checkPass : '',
+
+		}
+		//이벤트 바인딩
+		this.event.button.onClick = this.event.button.onClick.bind(this);				
+		this.event.radio.onChange = this.event.radio.onChange.bind(this);
+
+		this.event.inputcalendar.onChange = this.event.inputcalendar.onChange.bind(this);
+		this.event.input.onChange = this.event.input.onChange.bind(this);
+	}
+
+	componentDidMount () {
+		// this.transaction("QAM050000_R01"); 		
+
+	}
+	componentDidUpdate (prevProps, prevState, snapshot) {
+
+
+	}
+
+	componentWillUnmount () {
+
+	}
+
+	validation = (transId) => {
+		switch (transId) {
+			
+			// 	평가대상번호 생성 대상 통화이력 체크되어있는지 확인
+			case 'QAM050000_I01' :
+
+				let checkCnt = 0;
+				this.state.dsCallSpList.records.forEach((item, index) => { 
+					if(item.CHK === 'Y') {
+						checkCnt++;
+					}
+				})
+				if(checkCnt === 0) {
+					ComLib.openDialog('A', '평가대상번호 생성 대상 통화이력에 체크되어 있는 항목이 존재하지 않습니다.');
+					return false;
+				}
+
+				break;
+
+			// 	수동입력 하는 경우 입력값이 제대로 되어 있는지 확인				
+			case 'QAM050000_I02' :
+
+				if(this.state.radioEvaluteNumberProps.selected === 'userInput') {
+										
+					const inputVal = this.state.textFieldProps.string.value
+
+					if(StrLib.isNull(inputVal)){
+						ComLib.openDialog('A', '평가대상번호 수동 입력란이 비어있습니다.');
+						return false;
+					}
+						
+
+					
+
+				}
+
+				break;
+			// 	값이 중복되는지 확인
+			case 'QAM050000_I03' :
+
+
+
+				if(this.state.checkPass === 'N') {
+					ComLib.openDialog('A', '중복확인을 하시지 않았습니다. 중복확인버튼을 눌러주세요.');
+					return false;					
+				} 				
+				break;
+				
+				case 'QAM050000_I04' :
+
+					console.log(this.state.checkPass);
+
+					this.transaction('QAM050000_R02');
+
+					console.log(this.state.checkPass);
+
+					// return false;					
+					break;				
+			default :
+				break;
+		}
+		return true;
+
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (transId) => {
+
+		let transManager = new TransManager();
+		try {
+			switch (transId) {
+			case 'QAM050000_R01':
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"QAM.R_notMatchingCnsCallList",
+					datasetsend:"",
+					datasetrecv:"dsCallSpList",
+				});
+				transManager.addDataset('', [{}]);
+				transManager.agent();
+				break;
+			//평가번호 존재하는지 확인
+			case 'QAM050000_R02':				
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"QAM.R_checkVlaTgtNo",
+					datasetsend:"searchParam",
+					datasetrecv:"rst",
+				});
+				transManager.addDataset('searchParam', [ {STD_VLA : this.state.textFieldProps.value }]);
+				transManager.agent();
+				break;
+			
+			default : break;
+			}
+		} catch (err) {
+
+		}
+
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {
+		switch (res.id) {
+		case 'QAM050000_R01':
+			if(res.data.dsCallSpList.length > 0) {
+				ComLib.setStateInitRecords(this, "dsCallSpList", res.data.dsCallSpList);
+			} else {
+				ComLib.setStateRecords(this, "dsCallSpList", "");						
+			}
+			break;
+		case 'QAM050000_R02':
+
+			console.log('콜백');
+
+			console.log(res.data.rst[0].CHECK_CNT === '1')
+
+			if(res.data.rst[0].CHECK_CNT === '1') {
+				this.setState =  { ...this.state, checkPass : 'Y'}			
+			} else {				
+				this.setState =  { ...this.state, checkPass : 'N'}
+			}					
+			break;
+						
+		default : break;
+		}
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {
+
+		radio : {
+			onChange : (e) => {
+				switch (e.id) {
+					case 'radioEvaluteNumber' :
+						
+						if(e.value === 'userInput')  {
+							this.setState({...this.state, 
+								radioEvaluteNumberProps : {...this.state.radioEvaluteNumberProps, selected : e.value}
+								,textFieldProps : {...this.state.textFieldProps, string : {...this.state.textFieldProps.string, disabled : false }}								
+								,buttonDupleCheckProps : {...this.state.buttonDupleCheckProps, disabled : false}
+
+							});							
+						} 
+						else {
+							this.setState({...this.state, 
+								radioEvaluteNumberProps : {...this.state.radioEvaluteNumberProps, selected : e.value}								
+								,textFieldProps : {...this.state.textFieldProps, string : {...this.state.textFieldProps.string, disabled : true, value : '' }}
+								,buttonDupleCheckProps : {...this.state.buttonDupleCheckProps, disabled : true}
+							});
+						}
+						
+						break;
+					default : break;
+				}
+			}
+		},		
+		// 버튼 이벤트
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {
+
+					case "tempAdd"	:
+						let addData = [];					
+						let addCnt = 0;
+						this.state.dsCallSpList.records.forEach((item, index) => { 
+							if(item.CHK === 'Y') {
+								let row;
+								addCnt ++;
+								row =  item
+								row.recid = addCnt;
+								row.rowtype = 'c';
+								addData.push(row);
+							}
+						})
+						ComLib.setStateRecords(this, "dsValTgtCtrCallSp", addData);
+						break;						
+
+
+					case "tempMinus"	:
+
+							let delData = [];					
+							let minusCnt = 0;
+
+							this.state.dsValTgtCtrCallSp.records.forEach((item, index) => { 
+								if(item.CHK === 'N') {
+									minusCnt ++;
+									item.recid = minusCnt;
+									delData.push(item);
+								}
+							})	
+							ComLib.setStateRecords(this, "dsValTgtCtrCallSp", delData);
+							break;			
+					case "evaluateInputCheckBtn" :
+						
+						
+					
+					
+						this.transaction("QAM050000_R02");
+						this.validation("QAM050000_I04");
+						// const check = this.validation("QAM050000_I04");
+						
+						// setTimeout(50000);
+						// console.log(check)
+						// if(check === '1') {
+						// 	// return false;
+						// } else {
+						// 	// return true;
+						// }
+
+						
+
+						// console.log(check);
+							break;
+					case "evaluateCallCeactBtn" :
+						
+							this.validation("QAM050000_I04");
+							if(this.validation("QAM050000_I01")) console.log("성공1");
+							if(this.validation("QAM050000_I02")) console.log("성공2");
+							if(this.validation("QAM050000_I03")) console.log("성공3");
+							
+
+							
+							// if (this.validation("SYS010000_R02", bigCd, rowType)) this.transaction("SYS010000_R02", bigCd);
+
+							break;
+					default : break;						
+				}
+			}
+		},
+
+		inputcalendar : {
+			onCalendarClose : (e) => {
+				switch (e.target.id) {
+					case 'rangeCalStrt' :
+						break;
+					default : break;
+				}
+			},
+			onCalendarOpen : (e) => {
+				switch (e.target.id) {
+					case 'rangeCalStrt' :
+						break;
+					default : break;
+				}
+			},
+			onChange : (e) => {
+				console.log(e);
+				switch (e.target.id) {
+					case 'searchDateStart':
+						this.setState({...this.state, rangeCalendarProps : {...this.state.rangeCalendarProps, startDate : e.target.value}});						
+						break;
+					case 'searchDateEnd':
+						this.setState({...this.state, rangeCalendarProps : {...this.state.rangeCalendarProps, endDate : e.target.value}});						
+						break;
+					default : break;				
+				}
+			}
+		},
+		selectbox: {
+			onChange: (e) => {
+				switch (e.id) {
+					case 'cmbUser':
+						console.log(e.target.value);
+						ComLib.setStateValue(this, "dsGrp", 0, "USR_CD", e.target.value);
+						console.log(this.state.dsGrp);
+						break;
+					default : break;
+				}
+			}
+		},
+
+		input : {
+			onChange : (e) => {
+				switch (e.target.id) {
+					case 'evaluateCreateInput' :
+						this.setState({...this.state, textFieldProps : { ...this.state.textFieldProps, string : {...this.state.textFieldProps.string, value : e.target.value }}});
+						break;
+					default : break;
+				}
+			}
+		},		
+		grid: {
+			onRowClicked: (e) => {
+
+			},
+			onCellFocused: () => {
+			},
+			onCellClicked: (e) => {
+			},
+			onCellDoubleClicked: () => {
+			},
+			onCellValueChanged: (e) => {
+			},
+			onRowDoubleClicked: () => {
+			},
+			onCellEditingStopped: () => {
+			},
+			onSelectionChanged: () => {
+			},
+			onRowSelected: (e) => {
+			},
+			onDeleteRow: (e) => {
+			},
+			onInsertRow : (e) => {
+				switch (e.id) {											
+					default : break;
+				}
+				
+			}
+		},		
+
+	}
+
+
+
+	
+	render () {
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<ComponentPanel>
+						{/* <RelativeGroup> */}
+							<LFloatArea>
+								<FlexPanel>
+									<Label value="센터"/>
+									<Selectbox
+										value = {''}
+										dataset = {[]}
+										width = {200}
+									/>
+									<Label value="팀"/>
+									<Selectbox
+										value = {''}
+										dataset = {[]}
+										width = {200}
+									/>
+									<Label value="사용자"/>
+									<Selectbox
+										value = {''}
+										dataset = {[]}
+										width = {200}
+									/>
+									<Label value={this.state.rangeCalendarProps.label}/>
+									<RangeInputCalendar
+										stId = {this.state.rangeCalendarProps.stId}
+										endId = {this.state.rangeCalendarProps.endId}
+										startDate = {this.state.rangeCalendarProps.startDate}
+										endDate = {this.state.rangeCalendarProps.endDate}
+										onChange = {this.event.inputcalendar.onChange}										
+									/>
+
+								</FlexPanel>
+							</LFloatArea>
+							<RFloatArea>
+								<Button 
+									id = {this.state.buttonSearchProps.id}
+									value = {this.state.buttonSearchProps.value}
+									disabled = {this.state.buttonSearchProps.disabled}
+									hidden = {this.state.buttonSearchProps.hidden}
+									onClick = {this.event.button.onClick}
+									mr = {10}														
+								/>
+							</RFloatArea>
+						{/* </RelativeGroup> */}
+					</ComponentPanel>
+					<FlexPanel>
+						<ComponentPanel>
+							<Grid
+								height= "500px"
+								id={this.state.callHistoryList.id}
+								areaName = {this.state.callHistoryList.gridLabel}
+								data = {this.state.dsCallSpList}
+								header = {this.state.callHistoryList.gridHeader}
+								
+
+								onRowClicked = {this.event.grid.onRowClicked}
+								onCellFocused = {this.event.grid.onCellFocused}
+								onCellClicked = {this.event.grid.onCellClicked}
+								onCellDoubleClicked = {this.event.grid.onCellDoubleClicked}
+								onCellValueChanged = {this.event.grid.onCellValueChanged}
+								onRowDoubleClicked = {this.event.grid.onRowDoubleClicked}
+								onCellEditingStopped = {this.event.grid.onCellEditingStopped}
+								onSelectionChanged = {this.event.grid.onSelectionChanged}
+								onRowSelected = {this.event.grid.onRowSelected}
+								onDeleteRow = {this.event.grid.onDeleteRow}
+								onInsertRow = {this.event.grid.onInsertRow}	
+								
+								addRowBtn = {false}
+								delRowBtn = {false}
+								dnlExcelBtn = {false}								
+
+							/>
+						</ComponentPanel>
+						<ComponentPanel width="1%">					
+							<Button
+							id = {'tempAdd'}
+							value = {'+'}
+							onClick = {this.event.button.onClick}
+							/>
+							<Button
+							id = {'tempMinus'}
+							value = {'-'}
+							onClick = {this.event.button.onClick}
+							/>
+						</ComponentPanel>
+						<RelativeGroup>
+							<ComponentPanel width="94%">
+								<RelativeGroup>
+									<FlexPanel>
+									<Label value={this.state.radioEvaluteNumberProps.label}/>
+									<Radio  
+										id= {this.state.radioEvaluteNumberProps.id}
+										dataset = {this.state.radioEvaluteNumberProps.dataset }
+										keyProp = {this.state.radioEvaluteNumberProps.keyProp}
+										value = {this.state.radioEvaluteNumberProps.value}
+										disabled = {this.state.radioEvaluteNumberProps.disabled}
+										selected = {this.state.radioEvaluteNumberProps.selected}
+										onChange = {this.event.radio.onChange}
+										/>
+									</FlexPanel>
+								</RelativeGroup>
+								<RelativeGroup>
+									<LFloatArea>
+									<FlexPanel>
+									<Label value={this.state.textFieldProps.label}/>
+									<Textfield
+										width = {300}
+										id = {this.state.textFieldProps.string.id}
+										name =  {this.state.textFieldProps.string.name}
+										value =  {this.state.textFieldProps.string.value}
+										placeholder =  {this.state.textFieldProps.string.placeholder}
+										minLength =   {this.state.textFieldProps.string.minLength}
+										maxLength =   {this.state.textFieldProps.string.maxLength}
+										readOnly =  {this.state.textFieldProps.string.readOnly}
+										disabled =  {this.state.textFieldProps.string.disabled}
+										onChange = {this.event.input.onChange}
+									/>
+
+									</FlexPanel>
+									</LFloatArea>
+									<RFloatArea>
+										<Button 
+											id = {this.state.buttonDupleCheckProps.id}
+											value = {this.state.buttonDupleCheckProps.value}
+											disabled = {this.state.buttonDupleCheckProps.disabled}
+											hidden = {this.state.buttonDupleCheckProps.hidden}
+											onClick = {this.event.button.onClick}
+											// mr = {10}																	
+										/>
+									</RFloatArea>
+								</RelativeGroup>
+							</ComponentPanel>
+							<SubFullPanel>
+								<ComponentPanel width="94%">
+									<Grid
+										height= "250px"
+										id={this.state.callEvaluateCreateCallHistoryList.id}
+										areaName = {this.state.callEvaluateCreateCallHistoryList.gridLable}
+										header = {this.state.callEvaluateCreateCallHistoryList.gridHeader}
+										data = {this.state.dsValTgtCtrCallSp}
+										onRowClicked = {this.event.grid.onRowClicked}
+										onCellFocused = {this.event.grid.onCellFocused}
+										onCellClicked = {this.event.grid.onCellClicked}
+										onCellDoubleClicked = {this.event.grid.onCellDoubleClicked}
+										onCellValueChanged = {this.event.grid.onCellValueChanged}
+										onRowDoubleClicked = {this.event.grid.onRowDoubleClicked}
+										onCellEditingStopped = {this.event.grid.onCellEditingStopped}
+										onSelectionChanged = {this.event.grid.onSelectionChanged}
+										onRowSelected = {this.event.grid.onRowSelected}
+										onDeleteRow = {this.event.grid.onDeleteRow}
+										onInsertRow = {this.event.grid.onInsertRow}								
+		
+										
+										addRowBtn = {false}
+										delRowBtn = {false}
+										dnlExcelBtn = {false}																		
+									/>
+									<RelativeGroup>
+										<RFloatArea>
+											<Button 
+											
+											id = {this.state.buttonSaveProps.id}
+											value = {this.state.buttonSaveProps.value}
+											disabled = {this.state.buttonSaveProps.disabled}
+											hidden = {this.state.buttonSaveProps.hidden}
+											onClick = {this.event.button.onClick}
+											value="저장"/>
+										</RFloatArea>
+									</RelativeGroup>
+								</ComponentPanel>
+							</SubFullPanel>
+						</RelativeGroup>
+					</FlexPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+
+export default View;
+

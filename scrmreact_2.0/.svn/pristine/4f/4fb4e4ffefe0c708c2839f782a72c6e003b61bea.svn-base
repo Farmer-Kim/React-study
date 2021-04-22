@@ -1,0 +1,845 @@
+// 수동STT요청
+import React from 'react';
+import {
+	ComponentPanel, FlexPanel, FullPanel,  LFloatArea, RFloatArea, SearchPanel
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button, Label} from 'components';
+import {RangeInputCalendar, Selectbox, InputFileUpload} from 'components';
+import {Grid} from 'components';
+import {TransManager, StrLib, ComLib, DataLib, DateLib, newScrmObj} from 'common';
+ 
+class View extends React.Component {
+	constructor(props) {
+		super();
+		this.state = {
+
+			buttonProps : {
+				btnSearchProps : {
+					id : 'btnSelfFileSearchList',
+					disabled : false,
+					value : '조회',
+					hidden : false
+				},	
+				btnExecProps : {
+					id : 'btnExecSTT',
+					disabled : true,
+					value : 'STT수행',
+					hidden : false
+					
+				}
+			},
+			gridSelfFileList : {
+				areaName : '수동STT요청',
+				id : 'gridSelfFileList',
+				height : "270px",
+				infoCheckBox :  {
+					use : true,
+					colId : 'CHK',					
+				},		
+				header : 
+				[
+					{headerName: '작업요청시간',	field: 'REG_DT',		colId: 'REG_DT',	editable: false}
+					,{headerName: '요청자',			field: 'REQ_USR_NM',	colId: 'REQ_USR_NM',	editable: false, }
+					,{headerName: '요청건수',		field: 'REQ_CNT',		colId: 'REQ_CNT',	editable: false, textAlign: 'right',}
+					,{headerName: '등록건수',		field: 'CNT1',			colId: 'CNT1',	editable: false, textAlign: 'right',}
+					,{headerName: '진행건수',		field: 'CNT2',			colId: 'CNT2',	editable: false, textAlign: 'right',}
+					,{headerName: '성공건수',		field: 'CNT3',			colId: 'CNT3',	editable: false, textAlign: 'right',}
+					,{headerName: '실패건수',		field: 'CNT4',			colId: 'CNT4',	editable: false, textAlign: 'right',}
+
+				],
+				components: { 
+					showCellRendererPlayCheck: this.createShowCellRenderer(), 						
+				},
+			paging : {
+				start: 0,
+				size : 40,
+				page : 1
+			},				
+	
+			},						
+			rangeCalendarProps : {
+				label : '기간',
+				id : 'searchDateCalender',
+				strtId : 'searchDateCalenderStart',
+				endId : 'searchDateCalenderEnd',				
+				startDate : DateLib.getToday(),
+				endDate : DateLib.getToday(),
+				focusedInput : null,
+			},	
+			fileUpload : {
+				id : 'fileUpload',
+				width : "100%",
+				height : "250",
+			},
+			selectboxProps : {
+				selSelfFileStateSearch : {
+					id : 'selSelfFileStateSearch',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("STT_TBL_JOB_SELF_INFO", "STATE"), newScrmObj.constants.select.argument.all),
+					width : 80,
+					selected : 0,
+					disabled : false,
+					label : "작업상태"
+				},
+				selUserList : {
+					id : 'selUserList',
+					width : 160,
+					selected : 0,
+					disabled : false,
+					label : "요청자명",
+					value : '',					
+				},
+				selVlaBrdList : {
+					id : 'selVlaBrdList',
+					dataset : [{value : 'Auto', name : 'Auto'}],				
+					width : 350,
+					selected : 1,
+					disabled : true,
+					value : '',
+					name : '',
+				},
+			},
+			fileDataArray : [],
+			existsBrdCdFileDataArray : [],
+			existsVlaBrdInfoArray : [],
+			dsSelfFileList : DataLib.datalist.getInstance(),
+			dsSrch: DataLib.datalist.getInstance([{CENT_CD: "", TEAM_CD: "", AUTH_LV: "", SRCH_DV: "NM", SRCH_VALUE: ""}]),
+			dsGrp: DataLib.datalist.getInstance([{CENT_CD: "", TEAM_CD: "", USR_CD: ""}]),
+
+		}
+
+		this.event.button.onClick = this.event.button.onClick.bind(this);
+        this.event.upload.handleChangeStatus =  this.event.upload.handleChangeStatus.bind(this);
+		this.event.upload.handleSubmit =  this.event.upload.handleSubmit.bind(this);	
+		this.fileUploadValidation = this.fileUploadValidation.bind(this);	
+		this.event.inputcalendar.onChange = this.event.inputcalendar.onChange.bind(this);	
+		this.event.selectbox.onChange = this.event.selectbox.onChange.bind(this);
+		this.searchEnterKey = this.searchEnterKey.bind(this);
+		
+	}
+	
+	componentDidMount () {	
+		this.transaction('STT010000_R00');
+	}
+
+	componentDidUpdate (prevProps, prevState, snapshot) {
+	
+	}
+
+	componentWillUnmount () {
+
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (transId) => {
+
+		switch (transId) {
+			case 'STT010000_R01' :
+
+				if(StrLib.isNull(this.state.rangeCalendarProps.startDate) || StrLib.isNull(this.state.rangeCalendarProps.endDate) )  {
+					ComLib.openDialog('A', 'COME0004', ['시작일자', '종료일자']);
+					return false;
+				}
+
+				if(this.state.rangeCalendarProps.startDate > this.state.rangeCalendarProps.endDate ) {
+					ComLib.openDialog('A', 'SYSI0010', ['검색시작일자가 검색종료일보다 클 수 없습니다.']);
+					return false;
+				}						
+				break;
+
+			case 'STT010000_C01':
+
+				if(this.state.fileDataArray.length === 0) {
+					ComLib.openDialog('A', 'SYSI0010', ['STT를 수행할 데이터가 없습니다.']);
+					return false
+				}
+
+				//현재 시분초 작업요청시간
+				const jobId = DateLib.getTodayTime()
+				
+				this.state.fileDataArray.forEach((item) => item.JOB_ID = jobId) ;
+									
+				break;
+
+			default :
+				break;
+		}
+
+		return true;
+
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (transId) => {
+
+		let transManager = new TransManager();
+		try {
+			switch (transId) {
+			case 'STT010000_R00':
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"STT.R_getVlaBrdList",
+					datasetsend:"dsVlaBrdListInfo",
+					datasetrecv:"dsVlaBrdList",
+				});
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"STT.R_getExistsVlaBrdList",
+					datasetsend:"dsVlaBrdListInfo",
+					datasetrecv:"dsExistsVlaBrdList",
+				});
+
+				transManager.addDataset('dsVlaBrdListInfo', [{}]);
+				transManager.agent();
+				break;
+
+			case 'STT010000_R01':
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"STT.R_SelfJobHistory",
+					datasetsend:"dsSrchParamInfo",
+					datasetrecv:"dsSelfFileList",
+				});
+				transManager.addDataset('dsSrchParamInfo', [{ START_DATE : this.state.rangeCalendarProps.startDate
+														   ,  END_DATE   : this.state.rangeCalendarProps.endDate 
+														   ,  REQ_USR    : this.state.dsSrch.records[0]["USR_CD"]
+														}]);
+				transManager.agent();
+				break;
+
+			case 'STT010000_R02':
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"STT.R_getExistsVlaBrdList",
+					datasetsend:"dsExistsBrdInfo",
+					datasetrecv:"dsExistsVlaBrdList",
+				});
+
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"STT.R_getExistsBrdList",
+					datasetsend:"dsExistsBrdInfo",
+					datasetrecv:"dsExistsBrdList",
+				});
+				transManager.addDataset('dsExistsBrdInfo',    [{dsExistsBrdInfo: this.state.fileDataArray, "VLA_BRD_CD" : this.state.selectboxProps.selVlaBrdList.value}]);
+				transManager.agent();
+				break;
+
+			case 'STT010000_C01':
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.update,
+					sqlmapid:"STT.U_SetCusNo",
+					datasetsend:"dsSelfFileList",
+				});
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.create,
+					sqlmapid:"STT.C_CnsCallSp",
+					datasetsend:"dsSelfFileList",
+				});
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.create,
+					sqlmapid:"STT.C_JobSelfInfo",
+					datasetsend:"dsSelfFileList",
+				});
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.update,
+					sqlmapid:"STT.C_AppQaVlaRst",
+					datasetsend:"dsSelfFileList",
+				});
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.create,
+					sqlmapid:"STT.C_AppQaVlaTgtRecInf",
+					datasetsend:"dsSelfFileList",
+				});																
+				transManager.addDataset('dsSelfFileList', this.state.fileDataArray);
+				transManager.agent();
+				break;
+			default : break;
+			}
+		} catch (err) {
+
+		}
+
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {
+		switch (res.id) {
+		case 'STT010000_R00':					
+			if(res.data.dsVlaBrdList.length > 0){
+				for(let intA = 0; intA < res.data.dsVlaBrdList.length; intA++){
+					res.data.dsVlaBrdList[intA].name = res.data.dsVlaBrdList[intA]['name'];
+					res.data.dsVlaBrdList[intA].value = res.data.dsVlaBrdList[intA]['value'];	
+					this.state.selectboxProps.selVlaBrdList.dataset.push(res.data.dsVlaBrdList[intA]);
+				}
+			}
+			if(res.data.dsExistsVlaBrdList.length > 0){
+				this.setState({existsVlaBrdInfoArray : res.data.dsExistsVlaBrdList[0].STT_TRSM_DTM});
+			}
+
+			this.setState({...this.state, selectboxProps : {...this.state.selectboxProps, selVlaBrdList : {...this.state.selectboxProps.selVlaBrdList, dataset : this.state.selectboxProps.selVlaBrdList.dataset}}});					
+			break;
+		case 'STT010000_R01':			
+			if(res.data.dsSelfFileList.length > 0) {
+				ComLib.setStateInitRecords(this, "dsSelfFileList", res.data.dsSelfFileList);
+			} else {								
+				ComLib.setStateRecords(this, "dsSelfFileList", "");						
+			}
+			break;
+		case 'STT010000_R02':	
+			this.setState({...this.state, existsBrdCdFileDataArray : res.data.dsExistsBrdList});
+
+			let existsVlaBrdCdCheck = [];
+			let existsVlaBrdCdCheckCnt = []
+
+			this.state.fileDataArray.forEach((array, index) => {
+				if(this.state.existsBrdCdFileDataArray.some(existsBrdFileItem => existsBrdFileItem.CTR_NO === array.CTR_NO)){				
+				}
+				
+				if(res.data.dsExistsVlaBrdList.some(existsVlaBrdCd => existsVlaBrdCd.STT_TRSM_DTM > array.CALL_YYMMDD )){
+					existsVlaBrdCdCheck.push(array.FILE_NM);
+					existsVlaBrdCdCheckCnt.push(index+1);
+				}
+			})
+
+			if(this.state.selectboxProps.selVlaBrdList.value === '' || this.state.selectboxProps.selVlaBrdList.value === 'Auto'){ 
+				if(ComLib.openDialog('C', 'SYSI0010', ['업로드된 파일의 계약일 기준으로 평가표의 스크립트가 자동 매핑되며 STT 수행 이력이 존재하는 파일은 기존 평가표의 스크립트로 매핑됩니다. 진행하시겠습니까?'], confirm => { 
+					if(confirm){
+						if (this.validation("STT010000_C01")) this.transaction("STT010000_C01");
+					}
+				}));
+			}else{
+				if(existsVlaBrdCdCheckCnt.length > 0){
+					ComLib.openDialog('A', 'SYSI0010', [ existsVlaBrdCdCheck[0] + ' 파일의 계약일 시점에 생성된 평가표가 존재하지 않습니다. 평가표를 Auto로 설정해주시기 바랍니다.']);
+					return false;
+				}else{
+					if(ComLib.openDialog('C', 'SYSI0010', ["'" + this.state.selectboxProps.selVlaBrdList.name + "'" + ' 평가표의 스크립트가 매핑되며 STT 수행 이력이 존재하는 파일은 기존 평가표의 스크립트가 매핑됩니다. 진행하시겠습니까?'], confirm => { 
+						if(confirm){
+							if (this.validation("STT010000_C01")) this.transaction("STT010000_C01");
+						}									
+					}));
+				}
+			}
+			break;		
+		case 'STT010000_C01':
+			ComLib.openDialog('A', 'SYSI0010', ['수동STT 요청이 정상적으로 완료 되었습니다.']);
+			this.setState({...this.state , fileDataArray : [], selectboxProps : {...this.state.selectboxProps, selVlaBrdList : {...this.state.selectboxProps.selVlaBrdList, disabled : true}} , buttonProps : {...this.state.buttonProps, btnExecProps : {...this.state.buttonProps.btnExecProps, disabled : true}}, 
+						});										
+			break;
+		default : break;
+		}
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {
+		// 버튼 이벤트
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {
+					case "btnSelfFileSearchList" :						
+						if (this.validation("STT010000_R01")) this.transaction("STT010000_R01");
+						break;		
+					default : break;						
+
+					case "btnExecSTT" :				
+						this.transaction("STT010000_R02");
+						break;					
+				}
+			}
+		},
+		inputcalendar : {
+			onChange : (e) => {
+				switch (e.target.id) {
+					case 'searchDateCalender':
+
+						this.setState({...this.state, rangeCalendarProps : {...this.state.rangeCalendarProps, startDate : e.startDate, endDate : e.endDate}}); 
+						break;
+					default : break;				
+				}
+			},
+			onFocusChange : (e) => {
+				switch (e.target.id) {
+				case 'iptRangeCalTest' :
+					this.setState({...this.state, rangeCalendarProps : {...this.state.rangeCalendarProps, focusedInput : e.focusedInput}});
+					break;
+				default : break;
+				}
+			},
+		},		
+        upload : {
+            handleChangeStatus : (e) => {
+                switch (e.id) {
+                    case 'upldAttchFile' :
+                        break;
+                    default : break;
+                }
+            },
+            handleSubmit : (e) => {
+                switch (e.id) {
+                    case 'upldAttchFile' :
+                        this.setState({
+                            ...this.state,
+                            dsNoteFileInfo : this.state.dsNoteFileInfo.concat(e.files.map((item) => {
+                                return ({
+                                        BORD_MNG_NO : this.state.srchFileParam
+                                    ,   ATT_FILE_NM : item['file']['name']
+                                    ,   ATT_FILE_SIZE : item['file']['size']
+                                    ,   ATT_FILE_CONT : item['file']
+                                    ,   REG_ID : JSON.parse(sessionStorage.getItem('dsUserInfo'))[0].USR_CD
+                                    ,   CHG_ID : JSON.parse(sessionStorage.getItem('dsUserInfo'))[0].USR_CD
+                                    ,   state : newScrmObj.constants.crud.create
+                                });
+                            }))
+						});						
+                        break;
+                    default : break;
+                }
+			},
+			onUploadComplete : (e) => {
+				switch (e.id) {
+				case "fileUpload":
+
+					let fileArray = this.state.fileDataArray
+
+					e.files.forEach((item, index) => {
+									
+						let row = item.file
+
+				
+						//파일의 확장자 제거
+						let rawFile = item.file.name.split('.')
+						let rawFileChange = rawFile[0].split('_')
+						/**
+						 * [0] 계약번호
+						 * [1] 상담원
+						 * [2] 고객명
+						 * [3] 고객전화번호
+						 * [4] 통화 년월일
+						 * [5] 통화 시분초
+						 */
+						row.CTR_NO				= rawFileChange[0];
+						row.RECEIVER 			= rawFileChange[1];
+						row.CUS_NM   			= rawFileChange[2];
+						row.CUS_TELL_NO 		= rawFileChange[3];
+						row.CALL_YYMMDD 		= rawFileChange[4];
+						row.CALL_HHIISS 		= rawFileChange[5].substr(0,6);
+
+						row.REG_USR_CD   		= ComLib.getSession("gdsUserInfo")[0].USR_CD
+						row.REG_USR_CONN_IP  	= ComLib.getSession("gdsUserInfo")[0].CONN_IP
+						// DV_CD
+						row.JOB_DV_CD			= ComLib.getComCodeValue('STT_TBL_JOB_INFO', 'DV_CD')[0]
+
+						//현재는 코드에 반영되어 있는 서버리스트 서버패스의 코드값의 0번째를 셋팅함 PATH 연구소와 대화 필요
+						row.SERVER_NM			= ComLib.getComCodeValue('SERVER_LIST')[0]
+						//파일 PATH 이지만 연구소에서는 실질적으로 PATH + FILE_NAME 구로조 시스템이 되어 있기 때문에 
+						row.FILE_PATH 			= ComLib.getComCodeValue('SERVER_PATH')[0] + "/" + item.file.name
+						row.FILE_NM   			= item.file.name;
+						row.FILE_SIZE			= item.file.size;
+						row.VLA_BRD_CD 			= this.state.selectboxProps.selVlaBrdList.value;
+						fileArray.push(row)
+				
+					})
+
+					this.setState({...this.state, fileDataArray : fileArray
+												,  selectboxProps : 
+												{...this.state.selectboxProps,  selVlaBrdList : {...this.state.selectboxProps.selVlaBrdList, disabled : false }
+											
+												},buttonProps : 
+													{...this.state.buttonProps,  btnExecProps : {...this.state.buttonProps.btnExecProps, disabled : false }
+												
+													}
+								});									
+				break;
+
+				default : break;					
+				}
+			}
+			
+		},
+		
+		selectbox: {
+			onChange: (e) => {
+				switch (e.id) {
+				case 'selSelfFileStateSearch':
+						this.setState({...this.state, 
+								selectboxProps : {...this.state.selectboxProps, selSelfFileStateSearch : {...this.state.selectboxProps.selSelfFileStateSearch, selected : e.target.selectedIndex, value : e.target.value}
+												}});				
+					break;
+				case 'selCenterList':
+					ComLib.setStateValue(this, "dsSrch", 0, "CENT_CD", e.target.value);
+					ComLib.setStateValue(this, "dsSrch", 0, "TEAM_CD", "");
+					break;
+				case 'selTeamList':
+					ComLib.setStateValue(this, "dsSrch", 0, "TEAM_CD", e.target.value);
+					break;					
+				case 'selUserList':
+					ComLib.setStateValue(this, "dsSrch", 0, "USR_CD", e.target.value);
+					break;			
+
+				case 'selVlaBrdList':			
+					this.setState({...this.state, selectboxProps : {...this.state.selectboxProps, selVlaBrdList : {...this.state.selectboxProps.selVlaBrdList, selected : e.target.selectedIndex, value : e.target.value, name : e.target[e.target.selectedIndex].outerText} }});
+					break;						
+				default : break;
+				}		
+			},
+		},
+		grid: {
+			onGridReady : (e) => {
+
+			},
+			onCellClicked: (e) => {
+				if(e.col === "PLAY_YN") {
+					if(e.data.STATE === 'Y') {
+						let option = { width: '600px', height: '740px', modaless: true, callId : e.data.CALL_ID,  type : e.data.type}
+						ComLib.openPlayer(option);
+					}
+				}
+			},
+			onScrollEnd: (e) => {
+				// if (e.page === this.state.gridProps.paging.page) {
+					this.setState({...this.state
+						, gridProps : { ...this.state.gridProps
+							, paging : { ...this.state.gridProps.paging
+								, start : this.state.gridProps.paging.start + this.state.gridProps.paging.size
+								, page : this.state.gridProps.paging.page + 1
+							}
+						}
+					}, () => {
+						this.transaction("SAM010000_R01");
+					});
+				// }
+			},
+		},
+				
+	}
+
+	/**
+	 * 화면정의 함수
+	 * createShowCellRenderer : 작업상태가 성공일때 이미지를 보여줌
+	 * fileUploadValidation : 파일업로드 할때 파일이 정상적으로 파일규칙에 맞게 업로드가 되었는지 validation 체크
+	 */
+
+	createShowCellRenderer() {
+
+		function ShowCellRenderer() {}
+		ShowCellRenderer.prototype.init = function (params) {
+
+		  if (params.data.STATE === 'Y') {
+			this.ui = document.createElement('div');
+			this.ui.innerHTML =
+			'<div style="background-color:#c8c8c8">' +
+			'이미지로 표기' +
+			'재생이미지' +
+			'</div>' ;
+			} else {
+			this.ui = document.createElement('div');
+			this.ui.innerHTML =
+			'<div>' +
+			'재생불가' + 
+			'</div>' ;
+			}
+		}
+		ShowCellRenderer.prototype.getGui = function () {
+		  return this.ui;
+		};
+		return ShowCellRenderer;
+	}
+
+	fileUploadValidation(files) {
+	/*
+	예시 11811119132_고길동_홍길동_01011111111_20200609_113302		
+	rawFileChange[0] 계약번호
+	rawFileChange[1] 상담원
+	rawFileChange[2] 고객
+	rawFileChange[3] 전화번호
+	rawFileChange[4] 년도일
+	rawFileChange[5] 시분초
+	*/
+
+		function isDateCheck(yyyymmdd) {
+
+		var cruDate = yyyymmdd;
+		if (cruDate === '')
+			return false;
+		
+		var rxDatePattern = /^(\d{4})(\d{1,2})(\d{1,2})$/;
+		var dtArray = cruDate.match(rxDatePattern);
+		
+		if (dtArray == null)
+			return false;
+		
+		var dtYear = dtArray[1];
+		var dtMonth = dtArray[2];
+		var dtDay = dtArray[3];
+		
+		if (dtMonth < 1 || dtMonth > 12) {
+			return false;
+		}
+		else if (dtDay < 1 || dtDay > 31) {
+			return false;
+		}
+		else if ((dtMonth === 4 || dtMonth === 6 || dtMonth === 9 || dtMonth === 11) && dtDay == 31) {
+			return false;
+		}
+		else if (dtMonth === 2) {
+			var isleap = (dtYear % 4 === 0 && (dtYear % 100 !== 0 || dtYear % 400 === 0));
+			if (dtDay > 29 || (dtDay === 29 && !isleap))
+				return false;
+		}
+		return true;
+		}
+		function isTimeCheck(hhiiss) {
+			var curTime = hhiiss.substr(0,5);
+			if (curTime === '') return false;			
+			var rxTimePattern = /^(\d{2})(\d{1,2})(\d{1,2})$/;
+			var timeArray = curTime.match(rxTimePattern);
+
+			if (timeArray == null) return false
+		
+			var dtHour  = timeArray[1]
+			var dtMInute = timeArray[2]
+			var dtSecond = timeArray[3]
+
+			if(dtHour > 25) return false;
+			else if (dtMInute > 60) return false;
+			else if (dtSecond > 60) return false;
+
+			return true
+		}
+
+		//일단은 count 체크만으로 true false, 추후 개선
+		let typeCheckCnt = [];
+		let dateCheckCnt = [];
+		let usrCheckCnt = [];
+		let existsVlaBrdCdCheckCnt = [];
+
+		files.forEach((array, index) => {
+			
+			//파일의 확장자 제거			
+			let rawFile = array.file.name.split('.')
+			let rawFileChange = rawFile[0].split('_')
+
+			if(Number(this.state.existsVlaBrdInfoArray) > Number(rawFileChange[4])){
+				existsVlaBrdCdCheckCnt.push(index+1);
+			}
+
+			if(rawFileChange.length < 6 ) 
+				typeCheckCnt.push(index+1)
+			
+			if(rawFileChange.length >= 6) {
+				if (ComLib.getSession("gdsUserList").filter(item => item['CODE_NM'] === rawFileChange[1]).length === 0) {
+					usrCheckCnt.push(index+1);
+				}
+				if(!isDateCheck(rawFileChange[4])) dateCheckCnt.push(index+1)
+				if(!isTimeCheck(rawFileChange[5])) dateCheckCnt.push(index+1)
+			}			
+		})
+		
+		if(typeCheckCnt.length === 0 && dateCheckCnt.length === 0 && usrCheckCnt.length === 0 && existsVlaBrdCdCheckCnt.length == 0) {
+			return true;
+		} else {			
+			if (usrCheckCnt.length > 0) {
+				ComLib.openDialog('A', 'SYSI0010', [ usrCheckCnt.toString() + '행의 상담원명과 일치하는 상담원이 존재하지 않습니다. 해당 파일을 삭제하시고\n파일이름을 업로드 규칙에 맞게 업로드해 주세요 ']);
+			}
+			if(typeCheckCnt.length > 0 ) {
+				ComLib.openDialog('A', 'SYSI0010', [ typeCheckCnt + '행의 파일명 규칙이 잘못되었습니다. 해당 파일을 삭제하시고\n파일이름을 업로드 규칙에 맞게 업로드해 주세요']);
+			}
+			if(dateCheckCnt.length > 0) {
+				ComLib.openDialog('A', 'SYSI0010', [ dateCheckCnt + '행의 날짜구분이 잘못되었습니다. 해당 파일을 삭제하시고\n파일이름을 업로드 규칙에 맞게 업로드해 주세요']);
+			}
+			if(existsVlaBrdCdCheckCnt.length > 0) {
+				ComLib.openDialog('A', 'SYSI0010', [ existsVlaBrdCdCheckCnt + '행 파일의 계약일 시점 이전에 생성된 평가표가 존재하지 않습니다.']);
+			}
+			return false;
+		}
+	}
+
+	searchEnterKey(e) {
+		e.preventDefault();
+		if (e.code === 'Enter') {
+			if(this.validation("STT010000_R01")) this.transaction("STT010000_R01")
+
+		}
+		
+	}
+	  
+	render () {
+		return (			
+			<React.Fragment >	
+				<FullPanel>
+					<ComponentPanel>
+						<InputFileUpload
+							width = {this.state.fileUpload.width} 
+							height = {this.state.fileUpload.height} 
+							id = {this.state.fileUpload.id}
+
+							handleChangeStatus = {this.event.upload.handleChangeStatus}
+							handleSubmit       = {this.event.upload.handleSubmit}
+							onUploadComplete   = {this.event.upload.onUploadComplete}
+
+							uploadValidation = {this.fileUploadValidation}
+						/>
+					</ComponentPanel>
+					<div style={{alignItems:"center", display:"flow-root" , marginTop : "5px", marginBottom : "5px"}}>	
+						<LFloatArea>
+						<Label value="파일업로드 할때 파일형식은 계약번호_상담원_고객명_고객전화번호_통화년월일_통화시분초_그외 단어로 구성해주셔야 합니다."> </Label>
+						<br/>
+						<Label value="예) 21811699132_상담원_고객_01011111111_20200609_11330215"> </Label>
+						
+						</LFloatArea>
+ 
+						<RFloatArea>
+							<FlexPanel>
+							<Label value={"평가표"}/>
+								<Selectbox
+									id = {this.state.selectboxProps.selVlaBrdList.id}
+									dataset = {this.state.selectboxProps.selVlaBrdList.dataset}
+									width = {this.state.selectboxProps.selVlaBrdList.width}
+									disabled = {this.state.selectboxProps.selVlaBrdList.disabled}
+									selected = {this.state.selectboxProps.selVlaBrdList.selected}
+									onChange= {this.event.selectbox.onChange}
+								/>	
+					
+							<div style={{marginLeft : "10px"}} >
+							<Button 
+								id = {this.state.buttonProps.btnExecProps.id}
+								value = {this.state.buttonProps.btnExecProps.value}
+								disabled = {this.state.buttonProps.btnExecProps.disabled}
+								hidden = {this.state.buttonProps.btnExecProps.hidden}
+								onClick = {this.event.button.onClick}
+								innerImage={true} 								
+								mr = {30}		
+								color= 'purple'
+								fiiled= {true} 																						
+							/>
+							</div>
+							</FlexPanel>
+						</RFloatArea>																
+					</div>
+					{/* <ComponentPanel>
+
+
+					</ComponentPanel> */}
+					{/* <div style={{marginTop : "3px"}}></div> */}
+					<SearchPanel>
+					<div style={{alignItems:"center", display:"flow-root"}}>
+						<LFloatArea>											
+							<FlexPanel>
+							<Label value={this.state.rangeCalendarProps.label} req={true} />
+							<RangeInputCalendar
+								id ={this.state.rangeCalendarProps.id}
+								startDate = {this.state.rangeCalendarProps.startDate}
+								endDate = {this.state.rangeCalendarProps.endDate}
+								onChange = {this.event.inputcalendar.onChange}
+								strtId  = {this.state.rangeCalendarProps.strtId}
+								endId  = {this.state.rangeCalendarProps.endId}
+
+								/>
+							
+							<div style={{marginLeft : '10px'}}/>
+							<Label value={this.state.selectboxProps.selUserList.label}/>
+							<Selectbox
+								id = {this.state.selectboxProps.selUserList.id}
+								dataset = {ComLib.convComboList(ComLib.getUserList(this.state.dsGrp, true).filter(usr => usr.AUTH_LV === 1 || usr.AUTH_LV === 5 || usr.AUTH_LV === 6), newScrmObj.constants.select.argument.all)}
+								width = {this.state.selectboxProps.selUserList.width}
+								disabled = {this.state.selectboxProps.selUserList.disabled}
+								selected = {this.state.selectboxProps.selUserList.selected}
+								onChange= {this.event.selectbox.onChange}
+							/>		
+							</FlexPanel>														
+							</LFloatArea>
+							<RFloatArea>
+								<FlexPanel>							
+								<Button 
+									id = {this.state.buttonProps.btnSearchProps.id}
+									value = {this.state.buttonProps.btnSearchProps.value}
+									disabled = {this.state.buttonProps.btnSearchProps.disabled}
+									hidden = {this.state.buttonProps.btnSearchProps.hidden}
+									onClick = {this.event.button.onClick}
+									mr = {10}							
+									color= 'blue' 
+									icon = {'srch'}
+									innerImage={true}
+									fiiled = "o"
+								/>
+								</FlexPanel>
+							</RFloatArea>
+					</div>						
+					</SearchPanel>
+					<ComponentPanel>
+						<Grid
+							areaName = {this.state.gridSelfFileList.areaName}		
+							id = {this.state.gridSelfFileList.id}
+
+							addRowBtn=  {false}
+							delRowBtn = {false}
+							dnlExcelBtn = {true}
+							rowNum   = {true}
+							height= {this.state.gridSelfFileList.height}							
+							// height= {this.state.dsSelfFileList.height}
+							data = {this.state.dsSelfFileList}
+							header = {this.state.gridSelfFileList.header}
+							components = {this.state.gridSelfFileList.components}
+							rowSelection = 'multiple'
+							suppressRowClickSelection = {true}
+
+							onGridReady = {this.event.grid.onGridReady}
+							onRowClicked = {this.event.grid.onRowClicked}
+							onCellFocused = {this.event.grid.onCellFocused}
+							onCellClicked = {this.event.grid.onCellClicked}
+							onCellDoubleClicked = {this.event.grid.onCellDoubleClicked}
+							onCellValueChanged = {this.event.grid.onCellValueChanged}
+							onRowDoubleClicked = {this.event.grid.onRowDoubleClicked}
+							onCellEditingStopped = {this.event.grid.onCellEditingStopped}
+							onSelectionChanged = {this.event.grid.onSelectionChanged}
+							onRowSelected = {this.event.grid.onRowSelected}
+							onDeleteRow = {this.event.grid.onDeleteRow}
+							onInsertRow = {this.event.grid.onInsertRow}
+							onScrollEnd = {this.event.grid.onScrollEnd}
+							onBeforeInsertRow = {this.event.grid.onBeforeInsertRow}
+
+							undoRedoCellEditing = {false}
+							enableCellChangeFlash = {false}							
+						/>
+					</ComponentPanel>
+				</FullPanel>
+
+			</React.Fragment>
+		)
+	}
+	
+}
+
+export default View;

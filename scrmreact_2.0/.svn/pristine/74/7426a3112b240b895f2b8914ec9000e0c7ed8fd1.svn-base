@@ -1,0 +1,293 @@
+import React from 'react';
+import {
+	AppPanel, HeadPanel, MiddlePanel, SidePanel, MainPanel, ComponentPanel, SearchPanel,
+	FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button} from 'components';
+import {Label, InputCalendar, Textfield } from 'components';
+import {ScrmRadialBarChart, Grid, Table} from 'components';
+import {ComLib, DataLib, newScrmObj, DateLib} from 'common';
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+		this.state = {
+			isDateExist    : false,
+			isDateApplied  : false,
+			textFieldProps : {
+				iptVlaBrdNm : {
+					id          : 'iptVlaBrdNm',
+					name        : 'iptVlaBrdNm',
+					placeholder : '평가표명',
+					minLength   : 1,
+					maxLength   : 20,
+					readOnly    : true,
+					disabled    : false
+				},
+				iptVlaIBrdVer : {
+					id          : 'iptVlaIBrdVer',
+					name        : 'iptVlaIBrdVer',
+					placeholder : '평가표버젼',
+					minLength   : 1,
+					maxLength   : 20,
+					readOnly    : true,
+					disabled    : false
+				}
+			},
+			btnProps : {
+				btnSearch : {
+					id       : 'btnSearch',
+					disabled : false,
+					value    : '조회',
+					hidden   : false
+				},
+				btnSave : {
+					id       : 'btnSave',
+					disabled : false,
+					value    : '저장',
+					hidden   : false
+				},
+				apply : {
+					id       : 'apply',
+					disabled : false,
+					value    : '적용',
+					hidden   : false
+
+				}
+			},
+			calendarProps : {
+				calAppDate : {
+					id : 'calAppDate',
+					value : null,
+					closeCalendar : true,
+					disabled : false,
+					disableCalendar : false,
+					format : 'y-MM-dd',
+					isOpen : false,
+					maxDate : null,
+					minDate : null,
+					required : false,
+					returnValue : 'start'
+				},
+			}				
+		}
+		this.event.button.onClick = this.event.button.onClick.bind(this);
+	}
+
+	componentDidMount () {
+		if (this.props.options.date !== null && this.props.options.date !== '99990101000000') {
+			let state = this.state;		
+
+			state['isDateExist'] = true;
+			state['calendarProps']['calAppDate'].value = this.props.options.date.substring(0, 8);
+
+			if (Number(this.props.options.date ) <= Number(DateLib.getTodayTime())) {
+				state['isDateApplied'] = true;
+
+			}
+
+			this.setState(state)
+		}
+	}
+
+	validation = (...params) => {
+		let targetId = params[0];
+		
+		switch (targetId) {
+			case 'apply':
+				let state = this.state;
+				let dates = this.props.options.dates;
+
+				if (ComLib.isNull(state['calendarProps']['calAppDate'].value)) {
+					ComLib.openDialog('A', 'COME0008', ['적용일자']);
+					return false;
+				}
+
+				if (state['calendarProps']['calAppDate'].value === this.props.options.date && state['calendarProps']['calAppDate'].value !== DateLib.getToday()) {
+					ComLib.openDialog('A', 'SYSI0010', ['적용일자가 변경되지 않았습니다.']);
+					return false;
+				}
+					
+				ComLib.openDialog('C', 'SYSI0010', ['한번 적용된 스크립트는 적용일자가 지난 이후로는 변경이 불가능 합니다. 적용하시겠습니까?'], checked => { if (checked === true) {
+					let time = this.state.calendarProps.calAppDate.value;
+
+					if (Number(this.state.calendarProps.calAppDate.value) === Number(DateLib.getToday())) {
+						time = Number(DateLib.getTodayTime()) + 1000;
+
+					} else {
+						time += "000000";
+
+					}
+					
+					this.props.onCallbackFunc(time);
+					this.props.onClose();
+	
+				}});
+									
+					
+				break;
+
+			case 'QAM030000_R01':
+
+				break;	
+		
+			default :
+				break;
+		}
+
+		return true;
+	}
+
+	event = {
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {	
+				case 'apply':
+					console.log(this.props)
+					this.validation(e.target.id)					
+					
+					break;				
+
+				default: break;
+				}
+			}
+		},
+		inputcalendar : {
+			onChange : (e) => {
+				switch (e.target.id) {
+				case 'calAppDate':
+					if (e.target.value < DateLib.getToday() && !ComLib.isNull(e.target.value)) {						
+						ComLib.openDialog('A', 'COME0003', ['적용일자']);
+
+						return;
+					}
+
+					let state = this.state;
+	
+					state['calendarProps']['calAppDate'].value =  e.target.value;
+
+					this.setState(state);						
+					
+					break;
+
+				default : break;
+				}
+				
+			}
+		}		
+	}
+
+	render () {
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<SearchPanel>
+						<RelativeGroup>
+							<LFloatArea>
+								<div style={{width: "90px", float: "left", textAlign: "left", marginLeft: "10px"}}>
+									<Label value="적용일자" req={true}/>
+								</div>
+								<InputCalendar
+									id              = {this.state.calendarProps.calAppDate.id}
+									value           = {this.state.calendarProps.calAppDate.value}
+									autoFocus       = {this.state.calendarProps.calAppDate.autoFocus}
+									closeCalendar   = {this.state.calendarProps.calAppDate.closeCalendar}
+									disabled        = {this.state.calendarProps.calAppDate.disabled}
+									disableCalendar = {this.state.calendarProps.calAppDate.disableCalendar}
+									format          = {this.state.calendarProps.calAppDate.format}
+									isOpen          = {this.state.calendarProps.calAppDate.isOpen}
+									maxDate         = {this.state.calendarProps.calAppDate.maxDate}
+									minDate         = {this.state.calendarProps.calAppDate.minDate}
+									required        = {this.state.calendarProps.calAppDate.required}
+									returnValue     = {this.state.calendarProps.calAppDate.returnValue}
+									onChange        = {this.event.inputcalendar.onChange}
+								/>
+							</LFloatArea>
+						</RelativeGroup>
+						<RelativeGroup>
+							<LFloatArea>
+								<div style={{width: "300px", float: "left", textAlign: "left", marginLeft: "10px", marginBottom: "5px"}}>
+									<Label value="* 과거의 일자로는 적용이 불가능 합니다."/> 
+								</div>
+								<div style={{width: "350px", float: "left", textAlign: "left", marginLeft: "10px", marginBottom: "5px"}}>
+									<Label value="* 금일 날자로 적용시 10분 후부터 스크립트가 적용됩니다."/> 
+								</div>
+								{this.state.isDateExist && this.state.isDateApplied? 
+									<div style={{width: "300px", float: "left", textAlign: "left", marginLeft: "10px", marginBottom: "5px"}}>
+										<Label value="* 적용 일자 변경시 신규 스크립트로 저장됩니다."/> 
+									</div>
+									:
+										this.state.isDateExist ?
+										<div style={{width: "320px", float: "left", textAlign: "left", marginLeft: "10px", marginBottom: "5px"}}>
+											<Label value="* 적용 일자 변경시 기존 스크립트를 업데이트 합니다."/> 
+										</div>
+										:
+										null
+								}
+							</LFloatArea>
+						</RelativeGroup>
+						<RelativeGroup>
+							<LFloatArea>
+								<FlexPanel>
+									<div style={{width: "90px", float: "left", textAlign: "left", marginLeft: "10px"}}>
+										<Label value="평가표명"/>
+									</div>
+									<Textfield
+										id          = {this.state.textFieldProps.iptVlaIBrdVer.id}
+										name        = {this.state.textFieldProps.iptVlaIBrdVer.name}
+										value       = {this.props.options.name}
+										placeholder = {this.state.textFieldProps.iptVlaIBrdVer.placeholder}
+										minLength   = {this.state.textFieldProps.iptVlaIBrdVer.minLength}
+										maxLength   = {this.state.textFieldProps.iptVlaIBrdVer.maxLength}
+										readOnly    = {this.state.textFieldProps.iptVlaIBrdVer.readOnly}
+										disabled    = {this.state.textFieldProps.iptVlaIBrdVer.disabled}
+										width       = {300}
+									/>
+								</FlexPanel>
+							</LFloatArea>
+						</RelativeGroup>
+						<RelativeGroup>
+							<LFloatArea>
+								<FlexPanel>
+									<div style={{width: "90px", float: "left", textAlign: "left", marginLeft: "10px"}}>
+										<Label value="평가표버젼"/>
+									</div>
+									<Textfield
+										id          = {this.state.textFieldProps.iptVlaBrdNm.id}
+										name        = {this.state.textFieldProps.iptVlaBrdNm.name}
+										value       = {this.props.options.version}
+										placeholder = {this.state.textFieldProps.iptVlaBrdNm.placeholder}
+										minLength   = {this.state.textFieldProps.iptVlaBrdNm.minLength}
+										maxLength   = {this.state.textFieldProps.iptVlaBrdNm.maxLength}
+										readOnly    = {this.state.textFieldProps.iptVlaBrdNm.readOnly}
+										disabled    = {this.state.textFieldProps.iptVlaBrdNm.disabled}
+										width       = {300}
+									/>
+								</FlexPanel>
+							</LFloatArea>
+						</RelativeGroup>
+						<SubFullPanel>	
+							{this.state.isDateExist ?
+								<div style={{height: "114px"}}></div>
+								:
+								<div style={{height: "145px"}}></div>
+							}						
+							<Button
+								color    = 'purple' 
+								fiiled   = "o" 
+								id       = {this.state.btnProps.apply.id}
+								value    = {this.state.btnProps.apply.value}
+								disabled = {this.state.btnProps.apply.disabled}
+								hidden   = {this.state.btnProps.apply.hidden}
+								onClick  = {this.event.button.onClick}
+							/>
+						</SubFullPanel>
+					</SearchPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

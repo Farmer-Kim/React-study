@@ -1,0 +1,21 @@
+import React from 'react';
+import {BasicButton as Button} from 'components';
+ 
+class DelRowButton extends React.Component{
+	constructor (props) {
+		super(props);
+		this.onClick = this.onClick.bind(this);
+	}
+	onClick = (e) => {
+		this.props.context.componentParent.onDeleteRow(this.props);
+	}
+	render () {
+		return (
+			<React.Fragment>
+				<Button value='삭제' onClick={this.onClick}/>
+			</React.Fragment>
+		)
+	}
+}
+
+export default DelRowButton;

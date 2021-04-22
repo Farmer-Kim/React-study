@@ -1,0 +1,66 @@
+// 오인식문장관리
+import React from 'react';
+import {
+	AppPanel, HeadPanel, MiddlePanel, SidePanel, MainPanel, ComponentPanel, FooterPanel,
+	FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button, Label} from 'components';
+import {MultiCheckBox, Checkbox, Radio, Textfield, InputCalendar, MultiSelectbox, TextPasswdfield, RangeInputCalendar, Selectbox, MulitSelectBox, Tree, InputFileUpload} from 'components';
+import {ScrmRadialBarChart, Grid} from 'components';
+import {ComLib, DataLib, newScrmObj} from 'common';
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+
+		this.state = {
+			dsMisSenList : DataLib.datalist.getInstance()
+		}
+	}
+	componentDidMount () {
+
+	}
+	render () {
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<ComponentPanel>
+						<RelativeGroup>
+							<LFloatArea>
+								<Label value="검색기간"/>
+								<InputCalendar/>
+								<InputCalendar/>
+							</LFloatArea>
+							<RFloatArea>
+								<Button value="오인식문장다운로드"/>
+								<Button value="오인식단어다운로드"/>
+								<Button value="조회"/>
+							</RFloatArea>
+						</RelativeGroup>
+					</ComponentPanel>
+					<SubFullPanel>
+						<ComponentPanel>
+							<Grid
+								height= "400px"
+								data = {this.state.dsMisSenList}
+								header = {
+									[
+										{headerName: 'No',			field: 'CENT_CD',		colId: 'CENT_CD',	editable: true, req: true, headerCheckboxSelection: true,	checkboxSelection: true},
+										{headerName: '오인식 상담 원문',	field: 'BIZ_PSB_YN',	colId: 'BIZ_PSB_YN',editable: true},
+										{headerName: '작성문장',		field: 'TEAM_CD',		colId: 'TEAM_CD',	editable: true,},
+										{headerName: '결과 문장',		field: 'USR_CD',		colId: 'USR_CD',	editable: true,},
+										{headerName: '학습전 정확도',	field: 'USR_NM',		colId: 'USR_NM',	editable: true},
+										{headerName: '학습후 정확도',	field: 'AUTH_LV',		colId: 'AUTH_LV',	editable: true},
+									]
+								}
+							/>
+						</ComponentPanel>
+					</SubFullPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

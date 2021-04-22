@@ -1,0 +1,161 @@
+// STT 학습
+import React from 'react';
+import {
+	AppPanel, HeadPanel, MiddlePanel, SidePanel, MainPanel, ComponentPanel, FooterPanel,
+	FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button} from 'components';
+import {MultiCheckBox, Checkbox, Radio, Textfield, InputCalendar, MultiSelectbox, TextPasswdfield, RangeInputCalendar, Selectbox, MulitSelectBox, Tree, InputFileUpload} from 'components';
+import {ScrmRadialBarChart, Grid, Tabs, TabPanel} from 'components';
+import {ComLib, DataLib, newScrmObj} from 'common';
+import STT030100 from '../STT030100';
+import STT030200 from '../STT030200';
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+		this.state = {
+			
+			buttonProps : {
+				btnDataDownload : {
+					id : 'btnDataDownload',
+					disabled : false,
+					value : '데이터 다운로드',
+					hidden : false,
+					color : 'green',
+				},
+				btnExcelUpload : {
+					id : 'btnExcelUpload',
+					disabled : false,
+					value : '파일업로드',
+					hidden : false,
+					color : 'green',
+				},
+				btnExecuteLearning : {
+					id : 'btnExecuteLearning',
+					disabled : false,
+					value : '학습진행',
+					hidden : false
+				},
+				btnOpenLearningHist : {
+					id : 'btnOpenLearningHist',
+					disabled : false,
+					value : '학습로그',
+					hidden : false
+				},				
+			},
+			gridLearningList : {
+				areaName : '사용자학습목록',
+				id : 'gridLearningList',
+				header : 
+				[
+				
+					{headerName:  '학습일자',	field: 'TRN_DTM',		 colId: 'TRN_DTM',		}
+					,{headerName: '타이틀',	field: 'TRN_TITLE',			colId: 'TRN_TITLE',		editable: false }
+					,{headerName: '작업상태',	field: 'TRN_STATE',			colId: 'TRN_STATE',		editable: false,
+						cellEditorParams: { values : ComLib.getComCodeValue('STT_TBL_TRAIN', 'TRN_STATE')},
+						valueFormatter : (params) => { return ComLib.getComCodeName('STT_TBL_TRAIN', params.value, 'TRN_STATE')}}
+					,{headerName: '적용상태',	field: 'TRN_STATE',		colId: 'TRN_STATE',	 cellRenderer : 'showCellRendererPlayCheck',}
+				],
+				
+			},	
+			dsLearningList : DataLib.datalist.getInstance(),
+			
+			cmpWordList : [],
+
+		}
+		this.event.tab.onClick		= this.event.tab.onClick.bind(this);
+		this.event.button.onClick	= this.event.button.onClick.bind(this);
+	}
+	componentDidMount () {
+
+	}
+	event = {
+		tab : {
+			onClick : (e) => {
+				console.log('onClick');
+			}
+		},
+		button : {
+			onClick : (e) => {
+				let option1;
+				switch (e.target.id) {
+				case "btnProcStudy":
+					option1 = { width: '450px', height: '320px', modaless: false, callback : () => {alert('callback 먼저');} }
+					ComLib.openPop('STT030001', '학습진행', option1);
+					break;
+				case "btnMisSenMan":
+					option1 = { width: '1200px', height: '600px', modaless: false, callback : () => {alert('callback 먼저');} }
+					ComLib.openPop('STT030002', '오인식문장관리', option1);
+					break;
+				case "btnStudyLog":
+					option1 = { width: '600px', height: '480px', modaless: false, callback : () => {alert('callback 먼저');} }
+					ComLib.openPop('STT030003', '학습로그', option1);
+					break;
+				default: break;
+				}
+			}
+		}
+	}
+	render () {
+		return (
+			<React.Fragment>
+			<FullPanel>
+				<SubFullPanel>
+					<FlexPanel>
+						<ComponentPanel>
+							<RelativeGroup>
+								<RFloatArea>
+									<Button id = {this.state.buttonProps.btnDataDownload.id} color={this.state.buttonProps.btnDataDownload.color} value={this.state.buttonProps.btnDataDownload.value}/>
+									<Button id = {this.state.buttonProps.btnExcelUpload.id} color={this.state.buttonProps.btnExcelUpload.color} value={this.state.buttonProps.btnExcelUpload.value}/>
+									<Button id = {this.state.buttonProps.btnExecuteLearning.id} color={this.state.buttonProps.btnExecuteLearning.color} value={this.state.buttonProps.btnExecuteLearning.value}/>
+								</RFloatArea>
+							</RelativeGroup>
+							<Tabs tabWidth='100px' onClick = {this.event.tab.onClick}>
+								<TabPanel id = {'STT030100'} index={0} label={'복합명사'}>
+									<STT030100 cmpWordList={this.state.cmpWordList}/>
+								</TabPanel>
+								<TabPanel id = {'STT030200'} index={1} label={'문장'}>
+									<STT030200/>
+								</TabPanel>
+							</Tabs>
+						</ComponentPanel>
+
+						<ComponentPanel>
+							<Grid
+
+
+								areaName = {this.state.gridLearningList.areaName}		
+								id = {this.state.gridLearningList.id}	
+								addRowBtn=  {false}
+								delRowBtn = {false}
+								dnlExcelBtn = {true}
+								rowNum   = {true}								
+								suppressRowClickSelection = {true}
+
+								height= "600px"
+								data = {this.state.dsLearningList}
+								header = {this.state.gridLearningList.header}
+
+
+							/>
+							<RelativeGroup>
+								<RFloatArea>
+									<Button id="btnMisSenMan" mt="10px" color="green" fiiled="o" value="오인식문장관리" onClick = {this.event.button.onClick}/>
+									<Button id="btnStudyLog" mt="10px" color="blue"   value="학습로그" onClick = {this.event.button.onClick}/>
+								</RFloatArea>
+							</RelativeGroup>
+						</ComponentPanel>
+					
+							</FlexPanel>
+					</SubFullPanel>
+
+
+					</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

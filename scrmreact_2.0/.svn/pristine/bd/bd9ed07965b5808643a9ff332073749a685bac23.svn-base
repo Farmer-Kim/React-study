@@ -1,0 +1,43 @@
+import PwdInit   from 'containers/base/common/pwdInit.js';
+import pwdChg   from 'containers/base/common/pwdChg.js';
+import COM010010 from 'containers/com/COM010010';
+import COM010020 from 'containers/com/COM010020';
+import STT000001 from 'containers/stt/STT000001';
+import STT030001 from 'containers/stt/STT030001';
+import STT030002 from 'containers/stt/STT030002';
+import STT030003 from 'containers/stt/STT030003';
+import STT060001 from 'containers/stt/STT060001';
+import STT070001 from 'containers/stt/STT070001';
+import QAM030001 from 'containers/qam/QAM030001';
+import QAM060001 from 'containers/qam/QAM060001';
+import QAM080001 from 'containers/qam/QAM080001';
+import STA030001 from 'containers/sta/STA030001';
+import STA030002 from 'containers/sta/STA030002';
+import STA030003 from 'containers/sta/STA030003';
+
+import BOT010001 from 'containers/bot/BOT010001';
+import BOT010101 from 'containers/bot/BOT010101';
+
+import AnswerArea from 'components/Player/AnswerArea';
+
+export const popRoute = [
+	{ id: 'pwdInit',		component: PwdInit },
+	{ id: 'pwdChg',			component: pwdChg },
+	{ id: 'AnswerArea',		component: AnswerArea },
+	{ id: 'COM010010',		component: COM010010 },
+	{ id: 'COM010020',		component: COM010020 },
+	{ id: 'STT000001',		component: STT000001 },
+	{ id: 'STT030001',		component: STT030001 },
+	{ id: 'STT030002',		component: STT030002 },
+	{ id: 'STT030003',		component: STT030003 },
+	{ id: 'STT060001',		component: STT060001 },
+	{ id: 'STT070001',		component: STT070001 },
+	{ id: 'QAM030001',		component: QAM030001 },
+	{ id: 'QAM060001',		component: QAM060001 },
+	{ id: 'QAM080001',		component: QAM080001 },
+	{ id: 'STA030001',		component: STA030001 },
+	{ id: 'STA030002',		component: STA030002 },
+	{ id: 'STA030003',		component: STA030003 },
+	{ id: 'BOT010001',		component: BOT010001 },
+	{ id: 'BOT010101',		component: BOT010101 },
+];

@@ -1,0 +1,29 @@
+import React from 'react';
+import {Grid, Tabs, TabPanel, ComponentPanel, InputFileUpload} from 'components';
+
+class Index extends React.Component{
+	constructor (props) {
+		super();
+		this.state = { 
+			uploadProps : {
+				id : 'testUpload',
+				height : '300px'
+			}
+		}
+		this.onUploadComplete = this.onUploadComplete.bind(this);
+	}
+	onUploadComplete = (e) => {
+		console.log('onUploadComplete');
+		console.log(e);
+	}
+	render () {
+		return (
+			<React.Fragment>
+				<ComponentPanel areaName="파일업로드">
+					<InputFileUpload id = {this.state.uploadProps.id} height = {this.state.uploadProps.height} onUploadComplete ={this.onUploadComplete}/>
+				</ComponentPanel>
+			</React.Fragment>
+		);
+	}
+ }
+export default Index;

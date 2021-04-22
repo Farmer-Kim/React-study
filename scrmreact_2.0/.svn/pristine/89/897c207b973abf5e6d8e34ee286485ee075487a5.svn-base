@@ -1,0 +1,14 @@
+import LOGIN from 'containers/base/common/login.js';
+import COM010000 from 'containers/com/COM010000';
+import SAM000000 from 'containers/sam/SAM000000';
+import SAM010000 from 'containers/sam/SAM010000';
+import SAM020000 from 'containers/sam/SAM020000';
+import SAM030000 from 'containers/sam/SAM030000';
+export const sampleRoute = [
+	{ id: 'LOGIN',		path: "/",				exact: true,	component: LOGIN },
+	{ id: 'COM010000',	path: "/com/COM010000",	exact: true,	component: COM010000 },
+	{ id: 'SAM000000',	path: "/base",			exact: true,	component: SAM000000 },
+	{ id: 'SAM010000',	path: "/SAM010000",		exact: true,	component: SAM010000 },
+	{ id: 'SAM020000',	path: "/SAM020000",		exact: true,	component: SAM020000 },
+	{ id: 'SAM030000',	path: "/SAM030000",		exact: true,	component: SAM030000 }
+];

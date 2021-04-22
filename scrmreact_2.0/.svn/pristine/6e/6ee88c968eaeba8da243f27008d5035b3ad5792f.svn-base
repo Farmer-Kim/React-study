@@ -1,0 +1,35 @@
+import React from 'react';
+import Login from 'containers/base/common/login.js'
+import AppMain from 'containers/base';
+
+import { Route, Switch } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import store from '../store';
+
+const NotFound = () => <h1>404.. This page is not found!</h1>
+
+class App extends React.Component{
+	componentDidMount(){
+
+	}
+	componentWillUnmount() {
+
+	}
+	render () {
+		const token = sessionStorage.getItem('token');
+		//const token = true;
+		return (
+			<React.Fragment>
+				{ token ? ( <Provider store={store}><AppMain/></Provider>)
+						: (
+							<Switch>
+								<Route path={'/'} exact={true} component={Login}/>
+								<Route path={'/base'} exact={true} component={<Provider store={store}><AppMain/></Provider>}/>
+							</Switch>
+						)
+				}
+			</React.Fragment>
+		);
+	}
+}
+export default App;

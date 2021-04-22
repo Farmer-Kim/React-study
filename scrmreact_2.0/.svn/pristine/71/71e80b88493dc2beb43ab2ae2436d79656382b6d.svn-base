@@ -1,0 +1,41 @@
+const menuData = [
+	{IMG_NM: null, MENU_ID: "base", MENU_NM: "메인화면", MENU_TYPE: "10", PARN_MENU_ID: "", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 1, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "COM010000", MENU_NM: "대쉬보드", MENU_TYPE: "20", PARN_MENU_ID: "base", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 1, USE_YN: "Y"},
+
+	{IMG_NM: null, MENU_ID: "QAM", MENU_NM: "QA관리", MENU_TYPE: "10", PARN_MENU_ID: "", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 2, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "QAM010000", MENU_NM: "평가항목관리", MENU_TYPE: "20", PARN_MENU_ID: "QAM", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/QAM000000", SORT_ORD: 1, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "QAM020000", MENU_NM: "평가표관리", MENU_TYPE: "20", PARN_MENU_ID: "QAM", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/QAM000000", SORT_ORD: 2, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "QAM030000", MENU_NM: "표준스크립트관리", MENU_TYPE: "20", PARN_MENU_ID: "QAM", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/QAM000000", SORT_ORD: 3, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "QAM040000", MENU_NM: "배정대상조회", MENU_TYPE: "20", PARN_MENU_ID: "QAM", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/QAM000000", SORT_ORD: 4, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "QAM050000", MENU_NM: "통화이력관리", MENU_TYPE: "20", PARN_MENU_ID: "QAM", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/QAM000000", SORT_ORD: 5, USE_YN: "Y"},
+	
+	{IMG_NM: null, MENU_ID: "STT", MENU_NM: "STT관리", MENU_TYPE: "10", PARN_MENU_ID: "", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/QAM000000", SORT_ORD: 3, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "STT010000", MENU_NM: "수동STT요청", MENU_TYPE: "20", PARN_MENU_ID: "STT", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/STT100000", SORT_ORD: 1, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "STT020000", MENU_NM: "STT결과조회", MENU_TYPE: "20", PARN_MENU_ID: "STT", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/STT200000", SORT_ORD: 2, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "STT030000", MENU_NM: "STT학습", MENU_TYPE: "20", PARN_MENU_ID: "STT", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/STT300000", SORT_ORD: 3, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "STT040000", MENU_NM: "오인식문장관리", MENU_TYPE: "20", PARN_MENU_ID: "STT", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/STT400000", SORT_ORD: 4, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "STT050000", MENU_NM: "키워드관리", MENU_TYPE: "20", PARN_MENU_ID: "STT", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/STT500000", SORT_ORD: 5, USE_YN: "Y"},
+
+	{IMG_NM: null, MENU_ID: "STA", MENU_NM: "통계", MENU_TYPE: "10", PARN_MENU_ID: "", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 4, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "STA010000", MENU_NM: "상담원현황", MENU_TYPE: "20", PARN_MENU_ID: "STA", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 1, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "STA020000", MENU_NM: "콜평가현황", MENU_TYPE: "20", PARN_MENU_ID: "STA", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 2, USE_YN: "Y"},
+
+	{IMG_NM: null, MENU_ID: "SYS", MENU_NM: "시스템관리", MENU_TYPE: "10", PARN_MENU_ID: "", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 5, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SYS010000", MENU_NM: "코드관리", MENU_TYPE: "20", PARN_MENU_ID: "SYS", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SYS000000", SORT_ORD: 1, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SYS020000", MENU_NM: "사용자관리", MENU_TYPE: "20", PARN_MENU_ID: "SYS", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SYS000000", SORT_ORD: 2, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SYS030000", MENU_NM: "메뉴관리", MENU_TYPE: "20", PARN_MENU_ID: "SYS", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SYS000000", SORT_ORD: 3, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SYS040000", MENU_NM: "권한관리", MENU_TYPE: "20", PARN_MENU_ID: "SYS", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SYS000000", SORT_ORD: 4, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SYS050000", MENU_NM: "센터관리", MENU_TYPE: "20", PARN_MENU_ID: "SYS", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SYS000000", SORT_ORD: 5, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SYS060000", MENU_NM: "기준값관리", MENU_TYPE: "20", PARN_MENU_ID: "SYS", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SYS000000", SORT_ORD: 6, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SYS070000", MENU_NM: "메시지관리", MENU_TYPE: "20", PARN_MENU_ID: "SYS", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SYS000000", SORT_ORD: 7, USE_YN: "Y"},
+
+	{IMG_NM: null, MENU_ID: "SAM", MENU_NM: "샘플메뉴", MENU_TYPE: "10", PARN_MENU_ID: "", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 6, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SAM000000", MENU_NM: "샘플페이지0", MENU_TYPE: "20", PARN_MENU_ID: "SAM", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 1, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SAM010000", MENU_NM: "샘플페이지1", MENU_TYPE: "20", PARN_MENU_ID: "SAM", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 2, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SAM020000", MENU_NM: "샘플페이지2", MENU_TYPE: "20", PARN_MENU_ID: "SAM", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 3, USE_YN: "Y"},
+	{IMG_NM: null, MENU_ID: "SAM030000", MENU_NM: "샘플페이지3", MENU_TYPE: "20", PARN_MENU_ID: "SAM", POPUP_HT: null, POPUP_WD: null, PRG_PATH: "/sam/SAM000000", SORT_ORD: 4, USE_YN: "Y"},
+];
+
+const loginData = null;
+
+export {menuData, loginData}

@@ -1,0 +1,1447 @@
+// 평가표관리
+import React from 'react';
+import {
+	ComponentPanel,FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+import {BasicButton as Button, Label} from 'components';
+import {Checkbox, Textfield, Selectbox } from 'components';
+import { Grid, } from 'components';
+import {TransManager, StrLib, ComLib, DataLib, newScrmObj} from 'common';
+import { SearchPanel } from '../../../components/Layout';
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+
+		this.gridVlaBrdAllInf = null
+		this.gridVlaBrdSingleInf = null
+
+		this.state = {
+			
+
+			components: { 
+				showCellRendererDupleCheck: this.createShowCellRenderer(), 						
+			},
+			buttonProps : {
+				btnSaveProps : {
+					id : 'btnSaveVlaStd',
+					disabled : false,
+					value : '저장',
+					hidden : false
+				},
+				btnModifyProps : {
+					id : 'btnModifyVlaStd',
+					disabled : false,
+					value : '삭제',
+					hidden : false,
+					checkd : 'N'
+				},				
+			},
+			checkboxProps : {			
+				chkCreateStd : {
+					id : 'chkCreateStd',
+					index : 0,
+					keyProp : 'scVsCode',
+					value : '신규평가표 생성',
+					checked : 'N',
+					readOnly : false,
+					disabled : false
+				},
+				chkLastStndVers : {					
+					id : 'chkLastStndVers',
+					index : 0,
+					keyProp : 'scVsCode',
+					value : '평가기준 최신화',
+					checked : 'N',
+					readOnly : false,
+					disabled : false,
+					visible : false
+				}				
+			},
+			selectboxProps : {
+				id : 'selectVlaStd',
+				dataset : [],
+				width : 250,
+				selected : 0,
+				value : '',
+				disabled : false,
+				checkValue : '',
+			},
+
+			textFieldProps : {
+				label : ' ',
+				string : {
+					id : 'createInputStd',
+					name : 'createInputStd',
+					value : '',
+					placeholder : '',
+					minLength : 5,
+					maxLength : 20,
+					readOnly : false,
+					disabled : false
+				},
+			},
+
+			gridVlaBrdAllInf : {
+				label : '전체평가기준',
+				id : 'gridVlaBrdAllInf',
+				height : "650px",
+				infoCheckBox :  {
+					use : true,
+					colId : 'CHK',					
+				},		
+				header : 
+					[			
+						{headerName:  '평가항목',	 	 field: 'VLA_ITM_NM',		colId: 'VLA_ITM_NM',   		resizable: true   , width : 50 ,rowSpan: true,}
+						,{headerName: '평가내용',		 field: 'VLA_CONT_NM',		colId: 'VLA_CONT_NM',  		resizable: true   , width : 100 ,rowSpan: true,}
+						,{headerName: '평가기준',		 field: 'VLA_STND_NM',		colId: 'VLA_STND_NM', 		cellRenderer : 'showCellRendererDupleCheck',autoHeight : true} // autoHeight를 추가 해도 좋을듯
+						//,{headerName: '평가기준',		 field: 'VLA_STND_NM',		colId: 'VLA_STND_NM', 		cellRenderer : 'showCellRendererDupleCheck'}			
+						// ,{headerName: 'VLA_ITM_CD',		field: 'VLA_ITM_CD',		colId: 'VLA_ITM_CD',	 	hide: true, }
+						// ,{headerName: 'VLA_STND_CD',	field: 'VLA_STND_CD',		colId: 'VLA_STND_CD',	 	hide: true, }								
+						// ,{headerName: 'VLA_CONT_CD',	field: 'VLA_CONT_CD',		colId: 'VLA_CONT_CD',	 	hide: true,  }										
+						// ,{headerName: 'VLA_BRD_VERS',	field: 'VLA_BRD_VERS',		colId: 'VLA_BRD_VERS',		hide: true, }				
+						// ,{headerName: 'VLA_BRD_CD',		field: 'VLA_BRD_CD',		colId: 'VLA_BRD_CD',		hide: true, }				
+						// ,{headerName: 'VLA_STND_SEQNO',	field: 'VLA_STND_SEQNO',	colId: 'VLA_STND_SEQNO',	hide: true, }										
+						// ,{headerName: 'SYNC',			field: 'SYNC',				colId: 'SYNC'      ,		hide: true}												
+						// ,{headerName: 'ORDER_STD',		field: 'ORDER_STD',			colId: 'ORDER_STD',			hide: true }	
+						// hide 를 굳이 안하고 그냥 헤더에서 제외해도 ds 에서 접근 가능 한걸로 알고 있음															
+					]			
+			},
+			gridVlaBrdSingleInf : {
+				label : ' ',
+				id : 'gridVlaBrdSingleInf',
+				height : "650px",
+				infoCheckBox :  {
+					use : true,
+					colId : 'CHK1',					
+				},						
+				header  : 
+				[					
+					{headerName:  '평가항목',	  		 field: 'VLA_ITM_NM',		colId: 'VLA_ITM_NM',  	width : 50 ,rowSpan: true,}
+					,{headerName: '평가내용',		 	 field: 'VLA_CONT_NM',		 colId: 'VLA_CONT_NM',  resizable: true , width : 110 ,rowSpan: true,}
+					,{headerName: '평가기준',			 field: 'VLA_STND_NM',		 colId: 'VLA_STND_NM',  autoHeight : true }			
+					// ,{headerName: 'VLA_ITM_CD',			field: 'VLA_ITM_CD',		colId: 'VLA_ITM_CD',		hide: true, }
+					// ,{headerName: 'VLA_STND_CD',		field: 'VLA_STND_CD',		colId: 'VLA_STND_CD',		hide: true, }				
+					// ,{headerName: 'VLA_CONT_CD',		field: 'VLA_CONT_CD',		colId: 'VLA_CONT_CD',		hide: true, }				
+					// ,{headerName: 'VLA_BRD_VERS',		field: 'VLA_BRD_VERS',		colId: 'VLA_BRD_VERS',		hide: true, }				
+					// ,{headerName: 'VLA_BRD_CD',			field: 'VLA_BRD_CD',		colId: 'VLA_BRD_CD',		hide: true, }				
+					// ,{headerName: 'VLA_STND_SEQNO',		field: 'VLA_STND_SEQNO',	colId: 'VLA_STND_SEQNO',	hide: true, }									
+					// ,{headerName: 'CHK_LAST_STND_VERS',	field: 'CHK_LAST_STND_VERS',colId: 'CHK_LAST_STND_VERS',hide: true, }									
+					// ,{headerName: 'LAST_STND_VERS',		field: 'LAST_STND_VERS',	colId: 'LAST_STND_VERS',	hide: true, }																											
+					// ,{headerName: 'ORDER_STD',			field: 'ORDER_STD',			colId: 'ORDER_STD',			hide: true, }										
+				],
+			},	
+			label : {
+				value : '평가표명'
+			},
+			
+			
+			insertVlaBrdInf : 'N',  //평가표정보 isnert 여부 insert하는경우 항목 추가 및 변경 또는 평가항목 신규입력정렬 순서 변경은 무조건 평가표버전 새로채번 하며 Insert
+
+
+
+
+
+			dsAllValStndList : DataLib.datalist.getInstance(),			
+			dsSelValStndList : DataLib.datalist.getInstance(),
+
+
+
+			//지워지는 평가표 child (insert로 바뀌어서 로직 주석)
+			//dsDelValStndList : DataLib.datalist.getInstance(),
+			//평가표목록정보이력원본
+			dsSelValStndHistList : DataLib.datalist.getInstance(),			
+			//평가표정보를 임시로 가지고 있는 데이터
+			dsVlaBrdInf : DataLib.datalist.getInstance(),
+			//SelectBox DataSet
+			dsValStndSelectList: DataLib.datalist.getInstance(),			
+			
+		}
+
+		this.event.button.onClick = this.event.button.onClick.bind(this);
+		this.event.input.onChange = this.event.input.onChange.bind(this);
+		this.event.checkbox.onChange = this.event.checkbox.onChange.bind(this);
+		this.event.selectbox.onChange = this.event.selectbox.onChange.bind(this);
+		
+		
+	}
+
+	componentDidMount () {
+
+		this.transaction("QAM020000_R01");
+		 
+	}
+	/*------------------------------------------------------------------------------------------------*
+		2) componentDidUpdate () => 갱신이 일어나 직후에 호춮 (최초 렌더링 시에는 호출되지 않음)
+		=> prevProps와 현재 props를 비교할 수 있음 -> 조건문으로 감싸지 않고 setState를 실행할 시, 무한 반복 가능성 -> 반드시 setState를 쓰려면 조건문으로 작성
+	 ------------------------------------------------------------------------------------------------*/
+	componentDidUpdate (prevProps, prevState, snapshot) {
+
+
+	}
+	/*------------------------------------------------------------------------------------------------*
+		3) componentWillUnmount () => 컴포넌트가 마운트 해제되어 제거되기 직전에 호출
+		=> 타이머 제거, 네트워크 요청 취소 등 수행 -> 마운트가 해제되기 때문에 setState를 호출하면 안됨
+	 ------------------------------------------------------------------------------------------------*/
+	componentWillUnmount () {
+
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (transId) => {
+		
+		switch (transId) {
+		case 'tempAdd':			
+				
+			let checkCnt = 0; 
+
+			this.state.dsAllValStndList.records.forEach((item, index) => { 
+				if(item.CHK === 'Y') {
+					checkCnt++						
+					
+				}
+			})
+
+			if (checkCnt === 0) {		
+				ComLib.openDialog('A', 'SYSI0010', ['평가표에 추가하실 평가기준을 선택해 주세요']);
+				return false;
+			}			
+			
+			break;
+
+		case 'tempMinus':				
+			checkCnt = 0; 
+			let checkRemainCnt = 0;
+
+			this.state.dsSelValStndList.records.forEach((item, index) => { 
+				if(item.CHK1 === 'Y') {
+					checkCnt++						
+				}
+				checkRemainCnt++
+			})
+
+			if (checkCnt === 0) {
+				ComLib.openDialog('A', 'SYSI0010', ['평가표에서 제외하실 평가기준을 선택해 주세요']);
+				return false;
+			}			
+
+			if (checkRemainCnt === 0) {
+				ComLib.openDialog('A', 'SYSI0010', ['평가표에는 적어도 하나 이상의 평가기준은 존재해야 합니다']);				
+				return false;
+			}							
+
+			break;
+
+		case "btnSaveVlaStd": 			
+			if(this.state.checkboxProps.chkCreateStd.checked ==='Y'){				
+				if(StrLib.isNull(this.state.textFieldProps.string.value)){
+
+					ComLib.openDialog('A', 'SYSI0010', ['평가표명란에 평가표명을 입력해 주세요.']);
+					return false;					
+
+				}
+			
+				if(this.state.dsSelValStndList.records.length === 0) {
+
+					ComLib.openDialog('A', 'SYSI0010', ['작성하신 평가표에 평가항목이 존재하지 않습니다.\n 평가항목을 선택해주세요.']);
+					return false;					
+
+				}
+
+			} else {				
+				if(this.state.dsSelValStndHistList.orgrecords.length ===  this.state.dsSelValStndList.records.length && this.state.dsSelValStndList.records.filter((item) => (item.rowtype ==='u')).length === 0){
+				
+					ComLib.openDialog('A', 'SYSI0010', ['변동사항이 없습니다.']);
+					return false;					
+
+				}
+
+			}
+
+			break;
+
+		default: break;
+		}
+
+		return true;
+
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	// QAM020000_R01 : 초기화면 죄근 작성된 평가표 정보 불러오기(SelectBox)
+	// QAM020000_R02 : R01의 코드를 기준으로 전체 평가표 및 작성되는 평가표 불러오기
+	// QAM020000_R03 : Insert에 필요한 평가표 정보 버전 및 평가표 코드 불러오기
+	// QAM020000_H01 : 기본적인 평가표 저장(항목 추가, 제거, 신규생성표 작성)
+	// QAM020000_U01 : 평가표기준정보 최신화(평가표 기준정보만 업데이트) 
+	// QAM020000_U02 : 평가표정보 삭제(USE_YN = N)
+	// QAM020000_U03 : 평가표목록정보 정렬순서 변경(평가표만 업데이트)
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (transId) => {
+
+
+		let transManager = new TransManager();
+		try {
+			switch (transId) {
+
+			// 초기화면 가장 최근에 작성된 평가표 최신 정보 가져오기
+			case 'QAM020000_R01':
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"QAM.R_getVlaVersion",
+					datasetsend:"",
+					datasetrecv:"dsValStndSelectList",
+				});
+				transManager.addDataset('', [{}]);
+				transManager.agent();			
+				break;
+
+			// 선택된 작성표 기준으로 전체 평가기준표와 선택된 평가표 불러오기
+			case 'QAM020000_R02':
+
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"QAM.R_getVlaBrdAllInf",
+					datasetsend:"",
+					datasetrecv:"dsAllValStndList",
+				});
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"QAM.R_getVlaBrdSingleInf",
+					datasetsend:"dsSearchParam",
+					datasetrecv:"dsSelValStndList",
+				});
+
+				transManager.addDataset('dsSearchParam', [{STD_VLA : this.state.selectboxProps.value}]);				
+				transManager.addDataset('', [{}]);
+				transManager.agent();
+
+				break;
+
+			//평가표 코드, 평가표 버전 불러오기 
+			case 'QAM020000_R03':
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"QAM.R_getCreateVlaVersionInfo",
+					datasetsend:"",
+					datasetrecv:"dsVlaBrdInf",
+				});
+				transManager.addDataset('', [{}]);					
+				transManager.agent();
+
+				break;
+
+			//저장시 일어나는 이벤트(순서정렬 업데이트)
+			case 'QAM020000_H01':
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				
+				//평가표정보
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.handle,
+					sqlmapid:"QAM.C_handleVlaBrdInf",
+					datasetsend:"dsAppQaVlaBrdInf",
+					datasetrecv:"",
+				});			
+				//평가표목록		
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.handle,
+					sqlmapid:"QAM.H_handleVlaBrdLstInf",
+					datasetsend:"dsAppQaVlaBrdLstInf",
+					datasetrecv:"",
+				});
+				//최초 신규생성시
+				if(this.state.checkboxProps.chkCreateStd.checked ==='Y'){
+					transManager.addDataset('dsAppQaVlaBrdInf', [{							
+						VLA_BRD_CD : this.state.dsVlaBrdInf.records[0].VLA_BRD_CD,							
+						VLA_BRD_NM : this.state.textFieldProps.string.value,
+						VLA_BRD_VERS : this.state.dsVlaBrdInf.records[0].VLA_BRD_VERS,
+						rowtype : 'c',
+					}]);					
+				} else {													
+					transManager.addDataset('dsAppQaVlaBrdInf', [{							
+						VLA_BRD_CD : this.state.dsSelValStndHistList.orgrecords[0].VLA_BRD_CD,							
+						VLA_BRD_NM : this.state.selectboxProps.dataset[this.state.selectboxProps.selected].name,
+						VLA_BRD_VERS : this.state.dsVlaBrdInf.records[0].VLA_BRD_VERS,
+						rowtype : 'c',
+					}]);																	
+				}
+
+				// this.dsSelValStndList.getT
+				transManager.addDataset('dsAppQaVlaBrdLstInf', this.state.dsSelValStndList.records);					
+				transManager.agent();
+
+				break;
+
+				//평가표 최신화
+				case 'QAM020000_U01':
+
+					transManager.setTransId(transId);
+					transManager.setTransUrl(transManager.constants.url.common);
+					transManager.setCallBack(this.callback);
+
+					transManager.addConfig({
+						dao: transManager.constants.dao.base,
+						crudh: transManager.constants.crudh.handle,
+						sqlmapid:"QAM.H_handleVlaBrdLstInf",
+						datasetsend:"dsAppQaVlaBrdLstInfSp",
+						datasetrecv:"",
+					});										
+
+					transManager.addDataset('dsAppQaVlaBrdLstInfSp', this.state.dsSelValStndList.records.filter((item) => item.rowtype !== newScrmObj.constants.crud.read));
+					transManager.agent();
+
+					break;
+
+				//평가표 정보 삭제
+				case 'QAM020000_U02':
+
+					transManager.setTransId(transId);
+					transManager.setTransUrl(transManager.constants.url.common);
+					transManager.setCallBack(this.callback);
+					transManager.addConfig({
+						dao: transManager.constants.dao.base,
+						crudh: transManager.constants.crudh.create,
+						sqlmapid:"QAM.U_handleVlaBrdInf",
+						datasetsend:"dsAppQaVlaBrdInf",
+						datasetrecv:"",
+					});										
+					transManager.addDataset('dsAppQaVlaBrdInf', [{							
+						VLA_BRD_CD : this.state.dsSelValStndHistList.orgrecords[0].VLA_BRD_CD,													
+						USE_YN  : 'N',
+						rowtype : 'u',
+					}]);									
+					transManager.agent();
+
+				break;
+
+				case 'QAM020000_U03':
+
+					transManager.setTransId(transId);
+					transManager.setTransUrl(transManager.constants.url.common);
+					transManager.setCallBack(this.callback);
+
+					transManager.addConfig({
+						dao: transManager.constants.dao.base,
+						crudh: transManager.constants.crudh.handle,
+						sqlmapid:"QAM.U_handleVlaBrdLstInf",
+						datasetsend:"dsAppQaVlaBrdLstInfSp",
+						datasetrecv:"",
+					});										
+					
+					transManager.addDataset('dsAppQaVlaBrdLstInfSp', this.gridVlaBrdSingleInf.gridDataset.records);					
+					transManager.agent();
+
+					break;
+
+
+
+			default : break;
+			}
+		} catch (err) {
+
+		}
+
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {
+
+		switch (res.id) {
+
+		case "QAM020000_R01":
+			
+			this.setState({...this.state, selectboxProps : 
+							{...this.state.selectboxProps, dataset : res.data.dsValStndSelectList, value : res.data.dsValStndSelectList[0].value}
+						 }, 
+						 	function () {this.transaction("QAM020000_R02")}
+						);										
+					
+			
+			
+			break;
+		case 'QAM020000_R02':
+
+			let lastStndVers = res.data.dsSelValStndList.filter(item => item.CHK_LAST_STND_VERS === 'N').length;
+
+			//최신버전이 존재하는지 여부 최신버전이 존재하면 checkbox로 표기
+			if(lastStndVers > 0 ) {
+				this.setState({...this.state
+					, checkboxProps: {...this.state.checkboxProps, chkLastStndVers : {...this.state.checkboxProps.chkLastStndVers, visible : true}}																				
+				});				
+			} else {
+				this.setState({...this.state
+					, checkboxProps: {...this.state.checkboxProps, chkLastStndVers : {...this.state.checkboxProps.chkLastStndVers, visible : false}}																					
+				});				
+			}
+					
+			this.leftLoadingGrid(res.data.dsAllValStndList, res.data.dsSelValStndList);
+			
+			ComLib.setStateInitRecords(this, "dsAllValStndList", res.data.dsAllValStndList);
+			ComLib.setStateInitRecords(this, "dsSelValStndList", res.data.dsSelValStndList);			
+
+			//이력저장시 및 그리드 비교를 하기 위해 저장
+			ComLib.setStateInitRecords(this, "dsSelValStndHistList", res.data.dsSelValStndList);
+		
+		break;
+		case "QAM020000_R03":
+
+			ComLib.setStateInitRecords(this, "dsVlaBrdInf", res.data.dsVlaBrdInf);
+
+			if(this.state.insertVlaBrdInf === 'Y'){
+
+				//신규생성
+				if(this.state.checkboxProps.chkCreateStd.checked ==='Y'){
+					this.gridVlaBrdSingleInf.gridDataset.records.forEach((item, index) => { 
+						item.VLA_BRD_CD = res.data.dsVlaBrdInf[0].VLA_BRD_CD;
+						item.VLA_BRD_VERS = res.data.dsVlaBrdInf[0].VLA_BRD_VERS;
+						item.VLA_STND_SEQNO = index+1
+					})
+
+					ComLib.setStateInitRecords(this, 'dsSelValStndList', this.gridVlaBrdSingleInf.gridDataset.records);			
+
+					this.transaction("QAM020000_H01");				
+				} else {	
+
+					//그리드 추가, 제거가 되었을 경우는 무조건 INSERT지만....? 추가, 제거하다가 최종적으로 순서만 바꿨다면?
+					const orgStndCd = this.state.dsSelValStndHistList.orgrecords.map(item => item.VLA_ITM_CD)
+					const curStndCd = this.gridVlaBrdSingleInf.gridDataset.records.map(item => item.VLA_ITM_CD)
+
+					orgStndCd.sort()
+					curStndCd.sort();
+
+					const compareResult = orgStndCd.length === curStndCd.length && orgStndCd.every((value, index) => value === curStndCd[index])
+
+					//배열 동일 === 순서만 바꾼 저장이라는 것
+					if(compareResult === true) {
+
+						this.gridVlaBrdSingleInf.gridDataset.records.forEach((item, index) => { 					
+							item.rowtype = 'u';								
+							item.VLA_BRD_VERS = this.gridVlaBrdSingleInf.gridDataset.orgrecords[0].VLA_BRD_VERS;
+							item.VLA_STND_SEQNO = index+1								
+						})															
+			
+						this.transaction("QAM020000_U03");
+
+					} else {
+
+						this.gridVlaBrdSingleInf.gridDataset.records.forEach((item, index) => { 					
+							item.rowtype = 'c';								
+							item.VLA_BRD_VERS = res.data.dsVlaBrdInf[0].VLA_BRD_VERS;
+							item.VLA_BRD_CD = this.state.dsSelValStndHistList.orgrecords[0].VLA_BRD_CD
+							item.VLA_STND_SEQNO = index+1				
+						})								
+						
+						ComLib.setStateInitRecords(this, 'dsSelValStndList', this.gridVlaBrdSingleInf.gridDataset.records);			
+
+						this.transaction("QAM020000_H01");				
+					}
+											
+				}
+				
+			} else {
+			
+				this.gridVlaBrdSingleInf.gridDataset.records.forEach((item, index) => { 					
+					item.rowtype = 'u';								
+					item.VLA_BRD_VERS = this.gridVlaBrdSingleInf.gridDataset.orgrecords[0].VLA_BRD_VERS;
+					item.VLA_STND_SEQNO = index+1								
+				})															
+
+				this.transaction("QAM020000_U03");
+			}		
+
+		
+			break;
+
+		case "QAM020000_H01":
+					
+			ComLib.openDialog('A', 'COMI0003');
+
+			this.setState({...this.state
+				, checkboxProps: {...this.state.checkboxProps, chkCreateStd : {...this.state.checkboxProps.chkCreateStd, checked : 'N'}}
+				, textFieldProps : { ...this.state.textFieldProps, string : {...this.state.textFieldProps.string, value : '' }
+				, insertVlaBrdInf : 'N' }							
+			});
+			
+			this.transaction("QAM020000_R01");
+			
+			break;
+
+		case "QAM020000_U01":
+		
+			ComLib.openDialog('A', 'SYSI0010', ['평가기준이 최신화 되었습니다.']);
+
+			this.transaction("QAM020000_R02");					
+
+			break;
+
+		case "QAM020000_U02":
+
+			ComLib.openDialog('A', 'COMI0004');
+
+			this.transaction("QAM020000_R01");
+
+			break;
+
+		case "QAM020000_U03":
+
+			ComLib.openDialog('A', 'SYSI0010', ['평가표가 정상적으로 변경되었습니다.']);
+
+			let state = this.state;
+			state['checkboxProps']['chkCreateStd'].checked = 'N';
+			state['textFieldProps']['string'].value = '';			
+			state['insertVlaBrdInf'] = 'N';
+
+			this.setState(state);
+			this.transaction("QAM020000_R01");
+
+			break;
+
+		default : break;
+		
+		}
+	}
+
+
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {
+		// 버튼 이벤트
+		button : {
+			
+			onClick : (e) => {
+
+				switch (e.target.id) {
+
+				case "btnSaveVlaStd" :				
+					if(this.validation("btnSaveVlaStd")) {
+						ComLib.openDialog('C', 'SYSI0010', ['현재평가표를 저장하시겠습니까?'],  
+						checked => { if (checked === true) {
+							//신규추가가 아닌경우 기존의 평가표코드를 설정한다
+							if(this.state.checkboxProps.chkCreateStd.checked ==='N'){
+								this.state.dsAllValStndList.records.forEach((item) => {
+									item.VLA_BRD_CD = this.state.dsSelValStndHistList.orgrecords[0].VLA_BRD_CD
+								})
+							}
+							ComLib.setStateInitRecords(this, "dsAllValStndList", this.state.dsAllValStndList);								
+						
+							this.transaction("QAM020000_R03");
+							}
+						});
+					}
+
+					break;
+
+				case "btnModifyVlaStd" :						
+					ComLib.openDialog('C', 'SYSI0010', ['현재평가표를 삭제하시겠습니까?'], 
+						checked => { if (checked === true) this.transaction('QAM020000_U02')}
+					);
+				
+					break;
+
+				case "tempAdd":
+					if(this.validation("tempAdd")) {						
+						let addData = [];					
+						
+						this.state.dsAllValStndList.records.forEach((item, index) => { 
+							if(item.CHK === 'Y' && item.SYNC ==='N') {
+								let row;
+								row = JSON.parse(JSON.stringify(item));
+								row.rowtype = 'c';
+								row.CHK1 = 'N';
+								item.CHK = 'N'
+								item.SYNC = 'Y';
+								addData.push(row);
+							}
+						})
+																			
+						//ORDER_STD 기준으로 정렬
+						addData.sort((a, b) => {
+							return a.ORDER_STD < b.ORDER_STD ? -1 : a.ORDER_STD > b.ORDER_STD ? 1 : 0;
+						});
+
+						//신규 추가된 메뉴는 항상 최하단에 데이터 추가
+						const arrRecords = this.state.dsSelValStndList.records.slice(0);						
+						
+						for (let j = 0; j < addData.length; j ++) {
+							let addIndex = 0
+							let foundSimilar = false;
+							for (let i = 0; i < arrRecords.length; i ++) {
+								if (arrRecords[i].ORDER_STD.substring(0, 2) === addData[j].ORDER_STD.substring(0, 2)) {
+									if (Number(arrRecords[i].ORDER_STD.substring(0, 4)) === Number(addData[j].ORDER_STD.substring(0, 4))) {
+										if (Number(arrRecords[i].ORDER_STD.substring(0, 6)) < Number(addData[j].ORDER_STD.substring(0, 6))) {
+											addIndex = i + 1;
+											break;
+											
+										} else {
+											addIndex = i;
+											break;
+										}										
+									} else if (Number(arrRecords[i].ORDER_STD.substring(0, 4)) < Number(addData[j].ORDER_STD.substring(0, 4))) {
+										foundSimilar = true;
+										addIndex = i + 1;
+									} else {
+										foundSimilar = true;
+										addIndex = i;
+									}
+								} else if (Number(arrRecords[i].ORDER_STD.substring(0, 2)) < Number(addData[j].ORDER_STD.substring(0, 2)) && !foundSimilar) {
+									addIndex = i + 1;
+								} 
+							}		
+							arrRecords.splice(addIndex, 0, addData[j]);
+						}
+						
+						arrRecords.forEach((item, index) => {
+							item.VLA_STND_SEQNO = index + 1;
+						})			
+
+						this.setState({...this.state, insertVlaBrdInf : 'Y'});										
+
+						ComLib.setStateInitRecords(this, 'dsSelValStndList', arrRecords);
+
+						this.leftLoadingGrid(this.gridVlaBrdAllInf.gridDataset.records, arrRecords);
+								
+						ComLib.setStateRecords(this, "dsAllValStndList", this.gridVlaBrdAllInf.gridDataset.records);						
+																	
+					}
+					
+					break;						
+
+				case "tempMinus":
+					if(this.validation("tempMinus")) {
+						let remainData = [];					
+						let deleteData = [];
+
+						this.state.dsSelValStndList.records.forEach((item, index) => { 
+							if(item.CHK1 === 'Y') {
+								deleteData.push(item);
+							} else {
+								remainData.push(item);
+							}
+						})	
+					
+						//ORDER_STD 기준으로 정렬한 값을 설정
+						remainData.forEach((item, index) => {
+							item.VLA_STND_SEQNO = index+1;
+						})
+						this.leftLoadingGrid(this.state.dsAllValStndList.orgrecords, remainData);
+						
+						this.leftLoadingGrid(this.gridVlaBrdAllInf.gridDataset.records, remainData);
+
+						this.setState({...this.state, insertVlaBrdInf : 'Y'});																
+								
+						ComLib.setStateRecords(this, "dsSelValStndList", remainData);
+						ComLib.setStateRecords(this, "dsAllValStndList", this.gridVlaBrdAllInf.gridDataset.records);
+					
+					}
+					break;			
+
+				default : break;						
+				}
+			}
+		},
+		input : {
+			onChange : (e) => {
+				switch (e.target.id) {
+				case 'createInputStd' :
+					this.setState({...this.state
+								, textFieldProps : { ...this.state.textFieldProps, string : {...this.state.textFieldProps.string, value : e.target.value }}
+								});
+					break;
+				default : break;
+				}
+			},
+			onKeyPress : (e) => {
+				switch (e.target.id) {
+
+				}
+			}
+
+		},
+		checkbox : {
+			onChange : (e) => {
+				switch (e.id) {
+				case 'chkCreateStd':
+					if(e.checked) {
+						this.setState({...this.state
+							, checkboxProps: {...this.state.checkboxProps, chkCreateStd : {...this.state.checkboxProps.chkCreateStd,checked : (e.checked) ? 'Y' : 'N'}}
+							, buttonModifyProps : {...this.state.buttonModifyProps, disabled : (e.checked) }																
+							, insertVlaBrdInf : 'Y'
+						});
+
+						this.leftLoadingGrid(this.state.dsAllValStndList.orgrecords, []);
+						
+						ComLib.setStateRecords(this, "dsAllValStndList", this.state.dsAllValStndList.orgrecords);
+						ComLib.setStateRecords(this, "dsSelValStndList", []);
+					} else {						
+						this.setState({...this.state
+							, checkboxProps: {...this.state.checkboxProps, chkCreateStd : {...this.state.checkboxProps.chkCreateStd, checked : (e.checked) ? 'Y' : 'N'}}
+							, buttonModifyProps : {...this.state.buttonModifyProps, disabled : (e.checked)}								
+							, textFieldProps : { ...this.state.textFieldProps, string : {...this.state.textFieldProps.string, value : '' }}							
+							, insertVlaBrdInf : 'N'
+						});														
+						
+						this.transaction("QAM020000_R02");					
+					}
+											
+					break;
+
+				case 'chkLastStndVers':		
+
+					ComLib.openDialog('C', 'SYSI0010', ['현재평가표의 평가기준을 최신화 하시겠습니까?'], 
+						checked => { if (checked === true) {
+
+							this.state.dsSelValStndList.records.forEach((item, index) => { 
+								if(item.CHK_LAST_STND_VERS === 'N') {
+									item.rowtype = 'u'														
+									item.VLA_STND_VERS = item.LAST_STND_VERS
+								}
+
+							})																									
+							this.transaction('QAM020000_U01'); 
+						}												
+					});
+					break;
+				default : break;
+				}
+			}
+		},
+		selectbox: {
+			onChange: (e) => {
+				switch (e.id) {
+				case 'selectVlaStd' :						
+					this.setState(({...this.state, 
+									selectboxProps : {...this.state.selectboxProps, selected : e.target.selectedIndex, value : e.target.value}
+								}), 
+									function () {this.transaction("QAM020000_R02")}									
+								);
+				
+					break;
+					
+				default : break;
+				}
+			}
+		},
+		grid: {
+			onGridReady : (e) => {				
+				switch (e.id) {
+				case "gridVlaBrdAllInf":
+					this.gridVlaBrdAllInf = e.grid;
+
+					break;
+
+				case "gridVlaBrdSingleInf":
+					this.gridVlaBrdSingleInf = e.grid
+
+					break;
+
+				default: break
+				}
+				
+			},
+
+			onCellValueChanged: (e) => {
+
+				
+			},
+			onSelectionChanged: (e) => {
+				switch(e.id) {
+				case 'gridVlaBrdAllInf':
+					let selectedRow = [];
+
+					e.gridApi.getSelectedNodes().forEach((node) => {
+						selectedRow.push(node.rowIndex);
+					})
+				
+					this.state.dsAllValStndList.records.forEach((item, index) => { 							
+						item.CHK = 'N';
+						selectedRow.forEach((rowItem, rowIndex) => {
+							if(rowItem === index) {
+								item.CHK = 'Y';									
+							} 
+						})
+					})
+						
+					break;
+				case 'gridVlaBrdSingleInf':								
+					this.state.dsSelValStndList.records.forEach((item, index) => { 
+						
+						e.gridApi.getSelectedNodes().forEach((node) => {
+
+							if(node.selected === true) {
+								if(node.rowIndex === index) {
+									item.CHK1 = 'Y';									
+								} 							
+							} else {
+								item.CHK1 = 'N';								
+							}
+						})
+					})
+
+					break;
+	
+				default : break;
+				}		
+			},
+			onScrollEnd: (e) => {
+			},
+			onRowDragEnd: (e) => {
+				//선택되서(멀티플) 드래그 된 data
+				const draggedData = e.dragData.map(item => item.data)
+
+				//배열의 item항목
+				const draggedItm = draggedData.map(item => item.VLA_ITM_CD)
+				const draggedItmList = new Set(draggedItm)
+
+				// 결과값을 설정해주는 그리드 선언
+				let resultSetGrid;
+
+				//선택된 평가항목의 전체 배열을 구해온다
+				let tempItmData = []
+				e.data.forEach((item, index) => {
+					draggedData.forEach((dragItem, dragIndex) => {
+						if(item.VLA_ITM_CD === dragItem.VLA_ITM_CD) {
+							tempItmData.push(item)
+						}
+					})
+				})							
+				tempItmData = new Set(tempItmData)				
+
+				//선택된 평가내용의 전체 배열을 구해온다
+				let tempContData = []
+				e.data.forEach((item, index) => {
+					draggedData.forEach((dragItem, dragIndex) => {
+						if(item.VLA_CONT_CD === dragItem.VLA_CONT_CD) {
+							tempContData.push(item)
+						}
+					})
+				})							
+				tempContData = new Set(tempContData)
+
+		
+				//드래그앤드랍 된 데이터의 index
+				const chnRawItmIndex = e.data.findIndex(function(n) {
+					return n.VLA_STND_CD === draggedData[0].VLA_STND_CD
+				})	
+
+				//원데이터의 평가항목 시작Index
+				const orgDataItmFirstIndex = this.gridVlaBrdSingleInf.gridDataset.orgrecords.findIndex(function(n) {
+					return n.VLA_ITM_CD === draggedData[0].VLA_ITM_CD
+				})
+
+				//원데이터의 Itm_CD
+				const orgDataItmCd = this.gridVlaBrdSingleInf.gridDataset.orgrecords.map(item => item.VLA_ITM_CD)
+
+				//원데이터의 Itm_cd last Index
+				const orgDataItmLastIndex = orgDataItmCd.lastIndexOf(draggedData[0].VLA_ITM_CD)
+
+				//원데이터의 Cont_cd first Index
+				const orgDataContFirstIndex = this.gridVlaBrdSingleInf.gridDataset.orgrecords.findIndex(function(n) {
+					return n.VLA_CONT_CD === draggedData[0].VLA_CONT_CD
+				})							
+
+				//원데이터의 cont_cd
+				const orgDataContCd = this.gridVlaBrdSingleInf.gridDataset.orgrecords.map(item => item.VLA_CONT_CD)
+
+				//원데이터의 cont_cd last Index
+				const orgDataContLastIndex = orgDataContCd.lastIndexOf(draggedData[0].VLA_CONT_CD)
+
+				//평가항목이 여러개 있는지 count
+				let Stndcnt = orgDataContLastIndex - orgDataContFirstIndex;
+
+				//단일 항목 단일 평가 단일 기준일 경우
+				if(draggedData.length === 1 && tempContData.size === 1 && tempItmData.size === 1) {
+					const noChange = [];
+					const restChange = []					
+					const selectRow = []
+					e.data.forEach((item, index) => {
+						if(item.VLA_STND_CD === draggedData[0].VLA_STND_CD) {
+							item.index = index
+							selectRow.push(item)
+						}
+					})
+				
+					e.data.forEach((item,index) => {			
+						if(selectRow[0].index === 0) {
+							restChange.push(item);
+						} else if(index < selectRow[0].index ) {							
+							if(draggedItm[0] !== item.VLA_ITM_CD) {
+								noChange.push(item)
+							} 
+						} else {						
+							noChange.forEach((orgItem, orgIndex) => {
+								if(orgItem.VLA_ITM_CD === item.VLA_ITM_CD) {
+									noChange.push(item)
+								} else {
+									restChange.push(item)
+								}
+							})	
+						}
+					})
+
+					//하나의 항목 하나의 평가내용이므로 순서가 바뀐다는 것은 항목의 변화를 의미 
+					this.setState({...this.state, insertVlaBrdInf : 'Y'})
+
+					resultSetGrid = noChange.concat(selectRow, restChange);
+					resultSetGrid = new Set(resultSetGrid)
+					
+				}else {
+					if(draggedItmList.size > 1) {
+						ComLib.openDialog('A', 'SYSI0010', ['순서를 변경하실 경우 하나의 평가항목만을 선택해 주세요.']);
+						resultSetGrid = this.gridVlaBrdSingleInf.gridDataset.orgrecords
+
+					} else {
+						//하나만 선택했을시 평가항목내에서만 순서 조정 가능하도록
+						if(draggedData.length === 1) {
+							//단일 평가내용의 경우 데이터 잘리는 현상 없이 하기 위해 제어
+							if(tempContData.size === 1) {
+								if(orgDataItmFirstIndex <= chnRawItmIndex  && chnRawItmIndex <= orgDataItmLastIndex) {
+								
+									const noChange = [];
+									const restChange = []					
+									const selectRow = []
+									e.data.forEach((item, index) => {
+										if(item.VLA_STND_CD === draggedData[0].VLA_STND_CD) {
+											item.index = index
+											selectRow.push(item)
+										}
+									})
+								
+									e.data.forEach((item,index) => {			
+										if(selectRow[0].index === 0) {
+											restChange.push(item);
+										} else if(index < selectRow[0].index ) {							
+											noChange.push(item)
+										} else {						
+											noChange.forEach((orgItem, orgIndex) => {
+												if(orgItem.VLA_CONT_CD === item.VLA_CONT_CD) {
+													noChange.push(item)
+												} else {
+													restChange.push(item)
+												}
+											})	
+										}
+									})
+
+									resultSetGrid = noChange.concat(selectRow, restChange);
+									resultSetGrid = new Set(resultSetGrid)
+
+								} else {
+
+									ComLib.openDialog('A', 'SYSI0010', ['한 항목을 선택시 같은 평가항목에서만 순서 조정이 가능합니다.\n평가항목의 순서를 변경하실 경우 평가항목을 모두 선택하신후에\n 순서를 변경해 주세요.']);
+									resultSetGrid = this.gridVlaBrdSingleInf.gridDataset.orgrecords
+									
+								}
+
+							} else {
+														
+								if(orgDataItmFirstIndex <= chnRawItmIndex  && chnRawItmIndex <= orgDataItmLastIndex) {
+		
+									if(Stndcnt > 0) {
+
+										if(orgDataContFirstIndex <= chnRawItmIndex  && chnRawItmIndex <= orgDataContLastIndex) {
+
+											resultSetGrid = e.data	
+										} else {
+																				
+											ComLib.openDialog('A', 'SYSI0010', ['같은 평가내용에서만 순서 조정이 가능합니다.']);
+											resultSetGrid = this.gridVlaBrdSingleInf.gridDataset.orgrecords										
+										}
+
+									} else {
+										resultSetGrid = e.data
+
+									}
+		
+								} else {
+		
+									ComLib.openDialog('A', 'SYSI0010', ['한 항목을 선택시 같은 평가항목에서만 순서 조정이 가능합니다.\n 평가항목의 순서를 변경하실 경우 평가항목을 모두 선택하신후에\n 순서를 변경해 주세요.']);
+									resultSetGrid = this.gridVlaBrdSingleInf.gridDataset.orgrecords
+		
+								}
+							
+							}
+
+						//다행 선택했을시
+						} else {
+
+							//항목의 순서가 바뀌었는지 확인								
+							const orgDataItmFirstIndex = this.gridVlaBrdSingleInf.gridDataset.orgrecords.findIndex(function(n) {
+								return n.VLA_ITM_CD === draggedData[0].VLA_ITM_CD
+							})
+
+							const orgDataItmCd = this.gridVlaBrdSingleInf.gridDataset.orgrecords.map(item => item.VLA_ITM_CD)
+	
+							const orgDataItmLastIndex = orgDataItmCd.lastIndexOf(draggedData[0].VLA_ITM_CD)
+	
+							const chnRawItmIndex = e.data.findIndex(function(n) {
+								return n.VLA_STND_CD === draggedData[0].VLA_STND_CD
+							})						
+								
+							//같은 항목 내에서 다행 이동
+							if(orgDataItmFirstIndex <= chnRawItmIndex  && chnRawItmIndex <= orgDataItmLastIndex) {
+
+								//평가내용기준으로 평가내용이 전부다 선택했는지 체크 	
+								if(draggedData.length !== tempContData.size) {
+
+									ComLib.openDialog('A', 'SYSI0010', ['평가내용에 선택되지 않은 평가기준이 있습니다.\n 평가내용에 해당되는 평가기준을\n 전부 선택해 주세요.']);
+									resultSetGrid = this.gridVlaBrdSingleInf.gridDataset.orgrecords
+								} else {
+
+									const noChange = [];
+									const restChange = []					
+									const selectRow = []
+									e.data.forEach((item, index) => {
+										if(item.VLA_STND_CD === draggedData[0].VLA_STND_CD) {
+											item.index = index
+											selectRow.push(item)
+										}
+									})
+								
+									e.data.forEach((item,index) => {			
+										if(selectRow[0].index === 0) {
+											restChange.push(item);
+										} else if(index < selectRow[0].index ) {							
+											noChange.push(item)
+										} else {						
+											noChange.forEach((orgItem, orgIndex) => {
+												if(orgItem.VLA_CONT_CD === item.VLA_CONT_CD) {
+													noChange.push(item)
+												} else {
+													restChange.push(item)
+												}
+											})	
+										}
+									})
+	
+									resultSetGrid = noChange.concat(selectRow, restChange);
+									resultSetGrid = new Set(resultSetGrid)
+
+								}
+
+							} else {
+
+								if(draggedData.length !== tempItmData.size) {
+
+									ComLib.openDialog('A', 'SYSI0010', ['평가항목에 선택되지 않은 평가내용이 있습니다.\n 동일한 평가항목에 해당되는 평가내용의 평가기준을\n전부 선택해 주세요.']);
+									resultSetGrid = this.gridVlaBrdSingleInf.gridDataset.orgrecords
+																	
+								} else {
+
+									//항목이 바뀌기 때문에 이력에 추가 및 평가표 목록 Insert
+									this.setState({...this.state, insertVlaBrdInf : 'Y'});										
+
+									const noChange = [];
+									const restChange = []					
+									const selectRow = []
+									e.data.forEach((item, index) => {
+										if(item.VLA_STND_CD === draggedData[0].VLA_STND_CD) {
+											item.index = index
+											selectRow.push(item)
+
+										}
+									})
+								
+									e.data.forEach((item,index) => {			
+										if(selectRow[0].index === 0) {
+											restChange.push(item);
+										} else if(index < selectRow[0].index ) {							
+											noChange.push(item)
+										} else {						
+											noChange.forEach((orgItem, orgIndex) => {
+												if(orgItem.VLA_ITM_CD === item.VLA_ITM_CD) {
+													noChange.push(item)
+												} else {
+													restChange.push(item)
+												}
+											})	
+										}
+									})
+									
+									resultSetGrid = noChange.concat(selectRow, restChange);
+									resultSetGrid = new Set(resultSetGrid)									
+
+								}
+
+							}	
+							
+						}						
+
+					}
+					
+				}					
+
+				resultSetGrid = Array.from(resultSetGrid);
+
+				ComLib.setStateRecords(this, "dsSelValStndList", resultSetGrid);						
+				
+
+			},
+			
+		}
+
+	}
+	
+	
+	/**
+	 * 화면정의 함수
+	 * leftLoadingGrid         좌측 그리드와 우측 그리드가 일치할때 명암을 주기 위한 기능
+	 * createShowCellRenderer  좌측과 우측 그리드 내용 일치할시 음영표현
+	 */
+
+	//
+	leftLoadingGrid = (vlaAllListDataSet, vlaSelectListDataSet) => {
+		if(StrLib.isNull(vlaSelectListDataSet)) {		
+			vlaAllListDataSet.forEach((stdItem, stdIndex) => { 
+					stdItem.SYNC = 'N'
+			})				
+
+		} else {	
+			vlaAllListDataSet.forEach((stdItem, stdIndex) => { 
+				let cnt  = 0;	
+				vlaSelectListDataSet.forEach((spcItem, spcIndex) => {
+					if(stdItem.VLA_STND_CD === spcItem.VLA_STND_CD) {
+						cnt++
+					} 
+				})					
+				if(cnt !== 0){
+					stdItem.SYNC = 'Y'
+				} else {
+					stdItem.SYNC = 'N'
+				}				 
+			})					
+		}
+	}
+
+	createShowCellRenderer() {
+
+		function ShowCellRenderer() {}
+		ShowCellRenderer.prototype.init = function (params) {
+			
+		  if (params.data.SYNC === 'Y') {
+			this.ui = document.createElement('div');
+			this.ui.innerHTML =
+			'<div"><span style="color:#3b5bdb"><strong>' + 
+			 params.data.VLA_STND_NM  +
+			'<strong><span></div>' ;
+			} else {
+			this.ui = document.createElement('div');
+			this.ui.innerHTML =
+			'<div>' +
+			params.data.VLA_STND_NM  +
+			'</div>' ;
+			}
+		}
+		ShowCellRenderer.prototype.getGui = function () {
+		  return this.ui;
+		};
+		return ShowCellRenderer;
+	  }
+	  
+	render () {
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<FlexPanel>
+						<ComponentPanel>
+							<Grid
+								areaName = {this.state.gridVlaBrdAllInf.label}
+								id = {this.state.gridVlaBrdAllInf.id}
+								height= {this.state.gridVlaBrdAllInf.height}
+								addRowBtn = {false}
+								delRowBtn = {false}
+								dnlExcelBtn = {false}																				
+								data = {this.state.dsAllValStndList}
+								header = {this.state.gridVlaBrdAllInf.header}
+
+								components = {this.state.components}
+								infoCheckBox = {this.state.gridVlaBrdAllInf.infoCheckBox}
+	
+								onCellValueChanged   = {this.event.grid.onCellValueChanged}
+								onGridReady = {this.event.grid.onGridReady}								
+								onSelectionChanged   = {this.event.grid.onSelectionChanged}
+
+								suppressRowClickSelection = {true}
+								rowSelection = 'multiple'
+								sort = {false}
+							/>
+						</ComponentPanel>
+						<div style={{position:'relative'
+									, width : '4%'
+									, flex: 'reverse'
+									, display:"block"
+									, margin : "auto"
+									}}>					
+						
+							<Button
+								id = {'tempAdd'}
+								value = {'추가▶'}
+								onClick = {this.event.button.onClick}
+								color= 'purple' 
+								fiiled= {true} 			
+								mb = {10}																		
+							/>
+							<Button
+								id = {'tempMinus'}
+								value = {'◀삭제'}
+								onClick = {this.event.button.onClick}
+								color= 'purple' 
+								fiiled= {true} 																					
+							/>
+							
+						</div>						
+						<ComponentPanel>
+							<div style={{marginTop: "-15px"}}>							
+							<RelativeGroup>
+								<LFloatArea>
+									<FlexPanel>
+									<Label value={this.state.label.value} req={true}/>
+									{this.state.checkboxProps.chkCreateStd.checked === 'N'  ? 
+									<Selectbox
+										id = {this.state.selectboxProps.id}
+										value = {this.state.selectboxProps.value}
+										dataset = {this.state.selectboxProps.dataset}
+										width = {this.state.selectboxProps.width}
+										disabled = {this.state.selectboxProps.disabled}
+										selected = {this.state.selectboxProps.selected}
+										onChange= {this.event.selectbox.onChange}
+									/>
+									: 
+									<Textfield
+										width = {300}
+										id = {this.state.textFieldProps.string.id}
+										name =  {this.state.textFieldProps.string.name}
+										value =  {this.state.textFieldProps.string.value}
+										placeholder =  {this.state.textFieldProps.string.placeholder}
+										minLength =   {this.state.textFieldProps.string.minLength}
+										maxLength =   {this.state.textFieldProps.string.maxLength}
+										readOnly =  {this.state.textFieldProps.string.readOnly}
+										disabled =  {this.state.textFieldProps.string.disabled}
+										onChange = {this.event.input.onChange}
+										onKeyPress = {this.event.input.onKeyPress}
+									/>
+
+									}
+									</FlexPanel>
+								</LFloatArea>
+
+								<RFloatArea>
+								<FlexPanel>
+										{this.state.checkboxProps.chkLastStndVers.visible === true && 									
+										<Checkbox   
+											id = {this.state.checkboxProps.chkLastStndVers.id}
+											keyProp = {this.state.checkboxProps.chkLastStndVers.keyProp}
+											value = {this.state.checkboxProps.chkLastStndVers.value}
+											checked = {this.state.checkboxProps.chkLastStndVers.checked}
+											disabled = {this.state.checkboxProps.chkLastStndVers.disabled}
+											onChange = {this.event.checkbox.onChange}
+										/>
+										}
+										<Checkbox   
+											id = {this.state.checkboxProps.chkCreateStd.id}
+											keyProp = {this.state.checkboxProps.chkCreateStd.keyProp}
+											value = {this.state.checkboxProps.chkCreateStd.value}
+											checked = {this.state.checkboxProps.chkCreateStd.checked}
+											disabled = {this.state.checkboxProps.chkCreateStd.disabled}
+											onChange = {this.event.checkbox.onChange}
+										/>										
+									</FlexPanel>
+									</RFloatArea>
+
+							</RelativeGroup>
+							</div>
+							<SubFullPanel>
+								<Grid
+									id = {this.state.gridVlaBrdSingleInf.id}
+									height= {this.state.gridVlaBrdSingleInf.height}
+									noName               = {true}
+									addRowBtn			 = {false}
+									delRowBtn			 = {false}
+									dnlExcelBtn			 = {false}								
+									data 				 = {this.state.dsSelValStndList}
+									header 				 = {this.state.gridVlaBrdSingleInf.header}
+									infoCheckBox 		 = {this.state.gridVlaBrdSingleInf.infoCheckBox}
+
+									onGridReady 		 = {this.event.grid.onGridReady}								
+									onCellValueChanged   = {this.event.grid.onCellValueChanged}
+									onSelectionChanged   = {this.event.grid.onSelectionChanged}
+									onRowDragEnd 		 = {this.event.grid.onRowDragEnd}
+	
+									components			 = {this.state.components}
+									suppressRowClickSelection = {true}
+
+									rowDragManaged 		 = {true}
+									rowDrag				 = {true}
+																		
+									rowSelection 		= 'multiple'
+									sort = {false}
+
+								/>
+							</SubFullPanel>
+
+						</ComponentPanel>
+					</FlexPanel>
+					<SearchPanel>
+						<RelativeGroup>						
+							<RFloatArea>
+								<Button 									
+									id = {this.state.buttonProps.btnSaveProps.id}
+									value = {this.state.buttonProps.btnSaveProps.value}
+									disabled = {this.state.buttonProps.btnSaveProps.disabled}
+									hidden = {this.state.buttonProps.btnSaveProps.hidden}
+									onClick = {this.event.button.onClick}																		
+									color = "purple" 
+									fiiled = "o" 
+									mt = "5px"								
+								/>
+								{this.state.checkboxProps.chkCreateStd.checked === 'N'  ? 
+									<Button 
+										id = {this.state.buttonProps.btnModifyProps.id}
+										value = {this.state.buttonProps.btnModifyProps.value}
+										disabled = {this.state.buttonProps.btnModifyProps.disabled}
+										hidden = {this.state.buttonProps.btnModifyProps.hidden}
+										onClick = {this.event.button.onClick}									
+										color= 'purple' 
+										fiiled= {true} 																							
+									/>
+									:
+									null
+								}
+							</RFloatArea>							
+						</RelativeGroup>
+					</SearchPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+
+}
+
+
+
+
+export default View;

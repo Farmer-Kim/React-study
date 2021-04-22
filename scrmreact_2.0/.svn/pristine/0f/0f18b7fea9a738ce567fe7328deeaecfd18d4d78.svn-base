@@ -1,0 +1,185 @@
+import React from 'react';
+
+import {BasicButton as Button, SubFullPanel, LFloatArea, RFloatArea, FlexPanel, FullPanel, ComponentPanel} from 'components';
+import {Checkbox, Radio, Textfield, InputCalendar, Table, Grid, RangeInputCalendar, Label } from 'components';
+import {Selectbox, MulitSelectBox, AlertDialog, PopupDialog} from 'components';
+import {ComLib, TransManager} from 'common';
+
+
+
+/*------------------------------------------------------------------------------------------------*/
+// [0. Default Dataset Zone]
+/*------------------------------------------------------------------------------------------------*/
+
+
+class Index extends React.Component{
+    /*------------------------------------------------------------------------------------------------*/
+    // [1. Default State Zone]
+    /*------------------------------------------------------------------------------------------------*/
+    state = {
+        val1 : 1,
+        val2 : 'val2',
+        dataList : [],
+        dataListTest : [],
+        radioValue : '',
+        checkValue : [],
+        stateDataList : [],
+        alert : {
+            flag : false,
+            message : ''
+        },
+        popup : {
+            flag : false,
+        }
+    }
+    
+    /*------------------------------------------------------------------------------------------------*/
+    // [2. OnLoad Event Zone]
+    /*------------------------------------------------------------------------------------------------*/
+    
+    /*------------------------------------------------------------------------------------------------*/
+    // [3. validation Event Zone]
+    //  - validation 관련 정의
+    /*------------------------------------------------------------------------------------------------*/
+    validation = (id) => {
+        console.log('validtion');
+        switch (id) {
+            case 'SAM030000_R01' :
+                this.transaction('SAM030000_R01');
+                break;
+            default :
+                break;
+        }
+
+    }
+    /*------------------------------------------------------------------------------------------------*/
+    // [4. transaction Event Zone]
+    //  - transaction 관련 정의
+    /*------------------------------------------------------------------------------------------------*/
+    transaction = (transId) => {
+        console.log('transaction start');
+        let transManager = new TransManager();
+        try  {
+            switch (transId) {
+                case 'SAM030000_R01' :
+                    transManager.setTransId(transId);
+                    transManager.setTransUrl(transManager.constants.url.common);
+                    transManager.setCallBack(this.callback);
+                    transManager.addConfig({
+                        dao: transManager.constants.dao.base,
+                        crudh: transManager.constants.crudh.read,
+                        sqlmapid:"COM.R_selectTest",
+                        datasetsend:"dsTest",
+                        datasetrecv:"datasetTest"
+                    });
+                    transManager.addDataset('dsTest', [{ id : 'test' }]);
+                    transManager.agent();
+                    break;
+                default :
+                    break;
+            }
+        } catch (err) {
+            console.log(err);
+            alert(err);
+        }
+    }
+    /*------------------------------------------------------------------------------------------------*/
+    // [5. Callback Event Zone]
+    //  - Callback 관련 정의
+    /*------------------------------------------------------------------------------------------------*/
+    callback = (param) => {
+        console.log('callback start');
+        console.log(param);
+        try  {
+            switch (param.id) {
+                case 'SAM030000_R01' :
+                    console.log('SAM030000_R01 callback 성공');
+                    console.log(param.data);
+
+                    break;
+                default :
+                    break;
+            }
+        } catch (err) {
+            console.log(err);
+            alert(err);
+        }
+        
+    }
+    /*------------------------------------------------------------------------------------------------*/
+    // [6. event Zone]
+    //  - 각 Component의 event 처리
+    /*------------------------------------------------------------------------------------------------*/
+    onClick = (e) => {
+        console.log('onclick');
+        switch (e.target.id) {
+            case 'btnSearch' :
+                console.log('SAM030000_R01 시작');
+                this.validation('SAM030000_R01');
+                break;
+            case 'btnNew' :
+                alert(2);
+                break;
+            case 'btnSave' :
+                alert(3);
+                break;
+            case 'btnDel' :
+                alert(4);
+                break;
+            case 'btnChgState' :
+                console.log('값 변경');
+                this.setState({...this.state, val1: this.state.val1+1});
+                console.log(this.state.val1);
+                break;
+            case 'btnRestState' :
+                console.log('값 리셋');
+                this.setState({...this.state, val1: 1});
+                console.log(this.state.val1);
+                break;
+            case 'btnGetValue' :
+                console.log('값 확인');
+                console.log(this.state.dataList.getRowCount());
+                this.setState({ dataList: { ...this.state.dataList,  data : [{ id : 'test'}] } });
+                break;
+            case 'btnTestAlert' :
+                this.setState({...this.state,  alert : { flag: true, message : '팝업 완료'} });
+                break;
+            case 'btnTestPop' : 
+                this.setState({...this.state,  popup : { flag: true } });
+                break;
+            default : 
+                break;
+        }
+    }
+    onChange = (e) => {
+        switch (e.target.id) {
+            case 'txtTest' :
+                this.setState({ ...this.state, val2: e.target.value});
+                break;
+            default : 
+                break;
+        }
+    }
+    onclick = (e) => {
+        var checkList = document.getElementById('list1');
+        if (checkList.classList.contains('visible'))
+             checkList.classList.remove('visible');
+         else
+             checkList.classList.add('visible');
+    }
+    /*------------------------------------------------------------------------------------------------*/
+    // [7. render Zone]
+    //  - 화면 관련 내용 작성
+    /*------------------------------------------------------------------------------------------------*/
+    render () {
+        const { dataList, val1, val2 } = this.state;
+        return (
+            <React.Fragment>
+                <ComponentPanel>
+                    {123444}
+                </ComponentPanel>
+            </React.Fragment>
+        );
+    }
+ }
+export default Index;

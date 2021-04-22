@@ -1,0 +1,450 @@
+
+ .uploadBtn {
+	background-color: #e7e7e7;
+	color: black;
+	border-radius: 3px;
+	text-transform: capitalize;
+	cursor: pointer;
+	border: none;
+	outline: none;
+	
+  }
+  
+  .forward {
+	background-image: url(../images/arrow-forward-circle-outline.svg);
+	padding: 10px 40px 10px 20px;
+	background-repeat: no-repeat;
+	background-size: 30px;
+	background-position: right;
+	
+  }
+
+  .back {
+	background-image: url(../images/arrow-back-circle-outline.svg);
+	padding: 10px 20px 10px 45px;
+	background-repeat: no-repeat;
+	background-size: 30px;
+	background-position: left;
+	background-position-x: 5px;
+  }
+
+ 
+  .noImgBtn {
+	padding: 10px 20px 10px 45px;
+	background-repeat: no-repeat;
+	background-size: 30px;
+	background-position: left;
+	background-position-x: 5px;
+  }
+
+  .add {
+	background-image: url(../images/camera-outline.svg);
+	padding: 10px 20px 10px 45px;
+	background-repeat: no-repeat;
+	background-size: 30px;
+	background-position: left;
+	background-position-x: 5px;
+  }
+
+  .remove {
+	background-image: url(../images/trash-outline.svg);
+	padding: 10px 20px 10px 45px;
+	background-repeat: no-repeat;
+	background-size: 30px;
+	background-position: left;
+	background-position-x: 5px;
+	position: -webkit-sticky; /* Safari */
+	position: sticky;
+	top: 0;
+  }
+
+  .removeOne {
+	background-image: url(../images/trash-outline.svg);
+	padding: 20px 20px 20px 20px;
+	background-repeat: no-repeat;
+	background-size: 30px;
+	background-position: center;
+	margin-right: 10px;	
+	margin-bottom: 10px;
+  }
+
+  .update {
+	background-image: url(../images/reload-outline.svg);
+	padding: 20px 20px 20px 20px;
+	background-repeat: no-repeat;
+	background-size: 30px;
+	background-position: center;
+	margin-right: 10px;	
+	margin-bottom: 10px;
+  }
+
+  .upload {
+	background-image: url(../images/cloud-upload-outline.svg);
+	padding: 10px 20px 10px 45px;
+	background-repeat: no-repeat;
+	background-size: 30px;
+	background-position: left;
+	background-position-x: 5px;
+
+  }
+
+  .uploadBtn:disabled {
+	opacity: 0.3;
+  }
+  .uploadBtn:hover {
+	opacity: 0.3;
+  }
+  span:hover{
+	opacity: 0.3;
+  }
+
+	.wrapperBody {
+	background-color: #363940;
+	display: flex;
+	flex-direction: column;
+	padding: 20px;
+	position: relative;
+	
+  }
+  
+  .wrapper  {
+	background-color: #fff;
+	padding: 25px;
+	border-radius: 5px;
+	
+	max-width: 100%;
+	margin: 50px auto;
+	align-self: center;
+	box-sizing: border-box;
+	
+  }
+  
+  .uploadHeader {
+	border-bottom: 1px solid #ddd;
+	padding-bottom: 10px;
+	margin-bottom: 20px;
+	display: flex;
+  }
+  .uploadHeader h1 {
+	flex: 1;
+	padding: 0;
+	margin: 0;
+	font-size: 16px;
+	letter-spacing: 1px;
+	font-weight: 700;
+	color: #7A7B7F;
+  }
+  .uploadHeader span {
+	flex: 1;
+	text-align: right;
+	font-size: 12px;
+	color: #999;
+  }
+  .ways .uploadUl {
+	display: flex;
+	list-style: none;
+	padding: 0;
+	border-radius: 5px;
+	overflow: hidden;
+  }
+  .ways .uploadLi {
+	align-self: center;
+	flex: 1;
+	background-color: #F5F7FA;
+	text-align: center;
+	cursor: pointer;
+	padding: 15px 0;
+	color: #999;
+	text-transform: uppercase;
+	font-weight: 500;
+	font-size: 12px;
+	letter-spacing: 1px;
+	border: 1px solid #ddd;
+  }
+  
+  .ways .uploadLi:first-child {
+	border-right: 0;
+  }
+  .ways .uploadLi:last-child {
+	border-left: 0;
+  }
+  .ways .uploadLi.active {
+	border: 2px solid #1AA1E5;
+	color: #66676C;
+  }
+  .ways .uploadLi.active::before {
+	content: '\f00c';
+	font-family: 'fontawesome';
+	color: #1AA1E5;
+  }
+  .ways .uploadLi:not(.active) {
+	padding: 16px 0;
+  }
+  
+  .images {
+	display: flex;
+	flex-wrap:  wrap;
+	margin-top: 20px;
+	height: 300px;
+	overflow-y:auto; 
+    position:relative;
+  }
+  .images .img,
+  .images .pic {
+	flex-basis: 31%;
+	margin-bottom: 10px;
+	border-radius: 4px;
+  }
+  .images .img {
+	width: 112px;
+	height: 93px;
+	background-size: cover;
+	margin-right: 10px;
+	background-position: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	position: relative;
+	overflow: hidden;
+  }
+  .images .img:nth-child(3n) {
+	margin-right: 0;
+  }
+  .images .img span {
+	display: none;
+	text-transform: capitalize;
+	z-index: 2;
+  }
+  .images .img::after {
+	content: '';
+	width: 100%;
+	height: 100%;
+	transition: opacity .1s ease-in;
+	border-radius: 4px;
+	opacity: 0;
+	position: absolute;
+  }
+  .images .img:hover::after {
+	display: block;
+	background-color: #000;
+	opacity: .5;
+  }
+  .images .img:hover span {
+	display: block;
+	color: #fff;
+  }
+  .images .pic {
+	background-color: #F5F7FA;
+	align-self: center;
+	text-align: center;
+	padding: 40px 0;
+	text-transform: uppercase;
+	color: #848EA1;
+	font-size: 12px;
+	cursor: pointer;
+  }
+  
+  @media screen and (max-width: 400px) {
+	.wrapper {
+	  margin-top: 0;
+	}
+	.uploadheader {
+	  flex-direction: column;
+	}
+	.uploadheader span {
+	  text-align: left;
+	  margin-top: 10px;
+	}
+	.ways .uploadLi{
+	 font-size: 8px;
+	}
+	.images .img,
+	.images .pic {
+	  flex-basis: 100%;
+	  margin-right: 0;
+	}
+  }
+  
+  .wrapper .uploadFooter .uploadUl {
+	margin: 0;
+	margin-top: 30px;
+	display: flex;
+	list-style: none;
+	padding: 0;
+  }
+  .wrapper .uploadFooter .uploadUl .uploadLi {
+	flex: 1;
+  }
+  .wrapper .uploadFooter .uploadLi span {
+	text-transform: capitalize;
+	cursor: pointer;
+  }
+  .wrapper .uploadFooter .uploadLi:first-child {
+	color: #999;
+	text-align: left;
+	font-size: 12px;
+  }
+  .wrapper .uploadFooter .uploadLi:first-child span {
+	display: inline-block;
+	border-bottom: 1px solid #ddd;
+  }
+  .wrapper .uploadFooter .uploadLi:last-child {
+	text-align: right;
+  }
+  .wrapper .uploadFooter .uploadLi:last-child span {
+	background-color: #22A4E6;
+	
+	padding: 10px 20px;
+	color: #fff;
+	border-radius: 3px;
+  }
+  
+  .notification {
+	position: absolute;
+	left: 20px;
+	bottom: 20px;
+	top: auto;
+	right: auto;
+  }
+  
+  .notification p {
+	margin: 0;
+	padding: 0;
+  }
+  .notification .btn {
+	padding: 16px 20px;
+	border-radius: 5px;
+	display: flex;
+	margin-bottom: 10px;
+	font-size: 12px;
+	align-items: center;
+	animation: fadeIn .4s ease-in;
+  }
+  @keyframes fadeIn {
+	0% { opacity: 0; }
+	100% { opacity: 1; }
+  }
+  .notification .btn::before {
+	margin-right: 12px;
+	font-family: 'fontawesome';
+	font-size: 15px;
+  }
+  .notification span {
+	margin-left: 10px;
+	cursor: pointer;
+	flex: 1;
+	text-align: right;
+  }
+  
+  .notification .error {
+	background-color: #ECC8C5;
+	border: 1px solid #BD8181;
+  }
+  .notification .error span {
+	color: #C79995;
+  }
+  .notification .error::before {
+	content: '\f05c';
+	color: #B2312F;
+	
+  }
+  .notification .success {
+	background-color: #DEF2D6;
+	border: 1px solid #B3CEA9;
+  }
+  .notification .success span {
+	color: #AFC7A7;
+  }
+  .notification .success::before {
+	content: '\f00c';
+	color: #5A7052;
+  }
+  
+  .uploadFooter {
+	text-align: center;
+	margin-bottom: 20px;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	color: #fff;
+	font-size: 12px;
+  }
+  .uploadFooter a {
+	color: #fff;
+	text-decoration: none;
+	border-bottom: 1px solid #fff;
+	padding-bottom: 5px;
+  }
+
+  .uploadSelect {
+	text-transform: capitalize;
+    width: 230px; /* 원하는 너비설정 */
+    padding: .8em .5em; /* 여백으로 높이 설정 */
+    font-family: inherit;  /* 폰트 상속 */
+    border:none;
+    outline: none;
+    -webkit-appearance: none; /* 네이티브 외형 감추기 */
+    -moz-appearance: none;
+	appearance: none;
+	background-color: #e7e7e7;
+	background-image: url(../images/reorder-four-outline.svg);
+	padding: 10px 20px 10px 45px;
+	background-repeat: no-repeat;
+	background-size: 30px;
+	background-position: right;
+	background-position-x: 5px;
+}
+
+.uploadSelect:hover {
+	opacity: 0.3;
+    
+}
+
+.image-item{
+	margin-top: 10px;
+    border: 4px dashed #bcbcbc;
+	text-align: center;
+	padding-top: 10px;
+}
+
+/* Style the input fields */
+.fileUploadInput {
+	padding: 10px;
+	width: 80%;
+	
+	font-size: 17px;
+	font-family: Raleway;
+	border: 1px solid #aaaaaa;
+  }
+  
+  /* Mark input boxes that gets an error on validation: */
+  .fileUploadInput.invalid {
+	background-color: #ffdddd;
+  }
+
+  /* Make circles that indicate the steps of the form: */
+.step {
+	height: 15px;
+	width: 15px;
+	margin: 0 2px;
+	background-color: #bbbbbb;
+	border: none;
+	border-radius: 50%;
+	display: inline-block;
+	opacity: 0.5;
+  }
+  
+  /* Mark the active step: */
+  .step.active {
+	opacity: 1;
+  }
+  
+  /* Mark the steps that are finished and valid: */
+  .step.finish {
+	background-color: #4CAF50;
+  }
+
+  .footStep {
+	text-align:center;
+	margin-top:40px;
+  }

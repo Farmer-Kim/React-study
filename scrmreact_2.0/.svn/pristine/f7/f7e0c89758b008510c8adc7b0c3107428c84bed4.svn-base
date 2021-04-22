@@ -1,0 +1,62 @@
+// 오인식문장관리
+import React from 'react';
+import {
+	AppPanel, HeadPanel, MiddlePanel, SidePanel, MainPanel, ComponentPanel, FooterPanel,
+	FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button, Label} from 'components';
+import {MultiCheckBox, Checkbox, Radio, Textfield, InputCalendar, MultiSelectbox, TextPasswdfield, RangeInputCalendar, Selectbox, MulitSelectBox, Tree, InputFileUpload} from 'components';
+import {ScrmRadialBarChart, Grid} from 'components';
+import {ComLib, DataLib, newScrmObj} from 'common';
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+
+		this.state = {
+			dsMisSenList : DataLib.datalist.getInstance()
+		}
+	}
+	componentDidMount () {
+
+	}
+	render () {
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<RelativeGroup>
+						<Label value="학습진행일자 선택 및 학습타이틀을 입력하세요."/>
+						<Label value="학습 가능 시간대는 20시 ~ 02 사이입니다."/>
+					</RelativeGroup>
+					<SubFullPanel>
+						<div className="scrm-cal-div">
+							<InputCalendar/>
+							<Label value="~"/>
+							<InputCalendar/>
+						</div>
+					</SubFullPanel>
+					<SubFullPanel>
+						<FlexPanel>
+						</FlexPanel>
+					</SubFullPanel>
+					<SubFullPanel>
+						<FlexPanel>
+						<div className="scrm-cal-div">
+							<Label value="타이틀명"/>
+							<Textfield width={280}/>
+						</div>
+						</FlexPanel>
+						<FlexPanel>
+						</FlexPanel>
+						<RelativeGroup>
+							<Button value="저장" color="purple" fiiled="o"/>
+						</RelativeGroup>
+					</SubFullPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

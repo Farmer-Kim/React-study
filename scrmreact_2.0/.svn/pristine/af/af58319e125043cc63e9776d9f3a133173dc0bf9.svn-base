@@ -1,0 +1,1016 @@
+import React from 'react';
+import {ComponentPanel,	FlexPanel, FullPanel, SubFullPanel, RFloatArea, LFloatArea, RelativeGroup, Player} from 'components';
+import {BasicButton as Button, Label} from 'components';
+import {Textarea} from 'components';
+import {Grid} from 'components';
+import {DataLib, ComLib, DateLib, StrLib, newScrmObj, TransManager} from 'common';
+
+
+
+class View extends React.Component {
+	constructor(props) {
+
+		super();		
+		this.gridStnScrt    = null;
+		this.gridStnScrtApi = null;
+		this.gridStnScrtColumnApi = null;
+		this.gridStnScrtColumns = null;
+		this.gridQAVlaRstSp = null;
+		this.gridQAVlaRstSpApi = null;
+		
+		this.state = {
+
+			dsVlaResultList : DataLib.datalist.getInstance(),
+			dsStnScrtList : DataLib.datalist.getInstance(),
+			dsStnScrtEditRowList : DataLib.datalist.getInstance(),
+			dsVlaRstSpList : DataLib.datalist.getInstance(),			
+			dsLoginInfo: DataLib.datalist.getInstance([{USR_CD: "", PWD: "", CENT_CD: "", CONN_IP: ""}]),
+			
+			openPlayer: {
+				isOpen : true,				
+				callId : "",	
+				ctrNo : "",
+				vicRcnRstStrtTim : null
+			},
+
+			components: { 
+				test: this.createShowCellRenderer(), 						
+			},
+
+			openComment: { 
+				isOpen : true
+			},
+
+			summary : {
+				// LFloat
+				ctrDt : "",					// 계약일자
+				ctrNo : "",					// 계약번호
+				cusNm : "",					// 계약자
+				smlNm : "",				// 평가상태				
+				sumSco : "",				// 총점
+				
+				// RFloat
+				vlaBrdNm : "",
+				vlaBrdVers : "",
+				vlaStaCd : "",
+			},
+
+			textFieldProps : {
+				iptVlaDtm : {
+					id          : 'iptVlaDtm',
+					name        : 'iptVlaDtm',
+					value       : '',
+					placeholder : '내용',
+					minLength   : 1,
+					maxLength   : 200,
+					readOnly    : false,
+					disabled	: true,
+					rows        : 6
+				},
+
+				iptVlaDtmReply : {
+					id          : 'iptVlaDtmReply',
+					name        : 'iptVlaDtmReply',
+					value       : '',
+					placeholder : '답글',
+					hidden : true,
+					minLength   : 1,
+					maxLength   : 200,
+					readOnly    : false,
+					disabled	: true,
+					rows        : 2
+				},
+			},		
+
+			gridProps : {
+				gridStnScrt : {
+					id : 'gridStnScrt',		
+					areaName : '평가항목 스크립트 내용',
+					height : 380,
+					header:         
+					[
+						{
+							headerName: '평가 정보',
+							children : 
+								[
+									{headerName: '평가구분',		minWidth : 130,	maxWidth: 130,	field: 'VLA_ITM_NM',	colId: 'VLA_ITM_NM',	columnGroupShow: 'close',	rowSpan: true},									
+									{headerName: '평가내용',		minWidth : 180,	maxWidth: 180,	field: 'VLA_CONT_NM',	colId: 'VLA_CONT_NM',	columnGroupShow: 'open'},									
+									{headerName: '평가기준',		minWidth : 230,	maxWidth: 230,	field: 'VLA_STND_NM',	colId: 'VLA_STND_NM',	columnGroupShow: 'open',	autoHeight : true},								
+									{headerName: '스크립트 제목',	minWidth : 180,	maxWidth: 180,  field: 'VLA_TITLE',		colId: 'VLA_TITLE',		columnGroupShow: 'close', 
+										cellStyle : {
+											'white-space' : 'normal'
+										}
+									},
+								]
+						},
+
+						{
+							headerName: '스크립트 정보',
+							children :
+								[			
+									{headerName: '스크립트 내용',		minWidth:450,	field: 'VLA_CONT_CN_TEMP',	colId: 'VLA_CONT_CN_TEMP',	autoHeight : true,	columnGroupShow: 'close',
+										cellStyle : {
+											'white-space' : 'normal'
+										}
+									},
+									{headerName: '스크립트 분석결과',	minWidth : 450,	 field: 'VIC_RCN_RST_CONT',	colId: 'VIC_RCN_RST_CONT',	autoHeight : true,	columnGroupShow: 'open',
+										cellStyle : {
+											'white-space' : 'normal'
+										}
+									},									
+									{headerName: '배점',	field: 'VLA_CONT_CN_SCO_TEMP',	  colId: 'VLA_CONT_CN_SCO_TEMP',	resizable: false,	minWidth : 70,	maxWidth : 70,	columnGroupShow: 'close',	textAlign: 'center', }, 									
+									{headerName: '준수',	field: 'VLA_CONT_CN_SCORE',	 	  colId: 'VLA_CONT_CN_SCORE',		resizable: false,	minWidth : 70,	maxWidth : 70,	columnGroupShow: 'close',	textAlign: 'center',	checkboxSelection: true,
+										cellClass : (props.options.params.VLA_STA_CD_VALUE === "400" || props.options.params.VLA_STA_CD_VALUE === "500" || ComLib.getSession("gdsUserInfo")[0].AUTH_LV === 4) ? 'vla-complete-cell'  : '',
+										cellStyle : {
+											transform: 'translate(30%)'
+										}
+									},
+								],
+						},		
+					]
+				},
+			
+				gridQAVlaRstSp : {
+					id : 'gridQAVlaRstSp',
+					areaName : '평가 내용',
+					header :
+					[		
+						{headerName: '작성자',		field: 'REG_ID',	colId: 'REG_ID',	editable: false,	width: '100',	maxWidth: '150',	textAlign: 'center'},
+						{headerName: '작성일시',	field: 'REG_DTM',	colId: 'REG_DTM',	editable: false,	width: '250',	maxWidth: '150',	textAlign: 'center',	resizable: false},
+					],
+
+					tree :
+					{
+						isTree : true,
+						headerName: '내용',
+						header :
+						[
+							{field: 'VLA_CONT',	colId: 'VLA_CONT',	editable: false,	width: '600',
+							cellStyle : {
+								'text-align' : 'left'
+							}},
+						],
+						stndCol: ['REG_ID','REG_DTM'],
+						open : true
+					}
+				},
+			},
+		}		
+		this.event.button.onClick = this.event.button.onClick.bind(this);
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [2. OnLoad Event Zone]
+	/*------------------------------------------------------------------------------------------------*/
+	componentDidMount () {		
+		this.transaction("QAM060001_R01");		
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (transId) => {
+		switch (transId) {
+			case 'QAM060001_H02':
+				
+				if(this.state.textFieldProps.iptVlaDtm.disabled && this.state.textFieldProps.iptVlaDtm.transType === undefined){
+					ComLib.openDialog('A', 'SYSI0010', ['신규 버튼 클릭 후 내용을 입력해 주시기 바랍니다.']);					
+					return false;
+				}
+
+				if(StrLib.isNull(this.state.textFieldProps.iptVlaDtm.value) && this.state.textFieldProps.iptVlaDtm.transType === 'C'){
+					ComLib.openDialog('A', 'SYSI0010', ['내용을 입력해 주시기 바랍니다.']);					
+					return false;
+				}
+
+				if(StrLib.isNull(this.state.textFieldProps.iptVlaDtmReply.value) && this.state.textFieldProps.iptVlaDtm.transType === 'R'){
+					ComLib.openDialog('A', 'SYSI0010', ['답글을 입력해 주시기 바랍니다.']);					
+					return false;
+				}
+				break;
+
+			case 'QAM060001_U01':					
+				if(this.gridQAVlaRstSpApi.getSelectedRows().length === 0){
+					ComLib.openDialog('A', 'SYSI0010', ['삭제 대상을 선택해 주시기 바랍니다.']);					
+					return false;
+				}
+					break;		
+			default : break;
+		}
+		return true;
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (...params) => {
+		
+		let serviceid = params[0];
+		let transManager = new TransManager();
+		const user = ComLib.getSession("gdsUserInfo")[0].USR_CD;
+		try {
+			switch (serviceid) {	
+			case 'QAM060001_R01':										
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getVlaStnScrtList",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsStnScrtListRecv",
+				});
+
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getQAAsgTgtInf",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsStnAsgTgtListRecv",
+				});						
+				
+				transManager.addDataset('dsSearchParam', [{"CTR_DT" : this.state.summary.ctrDt, "VLA_TGT_NO" : this.props.options.params.VLA_TGT_NO, "USR_CD" : user} ]);						
+				transManager.agent();
+				break;
+
+			case 'QAM060001_R02':									
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getVlaRstSpInf",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsVlaRstSpInfRecv",
+				});
+
+				transManager.addDataset('dsSearchParam', [{"VLA_TGT_NO" : this.props.options.params.VLA_TGT_NO} ]);
+				transManager.agent();
+				break;
+
+			case 'QAM060001_H01': 					
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.create,
+					sqlmapid:"QAM.C_handleQAVlaList",
+					datasetsend:"dsEditRowData",
+				});	
+
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.update,
+					sqlmapid:"QAM.U_QAVlaStateUpt",
+					datasetsend:"vlaStateValue",
+				});					
+
+				let blaStateCd = this.state.summary.vlaStaCd.toString(); 				
+				let paramData = this.gridStnScrt.gridDataset.records;
+
+
+				let temp = {};								
+				let transData = [];
+
+				for (let i = 0; i < paramData.length; i ++) {
+					if (i === 0 || paramData[i].SEQ_NO !== paramData[i -1].SEQ_NO) {
+						temp = JSON.parse(JSON.stringify(paramData[i]));
+
+						temp.VLA_TGT_NO = this.props.options.params.VLA_TGT_NO;
+						temp.REG_ID	= ComLib.getSession("gdsUserInfo")[0].USR_CD;
+						temp.CHG_ID	= ComLib.getSession("gdsUserInfo")[0].USR_CD;
+						for (let j =0; j < 3 && i + j < paramData.length; j ++) {
+							let tempSco = 0;
+							if (paramData[i].SEQ_NO === paramData[i + j].SEQ_NO) {
+								tempSco = Number(paramData[i + j].CHK);
+								if (j === 0) {
+									temp.VLA_CONT_CN_1_SCO = tempSco;
+									
+								} else if (j === 1) {
+									temp.VLA_CONT_CN_2_SCO = tempSco;
+									
+								} else if (j === 2) {
+									temp.VLA_CONT_CN_3_SCO = tempSco;
+								}
+							}
+						}
+						transData.push(temp);
+					} 
+				}
+				
+				transManager.addDataset('dsEditRowData', transData);
+				transManager.addDataset('vlaStateValue', [{"VLA_STA_CD" : params[1] , "VLA_TGT_NO" : this.props.options.params.VLA_TGT_NO}]);			
+				transManager.agent();
+
+				break;
+
+			case 'QAM060001_H02':
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.create, 
+					sqlmapid:"QAM.C_handleQAVlaRstSp",
+					datasetsend:"dsVlaRstSp",
+				});
+				
+				
+				let TGT_SEQ_NO = 0;
+				let TGT_SEQ_NO_SEQNO = 1;
+				let USE_YN = "N";
+				let VLA_CONT = this.state.textFieldProps.iptVlaDtm.value;
+
+				if(params[1] === 'R'){
+					TGT_SEQ_NO = this.gridQAVlaRstSp.ID;
+					TGT_SEQ_NO_SEQNO = this.gridQAVlaRstSp.LEVEL+1;
+					VLA_CONT = this.state.textFieldProps.iptVlaDtmReply.value
+				}				
+				
+				let param = {
+					"VLA_TGT_NO" : this.props.options.params.VLA_TGT_NO,
+					"TGT_SEQ_NO" : TGT_SEQ_NO,
+					"TGT_SEQ_NO_SEQNO" : TGT_SEQ_NO_SEQNO,
+					"PS_USR" : user,
+					"PS_DTM" : StrLib.setFormatData(DateLib.getTodayTime()),
+					"VLA_STA_CD" : "310",
+					"VLA_CONT" : VLA_CONT,
+					"DEL_YN" : USE_YN,
+					"REG_ID" : user,
+				};
+				
+				transManager.addDataset('dsVlaRstSp', [ param ]);
+				transManager.agent();
+				break;
+		
+			case 'QAM060001_U01':
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.update,
+					sqlmapid:"QAM.U_handleQAVlaRstSp",
+					datasetsend:"dsVlaRstSp",
+				});
+				
+				transManager.addDataset('dsVlaRstSp', this.state.dsVlaRstSpList.records.filter((item) => item.rowtype !== newScrmObj.constants.crud.read));
+				transManager.agent();					
+				break;
+
+			default : 
+				break;
+			}
+
+		} catch (err) {
+
+		}
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {									
+		switch (res.id) {
+		case 'QAM060001_R01':	
+			//Lfloat 
+			this.state.summary.ctrDt = res.data.dsStnScrtListRecv[0].CTR_DT;
+			this.state.summary.ctrNo = res.data.dsStnScrtListRecv[0].CTR_NO;
+			this.state.summary.cusNm = res.data.dsStnScrtListRecv[0].CUS_NM;
+			this.state.summary.smlNm = res.data.dsStnScrtListRecv[0].VLA_STA_NM;				
+			//RFloat				
+			this.state.summary.vlaBrdNm = res.data.dsStnScrtListRecv[0].VLA_BRD_NM;
+			this.state.summary.vlaBrdVers = res.data.dsStnScrtListRecv[0].VLA_BRD_VERS;
+			this.state.summary.vlaStaCd = res.data.dsStnScrtListRecv[0].VLA_STA_CD;
+			this.setState(this.state);
+
+			if(this.state.summary.vlaStaCd === "400" || this.state.summary.vlaStaCd === "500" || ComLib.getSession("gdsUserInfo")[0].AUTH_LV === 4){
+				this.state.gridProps.gridStnScrt.header[1].children[3].cellStyle.pointerEvents = "none";
+				// this.checkboxStyle(this.state.summary.vlaStaCd);
+			}
+	
+			if (res.data.dsStnScrtListRecv.length <= 0) {
+				this.transaction('QAM060001_R02');
+
+			} else {	
+				let resData = res.data.dsStnScrtListRecv;
+				let initRec = [];	
+				let cnt  = -1;	
+				for (let i = 0; i < resData.length; i ++) {
+					if (!StrLib.isNull(resData[i].VLA_CONT_CN_1)) {
+						initRec.push(JSON.parse(JSON.stringify(resData[i])));
+						cnt += 1;								
+						initRec[cnt].VLA_CONT_CN_TEMP     = resData[i].VLA_CONT_CN_1; 
+						initRec[cnt].VLA_CONT_CN_SCO_TEMP = resData[i].VLA_CONT_CN_1_SCO;	
+						initRec[cnt].VLA_CONT_CN_1_SCO    = 0;	
+						initRec[cnt].CHK = resData[i].VLA_CONT_CN_1_SCO;
+						
+					} 
+
+					if (!StrLib.isNull(resData[i].VLA_CONT_CN_2)) {
+						initRec.push(JSON.parse(JSON.stringify(resData[i])));
+						cnt += 1;
+						initRec[cnt].VLA_CONT_CN_TEMP     = resData[i].VLA_CONT_CN_2; 
+						initRec[cnt].VLA_CONT_CN_SCO_TEMP = resData[i].VLA_CONT_CN_2_SCO;								
+						initRec[cnt].VLA_TITLE            = "";		
+						initRec[cnt].VLA_CONT_CN_2_SCO    = 0;	
+						initRec[cnt].CHK = resData[i].VLA_CONT_CN_2_SCO;	
+					
+						
+					} 
+
+					if (!StrLib.isNull(resData[i].VLA_CONT_CN_3)) {
+						initRec.push(JSON.parse(JSON.stringify(resData[i])));
+						cnt += 1;
+						initRec[cnt].VLA_CONT_CN_TEMP     = resData[i].VLA_CONT_CN_3; 
+						initRec[cnt].VLA_CONT_CN_SCO_TEMP = resData[i].VLA_CONT_CN_3_SCO;										
+						initRec[cnt].VLA_TITLE            = "";
+						initRec[cnt].VLA_CONT_CN_3_SCO    = 0;	
+						initRec[cnt].CHK = resData[i].VLA_CONT_CN_3_SCO;	
+						
+					} 							
+				}
+				
+				ComLib.setStateInitRecords(this, "dsStnScrtList", initRec);
+				let resultSum = 0 ;
+				this.gridStnScrtApi.forEachNode((node, i) => {	
+					if (Number(node.data.RD_VLA_CONT_CN1_SCO) === Number(node.data.VLA_CONT_CN_SCO_TEMP) && Number(node.data.RD_VLA_CONT_CN1_SCO) !== 0) {																																							 
+						resultSum += node.data.RD_VLA_CONT_CN1_SCO;
+						node.setSelected(true); 										
+					} else if (Number(node.data.RD_VLA_CONT_CN2_SCO) === Number(node.data.VLA_CONT_CN_SCO_TEMP) && Number(node.data.RD_VLA_CONT_CN2_SCO !== 0)) {	
+						resultSum += node.data.RD_VLA_CONT_CN2_SCO;
+						node.setSelected(true); 
+					} else if ( Number(node.data.RD_VLA_CONT_CN3_SCO) === Number(node.data.VLA_CONT_CN_SCO_TEMP) && Number(node.data.RD_VLA_CONT_CN3_SCO !== 0)) {																															
+						resultSum += node.data.RD_VLA_CONT_CN3_SCO;
+						node.setSelected(true); 
+					}
+				});
+				
+				
+				this.setState({ ...this.state, summary: {...this.state.summary, sumSco : resultSum }});
+				this.transaction("QAM060001_R02");
+			}
+				
+			break;
+
+		case 'QAM060001_R02':	
+			if(res.data.dsVlaRstSpInfRecv.length > 0){
+				this.state.textFieldProps.iptVlaDtm.value = res.data.dsVlaRstSpInfRecv[0]["VLA_CONT"];
+				this.setState(this.state);
+			}
+		
+			ComLib.setStateInitRecords(this, "dsVlaRstSpList", res.data.dsVlaRstSpInfRecv);			
+			break;
+		case 'QAM060001_H01':				
+			// ComLib.openDialog("A", "COMI0002");	
+			this.transaction("QAM060001_R01");
+			break;
+		case 'QAM060001_H02':
+			// ComLib.openDialog("A", "COMI0002");				
+			// this.transaction("QAM060001_R02");
+			this.state.textFieldProps.iptVlaDtm.maxWidth = 200;
+			this.state.textFieldProps.iptVlaDtm.rows = 6;
+			this.state.textFieldProps.iptVlaDtm.value = "";
+			this.state.textFieldProps.iptVlaDtm.transType = "";
+			this.setState(this.state);
+			this.transaction("QAM060001_R02");
+			break;
+		case 'QAM060001_U01':
+			// ComLib.openDialog("A", "COMI0002");	
+			this.transaction("QAM060001_R02");			
+		break;
+		default : break;
+		}
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {	
+		button: {		
+			onClick: (e) => {				
+				switch (e.target.id) {			
+				case 'btnConfirm':
+					if( ComLib.openDialog('C', 'SYSI0010', ['심사된 평가건에 대해서는 재평가가 불가능합니다. \n 승인 하시겠습니까?'], confirm => { 
+						if(confirm)
+							this.transaction("QAM060001_H01" , 400);
+						}));
+					break;
+
+				case 'btnReject':	
+					if( ComLib.openDialog('C', 'SYSI0010', ['심사된 평가건에 대해서는 재평가가 불가능합니다. \n 거절 하시겠습니까?'], confirm => { 
+						if(confirm)
+							this.transaction("QAM060001_H01" , 500);
+					}));
+				break;
+
+				case 'btnImprove':				
+					if( ComLib.openDialog('C', 'SYSI0010', ['해당 평가건에 대한 보완요청을 진행 하시겠습니까?'], confirm => { 
+						if(confirm)
+							this.transaction("QAM060001_H01" , 310);
+					}));
+				break;
+
+				case 'btnTempSave':						
+					if( ComLib.openDialog('C', 'SYSI0010', ['해당 평가건을 임시저장 하시겠습니까?'], confirm => { 
+						if(confirm)
+							this.transaction("QAM060001_H01" , 300);
+				}));
+				break;
+
+				case 'btnImprovecCp':			
+					if( ComLib.openDialog('C', 'SYSI0010', ['해당 평가건에 대한 보완을 완료하시겠습니까?'], confirm => { 
+						if(confirm)
+							this.transaction("QAM060001_H01" , 320);
+					}));
+				break;
+
+				case 'btnNewRstSp':	
+					this.state.textFieldProps.iptVlaDtm.maxWidth = 200;
+					this.state.textFieldProps.iptVlaDtm.rows = 6;
+					this.state.textFieldProps.iptVlaDtm.value = "";
+					this.state.textFieldProps.iptVlaDtm.disabled = false;		
+					this.state.textFieldProps.iptVlaDtm.transType = 'C';					
+					this.setState(this.state);
+				break;
+				
+				case 'btnReplyRstSp':	
+					this.state.textFieldProps.iptVlaDtm.maxWidth = 100;
+					this.state.textFieldProps.iptVlaDtm.rows = 2;	
+					this.state.textFieldProps.iptVlaDtmReply.value = "";
+					this.state.textFieldProps.iptVlaDtm.disabled = true;
+					this.state.textFieldProps.iptVlaDtmReply.disabled = false;
+					this.state.textFieldProps.iptVlaDtm.transType = 'R';
+					this.setState(this.state);			
+				break;
+
+				case 'btnAddRstSp':
+					if (this.validation("QAM060001_H02")){
+						if(this.state.textFieldProps.iptVlaDtm.transType === 'D'){
+							let delData = this.state.dsVlaRstSpList.orgrecords.filter(({ ID: orgID }) => !this.state.dsVlaRstSpList.records.some(({ ID : ID }) => orgID === ID));						
+							for(let intA=0; intA<delData.length; intA++){
+								delData[intA].rowtype = newScrmObj.constants.crud.update;
+								this.state.dsVlaRstSpList.records.push(delData[intA]);
+							}
+							this.setState(this.state);
+							this.transaction("QAM060001_U01");
+						}else{
+							this.transaction("QAM060001_H02" , this.state.textFieldProps.iptVlaDtm.transType);
+						}
+					}
+					break;
+				
+				case 'btnDelRstSp':		
+					if(this.validation("QAM060001_U01")){
+						let delRows = [];
+						let dsVlaRstSpListRows = [];
+						// let dsVlaRstSpRefreshList = [];
+						var selectedData = this.gridQAVlaRstSpApi.getSelectedRows();
+						
+						if(selectedData[0].childCNT > 0){
+							ComLib.openDialog('C', 'SYSI0010', ['해당 평가 내용을 삭제 하면 답글도 함께 삭제 됩니다. 삭제 하시겠습니까?'], confirm => { 							
+								if(confirm){																
+									this.state.dsVlaRstSpList.records.forEach((item) => {
+								
+										if(item.ID === selectedData[0].ID || item.PARENT_ID === selectedData[0].ID){
+											item.rowtype = newScrmObj.constants.crud.update;
+											delRows.push(item);																						
+										}else{
+											dsVlaRstSpListRows.push(item);											
+										}
+									});
+									this.state.textFieldProps.iptVlaDtm.transType = 'D';
+									this.setState(this.state);	
+									this.gridQAVlaRstSpApi.updateRowData({ remove: delRows.data });
+									ComLib.setStateRecords(this, "dsVlaRstSpList", dsVlaRstSpListRows);
+								}
+							});
+						}else{
+							ComLib.openDialog('C', 'SYSI0010', ['해당 평가 내용을 삭제 하시겠습니까?'], confirm => { 							
+								if(confirm){																
+									this.state.dsVlaRstSpList.records.forEach((item) => {
+										if(item.ID === selectedData[0].ID){
+											item.rowtype = newScrmObj.constants.crud.update;
+											delRows.push(item);
+											
+										}else{
+											dsVlaRstSpListRows.push(item);
+											
+										}
+									});
+									this.state.textFieldProps.iptVlaDtm.transType = 'D';
+									this.setState(this.state);	
+									this.gridQAVlaRstSpApi.updateRowData({ remove: delRows.data });
+									ComLib.setStateRecords(this, "dsVlaRstSpList", dsVlaRstSpListRows);
+								}
+							});
+						}
+					}
+				break;
+									
+				case 'openPlayer':	
+					this.state.openPlayer.isOpen = !this.state.openPlayer.isOpen;
+					this.setState(this.state , () => {
+						this.gridStnScrtColumnApi.autoSizeAllColumns();	
+						this.gridStnScrtApi.redrawRows();
+					});
+					break;
+
+				// case 'openComment':	
+				// 	this.state.openComment.isOpen = !this.state.openComment.isOpen;
+				// 	this.setState(this.state , () => {
+				// 		if(!this.state.openComment.isOpen){
+				// 			this.state.gridProps.gridStnScrt.height = 500;
+				// 			this.setState(this.state);
+				// 		}	
+							// this.setState({ ...this.state, gridStnScrt: {...this.state.gridProps.gridStnScrt, height : 500 }});
+							
+					// });
+					// break;	
+				default : break;
+				}
+			}
+		},
+		
+		input : {
+			iptVlaDtm : {
+				onChange : (e) => {		
+					this.state.textFieldProps.iptVlaDtm.value = e.target.value;				
+					this.setState(this.state);
+				},
+				onKeyPress  : () => {			
+				},
+			},
+
+			iptVlaDtmReply : {
+				onChange : (e) => {	
+					this.state.textFieldProps.iptVlaDtmReply.value = e.target.value;
+					this.setState(this.state);				
+				},
+				onKeyPress  : () => {			
+				},
+			},
+		},
+
+		grid: {
+			onGridReady : (e) => {
+				switch(e.id){
+				case "gridStnScrt":		
+					this.gridStnScrt = e.grid;
+					this.gridStnScrtColumnApi = e.columnApi;					
+					this.gridStnScrtColumns = e.columns;
+					this.gridStnScrtApi = e.gridApi;
+					break;
+
+				case "gridQAVlaRstSp":						
+					this.gridQAVlaRstSp = e.grid;
+					this.gridQAVlaRstSpApi = e.gridApi;
+					break;
+
+				default: break;
+				}
+			},
+
+			onRowClicked: (e) => {
+				switch(e.id){
+				case "gridQAVlaRstSp":
+					this.gridQAVlaRstSpApi.rowModel.rowsToDisplay[e.index].setSelected(true);
+					this.gridQAVlaRstSp = e.data;	
+					this.state.textFieldProps.iptVlaDtm.value = e.data.VLA_CONT;	
+					this.state.textFieldProps.iptVlaDtmReply.hidden = false;
+					this.setState(this.state);	
+					break;
+				default: break;
+				}
+			},
+			
+			onCellDoubleClicked: (e) => {
+				switch (e.id) {
+				case "gridStnScrt":					
+					if(e.col !== "VLA_CONT_CN_SCO_TEMP" && e.col !== "VLA_CONT_CN_SCORE")
+						this.setState({ ...this.state, openPlayer: {...this.state.openPlayer, vicRcnRstStrtTim : e.data.VIC_RCN_RST_STRT_TIM, callId : e.data.CALL_ID }});
+					break;
+				default:
+				break;
+				}
+			},
+			
+			onSelectionChanged: (e) => {
+				switch (e.id) {
+				case "gridStnScrt":	
+					let records = this.gridStnScrt.gridDataset.records;
+					let orgrecords = this.gridStnScrt.gridDataset.orgrecords;
+					let sumScore = 0;
+
+					this.gridStnScrtApi.forEachNode((node) => {		
+							if(node.selected === true) {			
+								sumScore += node.data.VLA_CONT_CN_SCO_TEMP;
+								records[node.rowIndex].CHK = records[node.rowIndex].VLA_CONT_CN_SCO_TEMP;
+							} else {
+								records[node.rowIndex].CHK = 0;	
+							}	
+
+							if (orgrecords[node.rowIndex].CHK === records[node.rowIndex].CHK) {
+								records[node.rowIndex].rowtype = newScrmObj.constants.crud.read
+							} else {
+								records[node.rowIndex].rowtype = newScrmObj.constants.crud.update
+							}
+						})		
+						
+					this.setState({ ...this.state, summary: {...this.state.summary, sumSco : sumScore }});	
+					break;						
+				default: break;
+				}
+			},
+
+			onColumnGroupOpened: (e) => {
+				switch (e.id) {
+				case 'gridStnScrt':
+					this.gridStnScrtColumnApi.autoSizeAllColumns();
+					this.gridStnScrtApi.redrawRows();
+					break;
+				default : break;
+				}
+			}
+		},
+		
+	}
+
+	createShowCellRenderer() {
+		function ShowCellRenderer() {}
+		ShowCellRenderer.prototype.init = function (params) {
+			let rtnVal = "";
+			let expand = params.data.EXPAND
+		
+			
+			if (params.data.childCNT > 0) { 
+				if (expand) {
+					rtnVal = `<span class="ag-icon ag-icon-tree-open" unselectable="on"></span>`;
+				} else {
+					// rtnVal = `<span class="ag-icon ag-icon-contracted" unselectable="on">+ (` + params.data.childCNT + `)   </span>`;
+					rtnVal = `<span class="ag-icon ag-icon-next" unselectable="on"></span>`;
+				}
+			}else{
+				rtnVal = `<span class="ag-icon ag-icon-tree-closed"></span>`;
+			} 	
+	
+			if (params["data"]["LEVEL"] > 1) {
+				var marginLeft = (params["data"]["LEVEL"] - 1) * 15;
+			}
+
+			this.ui = document.createElement('div');
+			this.ui.style.textAlign = 'left';
+			this.ui.style.marginLeft = marginLeft+"px";
+			this.ui.innerHTML =	rtnVal + '<span>' + params["data"]["VLA_CONT"]  + '</span>' ;
+		}
+		ShowCellRenderer.prototype.getGui = function () {
+		  return this.ui;
+		};
+		return ShowCellRenderer;
+	}
+
+	rowFinder = (targetRecords, targetColumn, currentRow, doFindDeleted) => {
+		let rowNum = 0;
+
+		if (!doFindDeleted) {
+			if (!StrLib.isNull(currentRow)) {
+				for (var i = 0; i < targetRecords.length; i++) {
+					if (targetRecords[i][targetColumn] === currentRow) {
+						rowNum = i;
+						break;
+					}
+				}
+			}
+			return rowNum;
+
+		} else {
+			let delNum = 0;
+			if (!StrLib.isNull(currentRow)) {
+				for (var i = 0; i < targetRecords.length; i++) {
+					if (targetRecords[i].rowtype === newScrmObj.constants.crud.destroy) {
+						delNum += 1;
+					} else if (targetRecords[i]["SEQ_NO"] === currentRow) {
+						rowNum = i;
+						break;
+					}
+				}
+			}
+			return {stnScrtRowNm: rowNum, deletedRowCnt: delNum}
+		}
+	}
+
+
+	handler = {
+		// 최초 실행함수
+		init : () => {
+
+		},
+		// Transaction 별 Dataset setting
+		setDs : (serviceid, data) => {
+			switch(serviceid){
+			case 'QAM060001_H01' :
+				break;
+			}
+			
+		},
+		// 컴포넌트 전체 value 초기화
+		initCompVal : () => {
+			
+		}
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [7. render Zone]
+	//  - 화면 관련 내용 작성
+	/*------------------------------------------------------------------------------------------------*/
+	render () {						
+		return (
+			<React.Fragment>
+				<FullPanel>			
+					<FlexPanel>
+						<div style={{width : '550px' , display : this.state.openPlayer.isOpen ? "block" : "none"}}>
+							<Player
+								callId = {this.state.openPlayer.callId}
+								ctrNo = {this.props.options.params.CTR_NO}
+								optionalTime = {this.state.openPlayer.vicRcnRstStrtTim}
+							/>					
+						</div>
+						<div style={{
+										position:'relative'
+										, flex: 'reverse'
+										, display: "block"
+										, margin : "auto"
+									}}>			
+							{this.state.openPlayer.isOpen ?
+								<Button id = "openPlayer" innerImage = {true} icon = {"left"} onClick = {this.event.button.onClick} />		
+							:	<Button id = "openPlayer" innerImage = {true} icon = {"right"} onClick = {this.event.button.onClick} />
+							}
+						</div>
+
+						<div style={{width : this.state.openPlayer.isOpen ? '950px' : '1500px'}}>
+							<SubFullPanel>
+								<RelativeGroup>	
+									<LFloatArea>
+										<Label isOpen = {this.state.openPlayer.isOpen} value={"계약번호  "}/>	
+										<Label isOpen = {this.state.openPlayer.isOpen} content = {true}  value={this.state.summary.ctrNo}/>
+										<Label isOpen = {this.state.openPlayer.isOpen} value={"계약일자  "}/>
+										<Label isOpen = {this.state.openPlayer.isOpen} content = {true} value={this.state.summary.ctrDt}/>
+										<Label isOpen = {this.state.openPlayer.isOpen} value={"계약자  "}/>
+										<Label isOpen = {this.state.openPlayer.isOpen} content = {true} value={this.state.summary.cusNm}/>
+										<Label isOpen = {this.state.openPlayer.isOpen} value={"평가상태  "}/>
+										<Label isOpen = {this.state.openPlayer.isOpen} content = {true} value={this.state.summary.smlNm}/>
+										<Label isOpen = {this.state.openPlayer.isOpen} value={"총점  " }/>
+										<Label isOpen = {this.state.openPlayer.isOpen} content = {true} value={this.state.summary.sumSco}/>
+									</LFloatArea>
+							{/* <RFloatArea>
+								<Label isOpen = {this.state.openPlayer.isOpen} value={"평가표명  "}/>
+								<Label isOpen = {this.state.openPlayer.isOpen} content = {true}  value={this.state.summary.vlaBrdNm }/>
+								<Label isOpen = {this.state.openPlayer.isOpen} value={"버전  "}/>
+								<Label isOpen = {this.state.openPlayer.isOpen} content = {true}  value={this.state.summary.vlaBrdVers  }/>
+							</RFloatArea>	 */}
+								</RelativeGroup>
+								<ComponentPanel>
+									<Grid		
+										id = {this.state.gridProps.gridStnScrt.id}
+										areaName = {this.state.gridProps.gridStnScrt.areaName}
+										contentBtn = {true}							
+										addRowBtn = {false}
+										delRowBtn = {false}
+										dnlExcelBtn = {true}
+										header = {this.state.gridProps.gridStnScrt.header}
+										data = {this.state.dsStnScrtList}
+										// height = {this.state.openComment.isOpen ? 360 : 500}
+										height = {this.state.gridProps.gridStnScrt.height}
+										rowNum = {true}							
+										onGridReady = {this.event.grid.onGridReady}
+										onRowDoubleClicked = {this.event.grid.onRowDoubleClicked}
+										onSelectionChanged = {this.event.grid.onSelectionChanged}
+										onColumnGroupOpened = {this.event.grid.onColumnGroupOpened}
+										onColumnResized = {this.event.grid.onColumnResized}		
+										onRowSelected = {this.event.grid.onRowSelected}
+										onCellDoubleClicked = {this.event.grid.onCellDoubleClicked}
+										suppressRowClickSelection = {true}
+										rowSelection = 'multiple'
+									/>
+								</ComponentPanel>
+							</SubFullPanel>
+
+									{/* <div style={{
+												position:'relative'
+												, flex: 'reverse'
+												, display: "block"
+												, margin : "5px"
+											}}>
+
+									{this.state.openComment.isOpen ?
+										<Button id = "openComment" innerImage = {true} icon = {"arrowDn"} onClick = {this.event.button.onClick} />
+									:	<Button id = "openComment" innerImage = {true} icon = {"arrowUp"} onClick = {this.event.button.onClick} />
+									}
+									</div> */}
+								<FlexPanel>  	
+									<ComponentPanel sizeVar = {true} width = {"100%"}>
+										<Grid
+											id = {this.state.gridProps.gridQAVlaRstSp.id}
+											areaName = {this.state.gridProps.gridQAVlaRstSp.areaName} 
+											addRowBtn = {false}
+											delRowBtn = {false}
+											height= {120}
+											header = {this.state.gridProps.gridQAVlaRstSp.header}
+											data = {this.state.dsVlaRstSpList}
+											tree = {this.state.gridProps.gridQAVlaRstSp.tree}
+											rowNum = {true}
+											onRowClicked = {this.event.grid.onRowClicked}
+											onGridReady = {this.event.grid.onGridReady}				
+											onSelectionChanged = {this.event.grid.onSelectionChanged}
+											components = {this.state.components}
+										/>
+									</ComponentPanel>
+									<ComponentPanel sizeVar = {true} width = {"55%"}>
+										<div style={{display : 'block', width:'100%', height : '30px'}}>
+											<LFloatArea>
+												<div className = "scrm-component-panel-namearea">
+													<span>내용</span>
+												</div>
+											</LFloatArea>
+										</div>
+
+										<div style={{width: '100%',  display: 'block', float: 'left'}}>
+											<Textarea
+												id          = {this.state.textFieldProps.iptVlaDtm.id}
+												name        = {this.state.textFieldProps.iptVlaDtm.name}
+												value       = {this.state.textFieldProps.iptVlaDtm.value}
+												placeholder = {this.state.textFieldProps.iptVlaDtm.placeholder}
+												minLength   = {this.state.textFieldProps.iptVlaDtm.minLength}
+												maxLength   = {this.state.textFieldProps.iptVlaDtm.maxLength}
+												readOnly    = {this.state.textFieldProps.iptVlaDtm.readOnly}
+												disabled	= {this.state.textFieldProps.iptVlaDtm.disabled}
+												rows        = {this.state.textFieldProps.iptVlaDtm.rows}
+												onChange    = {this.event.input.iptVlaDtm.onChange}
+												onKeyPress	= {this.event.input.iptVlaDtm.onKeyPress}
+											/>
+										</div>
+
+									{this.state.textFieldProps.iptVlaDtm.transType === 'R' ? 
+										<div style={{width: '100%',  display: 'block', float: 'left'}}>
+											<Textarea
+												id          = {this.state.textFieldProps.iptVlaDtmReply.id}
+												name        = {this.state.textFieldProps.iptVlaDtmReply.name}
+												value       = {this.state.textFieldProps.iptVlaDtmReply.value}
+												placeholder = {this.state.textFieldProps.iptVlaDtmReply.placeholder}
+												minLength   = {this.state.textFieldProps.iptVlaDtmReply.minLength}
+												maxLength   = {this.state.textFieldProps.iptVlaDtmReply.maxLength}
+												readOnly    = {this.state.textFieldProps.iptVlaDtmReply.readOnly}
+												disabled	= {this.state.textFieldProps.iptVlaDtmReply.disabled}
+												rows        = {this.state.textFieldProps.iptVlaDtmReply.rows}
+												onChange    = {this.event.input.iptVlaDtmReply.onChange}
+												onKeyPress	= {this.event.input.iptVlaDtmReply.onKeyPress}
+											/>
+										</div>
+										: null
+										}
+									
+										<RFloatArea>
+											<Button id = "btnReplyRstSp"	value={"답글"} color="green"	mt={5}	hidden = {this.state.textFieldProps.iptVlaDtmReply.hidden} onClick = {this.event.button.onClick}/>
+											<Button id = "btnNewRstSp"		value={"신규"} color="purple" 	mt={5}	onClick = {this.event.button.onClick}/>									
+											<Button id = "btnAddRstSp"		value={"저장"} color="blue"		mt={5}	onClick = {this.event.button.onClick}/>
+											<Button id = "btnDelRstSp"		value={"삭제"} color="red"		mt={5}	mr={5} onClick = {this.event.button.onClick}/>
+										</RFloatArea>
+									</ComponentPanel>									
+								</FlexPanel>
+
+								<SubFullPanel>
+									<RelativeGroup>
+										{this.state.summary.vlaStaCd === "400" || this.state.summary.vlaStaCd === "500"
+										? null 
+										: 
+										ComLib.getSession("gdsUserInfo")[0].AUTH_LV !== 4 
+										?
+										<RFloatArea>
+											<Button id = "btnConfirm"	value={"승인"} 		color="blue" 	mt={5}	onClick = {this.event.button.onClick} />
+											<Button id = "btnReject"	value={"거절"} 		color="red" 	mt={5} 	onClick = {this.event.button.onClick} />
+											<Button id = "btnImprove"	value={"보완요청"} 	color="green" 	mt={5}	onClick = {this.event.button.onClick} />
+											<Button id = "btnTempSave"	value={"임시저장"} 	color="purple" 	mt={5}	mr={5}	onClick = {this.event.button.onClick} />
+											
+										</RFloatArea>
+										:
+										<RFloatArea>									
+											<Button id = "btnImprovecCp"	value={"보안완료"} 	color="purple" 	mr={5}	onClick = {this.event.button.onClick} />
+										</RFloatArea>
+										}
+									</RelativeGroup>
+								</SubFullPanel>
+						</div>
+					</FlexPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+export default View;

@@ -1,0 +1,65 @@
+import React from 'react';
+import {
+	RadialBarChart, RadialBar, Legend, Tooltip, 
+	LineChart, CartesianGrid, XAxis,YAxis, Line,
+	BarChart , Bar
+} from 'recharts';
+// https://recharts.org/en-US/guide <== API site
+
+class ScrmLineBarChart extends React.Component {
+	onClick = (e) => {
+
+	}
+	onMouseEnter = (e) => {
+		
+	}
+	onMouseMove = (e) => {
+		
+	}
+	onMouseLeave = (e) => {
+		
+	}
+	render () {
+		
+		return (
+			<div className="scrm-line-chart-div">
+				<LineChart width={this.props.width} height={this.props.height} data={this.props.data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+					<CartesianGrid strokeDasharray="3 3" />
+					<XAxis dataKey={this.props.options.XAsisKey} />
+					<YAxis allowDecimals = {false}/>
+					<Tooltip />
+					<Legend />
+						{
+							this.props.options.dataKey.map((item, key) => {
+								return <Line type="monotone" dataKey={item.key} key={key} stroke={item.color} unit = {'건'}/>
+							})
+						}
+				</LineChart>
+			</div>
+		)
+	}
+}
+
+class ScrmBarChart extends React.Component{
+	render(){
+		return(
+			<div className="scrm-chart-div">					
+					<BarChart width={this.props.width} height={this.props.height} data={this.props.data} layout={this.props.layout}>
+					<XAxis type="number" domain={[0, 100]}  /> 
+					<YAxis dataKey= {this.props.dailyOptions.YAsisKey} hide reversed type="category" />
+					<Tooltip />
+					<Legend />     
+						{
+								this.props.dailyOptions.dataKey.map((item, key) => {								
+								return <Bar dataKey={item.key} key={key} fill={item.color} unit={'%'}/>
+							})
+						}
+				</BarChart>
+			</div>			
+		)
+	}
+}
+
+
+
+export { ScrmLineBarChart, ScrmBarChart};

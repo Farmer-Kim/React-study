@@ -1,0 +1,14 @@
+@import url('xeicon.css');
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600&display=swap');
+
+.scrm-header-div {width :100%; height: 10vh; max-height: 70px;}
+.scrm-header-btn-div {align-content: center; margin-top: 3.5vh;}
+.scrm-header-btn-div > button[tooltip]:hover {position : relative;}
+.scrm-header-btn-div > button[tooltip]:hover:after {
+	content : attr(tooltip);
+	position : absolute; left : -15%; bottom: -100%; background-color: transparent; color: white; font-weight: bold; font-size: 12px; z-index: 9999; width: calc(100% + 50px);
+}
+.logo .scrm-header-left-div {width:88px; height: 8vh; max-height: 8vh; background:url('../images/aiqa.png') no-repeat left 50px top 50%; background-size: 100px;}
+.logo {font-family: 'Roboto'; font-weight: bold; width:247px; height: 8vh; max-height: 8vh; line-height: 8vh; color:#fff; font-size:24px;}
+/* .scrm-header-btn-div > button {margin-right: 3vh;} */

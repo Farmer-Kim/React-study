@@ -1,0 +1,59 @@
+import React from 'react';
+import {
+	AppPanel, HeadPanel, MiddlePanel, SidePanel, MainPanel, ComponentPanel, FooterPanel,
+	FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button} from 'components';
+import {MultiCheckBox, Checkbox, Radio, Textfield, InputCalendar, MultiSelectbox, TextPasswdfield, RangeInputCalendar, Selectbox, MulitSelectBox, Tree, InputFileUpload} from 'components';
+import {ScrmRadialBarChart, Grid, Table} from 'components';
+import {ComLib, DataLib, newScrmObj} from 'common';
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+		this.state = {
+			dsDupValTgtCallList : DataLib.datalist.getInstance(),
+		}
+	}
+	componentDidMount () {
+
+	}
+	render () {
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<ComponentPanel>
+						<Grid
+							height= "250px"
+							data = {this.state.dsDupValTgtCallList}
+							header = {
+								[
+									{headerName: 'No',			field: 'CENT_CD',		colId: 'CENT_CD',	editable: true, req: true, headerCheckboxSelection: true,	checkboxSelection: true},
+									{headerName: '센터',	field: 'BIZ_PSB_YN',	colId: 'BIZ_PSB_YN',editable: true},
+									{headerName: '팀',		field: 'TEAM_CD',		colId: 'TEAM_CD',	editable: true,},
+									{headerName: '상담원ID',		field: 'TEAM_CD',		colId: 'TEAM_CD',	editable: true,},
+									{headerName: '상담원명',		field: 'TEAM_CD',		colId: 'TEAM_CD',	editable: true,},
+									{headerName: '통화시간',		field: 'TEAM_CD',		colId: 'TEAM_CD',	editable: true,},
+									{headerName: '평가대상번호',		field: 'TEAM_CD',		colId: 'TEAM_CD',	editable: true,},
+								]
+							}
+						/>
+					</ComponentPanel>
+					<RelativeGroup>
+						<RFloatArea>
+							<Checkbox
+								keyProp = {'QAM050001_chkUseDupInfo'}
+								value = {'중복으로 평가대상번호 사용'}
+								onChange = {(e) => {return null;}}
+							/>
+							<Button value="적용"/>
+						</RFloatArea>
+					</RelativeGroup>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

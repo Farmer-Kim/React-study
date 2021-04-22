@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="EUC-KR">
+<title>AI-QA</title>
+<link rel="shortcut icon" href="favicon.ico">
+<script language="javascript">
+	function fnOpen() {
+		if (window.name != null && window.name == 'mainframe') return;
+		var status		= "";
+		status			+= "location=no,";
+		status			+= "resizable=no,";
+		status			+= "scrollbars=no,";
+		status			+= "toolbar=no,";
+		status			+= "left=0,";
+		status			+= "top=0,";
+		status			+= "width=1600,";
+		status			+= "height=975";
+
+		var objWin = window.open("http://localhost:3000", "mainframe", status);
+	}
+</script>
+</head>
+<body onload="fnOpen()">
+</body>
+</html>

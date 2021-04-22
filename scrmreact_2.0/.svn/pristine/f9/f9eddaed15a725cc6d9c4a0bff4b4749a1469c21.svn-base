@@ -1,0 +1,395 @@
+import React from 'react';
+import {BasicButton as Button} from 'components';
+import {Label, Checkbox, Radio, Textfield, InputCalendar, Table, Grid, ComponentPanel, SubFullPanel, FullPanel, Player, RFloatArea, RelativeGroup} from 'components';
+import {Selectbox} from 'components';
+import {ComLib, DataLib, TransManager} from 'common';
+
+class View extends React.Component{
+	/*------------------------------------------------------------------------------------------------*/
+	// [1. Default State Zone]
+	/*------------------------------------------------------------------------------------------------*/
+	state = {
+		gridApi : null,
+		grid : null,
+		dsUserCnt : DataLib.datalist.getInstance(),
+		dsUserList: DataLib.datalist.getInstance(),
+		dsUserDet: DataLib.datalist.getInstance([{USR_CD: ""}]),
+		playerProps : {
+			id  : 'btnPlayerTest',
+			value : 'playerTest',
+		},
+		components: { 
+			test: this.createShowCellRenderer(),
+		},
+		gridProps : {
+			id : 'testGrid',
+			header: [
+				{headerName: '센터코드',		field: 'TEST1',		colId: 'TEST1',	req: true},
+				{headerName: '팀코드',			field: 'TEST2',		colId: 'TEST2',	},
+				{headerName: '사용자코드',		field: 'TEST3',		colId: 'TEST3',	req: true },
+				{	headerName: '사용자정보',		field: '',		colId: '',
+					children : [
+						{headerName: '사용자명',		field: 'TEST4',		colId: 'TEST4',	editable: true, flex : 3, minWidth : 100},
+						{headerName: '권한레벨',		field: 'TEST5',		colId: 'TEST5',	editable: true,  rowSpan : true, flex : 1},
+						{headerName: '영업가능여부',	field: 'TEST6',		colId: 'TEST6',	editable: true, flex : 1, },
+						{headerName: '사용여부',		field: 'TEST7',		colId: 'TEST7',	editable: true, flex : 1, 
+							cellEditor: 'agSelectCellEditor',
+							cellEditorParams: { values : ComLib.getComCodeValue('USE_YN') },
+							valueFormatter : (params) => { return ComLib.getComCodeName('USE_YN', params.value) }
+							// valueFormatter : (params) => {return params.value + '1'}
+						},
+					]
+				},
+				
+			],
+			data : DataLib.datalist.getInstance(
+				[
+					{	LEVEL: 1, ID:'1',       PARENT_ID: '0',	    VALUE: '',	TEST1 : '                         TEST1',	TEST2 : 'TEST2', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'Y', TEST8 : 'TEST8'	},
+					{	LEVEL: 2, ID:'1-1',     PARENT_ID: '1',	    VALUE: '',	TEST1 : 'TEST1',	TEST2 : 'TEST2', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'Y', TEST8 : 'TEST8'	},
+					{	LEVEL: 3, ID:'1-1-1',   PARENT_ID: '1-1',	VALUE: '',	TEST1 : 'TEST1',	TEST2 : 'TEST12', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 3, ID:'1-1-2',   PARENT_ID: '1-1',	VALUE: '',	TEST1 : 'TEST1',	TEST2 : 'TEST22', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 2, ID:'1-2',     PARENT_ID: '1',	    VALUE: '',	TEST1 : 'TEST1',	TEST2 : 'TEST12', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'Y', TEST8 : 'TEST8'	},
+					{	LEVEL: 3, ID:'1-2-1',   PARENT_ID: '1-2',	VALUE: '',	TEST1 : 'TEST1',	TEST2 : 'TEST22', TEST3 : 'TEST13', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 2, ID:'1-3',     PARENT_ID: '1',	    VALUE: '',	TEST1 : 'TEST1',	TEST2 : 'TEST22', TEST3 : 'TEST13', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 3, ID:'1-3-1',   PARENT_ID: '1-3',	VALUE: '',	TEST1 : 'TEST1',	TEST2 : 'TEST22', TEST3 : 'TEST13', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 3, ID:'1-3-2',   PARENT_ID: '1-3',	VALUE: '',	TEST1 : 'TEST11',	TEST2 : 'TEST2', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'Y', TEST8 : 'TEST8'	},
+					{	LEVEL: 4, ID:'1-3-2-1', PARENT_ID: '1-3-2',	VALUE: '',	TEST1 : 'TEST11',	TEST2 : 'TEST2', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 1, ID:'2',       PARENT_ID: '0',	    VALUE: '',	TEST1 : 'TEST11',	TEST2 : 'TEST2', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 2, ID:'2-1',     PARENT_ID: '2',	    VALUE: '',	TEST1 : 'TEST21',	TEST2 : 'TEST2', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 2, ID:'2-2',     PARENT_ID: '2',	    VALUE: '',	TEST1 : 'TEST21',	TEST2 : 'TEST2', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 3, ID:'2-2-1',   PARENT_ID: '2-2',	VALUE: '',	TEST1 : 'TEST21',	TEST2 : 'TEST2', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+					{	LEVEL: 1, ID:'3',       PARENT_ID: '0',	    VALUE: '',	TEST1 : 'TEST21',	TEST2 : 'TEST2', TEST3 : 'TEST3', TEST4 : 'TEST4', TEST5 : 'TEST5', TEST6: 'TEST6', TEST7 : 'y', TEST8 : 'TEST8'	},
+				]
+			),
+			paging : {
+				start: 0,
+				size : 40,
+				page : 1
+			},
+		}
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [2. OnLoad Event Zone]
+	/*------------------------------------------------------------------------------------------------*/
+	componentDidMount() {
+		if (this.validation("SAM010000_R01")) this.transaction("SAM010000_R01");
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (serviceid) => {
+		switch (serviceid) {
+			case 'SAM010000_R01':
+				break;
+			case 'SAM010000_H01':
+				break;
+			default : break;
+		}
+
+		return true;
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (serviceid) => {
+		let transManager = new TransManager();
+		try {
+			switch (serviceid) {
+			case 'SAM010000_R01':
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"COM.R_getUserListTEST",
+					datasetsend:"dsUser",
+					datasetrecv:"dsRst",
+				});
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"COM.R_getUserListTESTCnt",
+					datasetsend:"dsUser",
+					datasetrecv:"dsUserCnt",
+				});
+				// transManager.addDataset('dsUser', [{
+				// 	QUERY_START	: this.state.gridProps.paging.start,
+				// 	QUERY_LIMIT	: this.state.gridProps.paging.size,
+				// 	QUERY_PAGE	: this.state.gridProps.paging.page
+				// }]);
+				transManager.addDataset('dsUser', [{}]);
+				transManager.agent();
+				break;
+			case 'SAM010000_H01':
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.handle,
+					sqlmapid:"COM.H_handleTEST",
+					datasetsend:"dsUserList",
+				});
+				transManager.addDataset('dsUserList', this.state.dsUserList.getTransRecords());
+				transManager.agent();
+				break;
+			default : break;
+			}
+		} catch (err) {
+
+		}
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {
+		switch (res.id) {
+		case 'SAM010000_R01':
+			// if (res.data.dsRst.length > 0) {
+			// 	ComLib.setStateInitRecords(this, "dsUserList", res.data.dsRst);
+			// }
+			ComLib.setStateInitRecords(this, "dsUserList", res.data.dsRst);
+			ComLib.setStateInitRecords(this, "dsUserCnt", res.data.dsUserCnt);
+			break;
+		case 'SAM010000_H01':
+			this.transaction("SAM010000_R01");
+			break;
+		default : break;
+		}
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {
+		button: {
+			onClick: (e) => {
+				switch (e.target.id) {
+				case 'btnPlayerTest':
+					//alert('btnPlayerTest');
+					let option = { width: '600px', height: '740px', modaless: true, ctrNo : '11811769994', callId : '11811769994_10000004_215197_1311051' }
+					ComLib.openPlayer(option);
+					break;
+				case 'btnTestCall':
+					//alert('btnPlayerTest');
+					let option1 = { width: '1200px', height: '830px', modaless: false, callback : () => {alert('callback 먼저');} }
+					ComLib.openPop('STA020001', '콜평가요약', option1);
+					break;
+				case 'btnAdd':
+					break;
+				case 'btnDel':
+					break;
+				case 'btnSave':
+					alert('btnSave');
+					// if (this.validation("SAM010000_H01")) this.transaction("SAM010000_H01");
+					break;
+				default : break;
+				}
+			}
+		},
+		input: {
+			onChange: (e) => {
+				ComLib.setStateValue(this, "dsUserDet", 0, "USR_CD", e.target.value);
+			}
+		},
+		grid: {
+			onGridReady : (e) => {
+				console.log('console.log grid ongridready');
+				this.setState({gridApi : e.gridApi, grid : e.grid});
+			},
+			onRowClicked: (e) => {
+				//console.log('onRowClicked');
+				//console.log(e);
+				//ComLib.setStateValue(this, "dsUserDet", 0, "USR_CD", this.state.dsUserList.getRow(e.index));
+				//ComLib.setStateRecords(this, "dsUserDet", this.state.dsUserList.getRow(e.index));
+			},
+			onCellFocused: (e) => {
+				//console.log('onCellFocused');
+				//console.log(e);
+			},
+			onCellClicked: (e) => {
+				//console.log('onCellClicked');
+				//console.log(e);
+			},
+			onCellDoubleClicked: (e) => {
+				//console.log('onCellDoubleClicked');
+				//console.log(e);
+			},
+			onCellValueChanged: (e) => {
+				console.log('onCellValueChanged');
+				
+				//ComLib.setStateRecords(this, "dsUserList", e.data);
+				
+				// this.setState({...this.state, dsUserList : {...this.state.dsUserList, records : e.data}});
+				
+				//ComLib.setStateValue(this, "dsUserList", e.index, e.col, e.newValue);
+			},
+			onRowDoubleClicked: (e) => {
+				//console.log('onRowDoubleClicked');
+				//console.log(e);
+			},
+			onCellEditingStopped: (e) => {
+				//console.log('onCellEditingStopped');
+				//console.log(e);
+				
+			},
+			onSelectionChanged: (e) => {
+				
+			},
+			onRowSelected: (e) => {
+				// console.log('onRowSelected');
+				// console.log(e);
+			},
+			onDeleteRow: (e) => {
+				//console.log('onDeleteRow');
+				//ComLib.setStateRecords(this, "dsUserList", e.data, e.callback);
+//				e.callback();
+				//this.state.gridProps.data.setRecords(e.data);
+			},
+			onInsertRow: (e) => {
+				console.log('onInsertRow');
+				// this.state.dsUserList.setRecords(e.data);
+				// this.state.dsUserList.setValue(e.index, "CENT_CD", "0000000");
+				// this.state.dsUserList.setValue(e.index, "TEAM_CD", "0000001");
+
+				// ComLib.setStateDs(this, "dsUserList", e.callback);
+
+				//this.state.gridProps.data.setRecords(e.data);
+			},
+			onScrollEnd: (e) => {
+				// if (e.page === this.state.gridProps.paging.page) {
+					this.setState({...this.state
+						, gridProps : { ...this.state.gridProps
+							, paging : { ...this.state.gridProps.paging
+								, start : this.state.gridProps.paging.start + this.state.gridProps.paging.size
+								, page : this.state.gridProps.paging.page + 1
+							}
+						}
+					}, () => {
+						this.transaction("SAM010000_R01");
+					});
+				// }
+			},
+			onBeforeInsertRow : (e) => {
+				console.log('onBeforeInsertRow');
+				console.log(e);
+				let rtnVal = { rtn : true, index: this.state.grid.getSelectedRowIndex()};
+				console.log(rtnVal);
+				return rtnVal;
+			}
+		}
+	}
+
+	createShowCellRenderer() {
+
+		function ShowCellRenderer() {}
+		ShowCellRenderer.prototype.init = function (params) {
+			let left = 0;
+
+			let rtnVal = "";
+			let expand = params.data.EXPAND
+
+			if (params.data.childCNT > 0) {
+				if (expand) {
+					rtnVal = `<button className="scrm-btn xs grey-o i">- </button>`;	
+				} else {
+					rtnVal = `<button className="scrm-btn xs grey-o i">+ (` + params.data.childCNT + `)</button>`;
+				}
+			} 		
+	
+			if (params["data"]["LEVEL"] !== 1) {
+				left = (params["data"]["LEVEL"] - 1) * 10;
+			}
+
+			this.ui = document.createElement('div');
+			this.ui.innerHTML =	'<div style="padding-left: ' + left + 'px">' + params["data"]["ID"] + " "  + rtnVal + '</div>' ;
+		}
+		ShowCellRenderer.prototype.getGui = function () {
+		  return this.ui;
+		};
+		return ShowCellRenderer;
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [7. render Zone]
+	//  - 화면 관련 내용 작성
+	/*------------------------------------------------------------------------------------------------*/
+	render () {
+		console.log('container render');
+		console.log(ComLib.getComCodeName('USE_YN', 'Y'));
+		return (
+			<React.Fragment>
+				{/* <ComponentPanel>
+					<Player></Player>
+				</ComponentPanel> */}
+				<ComponentPanel>
+					<Button
+						id = {this.state.playerProps.id}
+						value = {this.state.playerProps.value}
+						onClick = {this.event.button.onClick}
+					/>
+					<Button
+						id = {'btnTestCall'}
+						value = {'call평가현황팝업'}
+						onClick = {this.event.button.onClick}
+					/>
+				</ComponentPanel>
+				<ComponentPanel>
+					<Grid
+						id={this.state.gridProps.id} ref={this.state.gridProps.id} height= "500px"
+						header = {this.state.gridProps.header}
+						tree = {{isTree : true, headerName:'트리테스트', stndCol: ['TEST1', 'TEST2', 'TEST3'], open : true}}
+						rowNum = {true}
+						dnlExcelBtn = {true}
+						// data = {this.state.dsUserList}
+						data = {this.state.gridProps.data}
+						onGridReady = {this.event.grid.onGridReady}
+						onRowClicked = {this.event.grid.onRowClicked}
+						onCellFocused = {this.event.grid.onCellFocused}
+						onCellClicked = {this.event.grid.onCellClicked}
+						onCellDoubleClicked = {this.event.grid.onCellDoubleClicked}
+						onCellValueChanged = {this.event.grid.onCellValueChanged}
+						onRowDoubleClicked = {this.event.grid.onRowDoubleClicked}
+						onCellEditingStopped = {this.event.grid.onCellEditingStopped}
+						onSelectionChanged = {this.event.grid.onSelectionChanged}
+						onRowSelected = {this.event.grid.onRowSelected}
+						onDeleteRow = {this.event.grid.onDeleteRow}
+						onInsertRow = {this.event.grid.onInsertRow}
+						onScrollEnd = {this.event.grid.onScrollEnd}
+						onBeforeInsertRow = {this.event.grid.onBeforeInsertRow}
+						// paging = {true}
+						// infinite = {true}
+						rowDrag = {true}
+						colPinned = {4}
+						
+						components = {this.state.components}
+
+						totalRowCnt = {(this.state.dsUserCnt.getRecords().length === 0) ? 0 : this.state.dsUserCnt.getValue(0, 'CNT')}
+						suppressRowClickSelection = {true}
+						infoCheckBox = {{
+							use : true
+						}}
+						rowSelection = 'multiple'
+					/>
+					{/*<Button id = "btnAdd" value = {"행추가"} onClick = {this.event.button.onClick}/>
+					<Button id = "btnDel" value = {"행삭제"} onClick = {this.event.button.onClick}/>*/}
+					<RelativeGroup>
+						<RFloatArea>
+							<Button color= 'purple' fiiled= {true} id = "btnSave" value = {"저장"} onClick = {this.event.button.onClick}/>
+						</RFloatArea>
+					</RelativeGroup>
+				</ComponentPanel>
+				<ComponentPanel>
+					<Label value={"사용자ID"}/>
+					<Textfield id="txfUsrCd" value={this.state.dsUserDet.records[0]["USR_CD"]} onChange={this.event.input.onChange}/>
+				</ComponentPanel>
+			</React.Fragment>
+		);
+	}
+}
+
+export default View;

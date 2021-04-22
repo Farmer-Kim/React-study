@@ -1,0 +1,600 @@
+import React from 'react';
+import { ComponentPanel
+       , FlexPanel
+       , FullPanel
+       , LFloatArea
+       , RFloatArea
+       , RelativeGroup
+       , SearchPanel
+	   , Label
+       , Tree
+       , Textfield 
+       , Selectbox            } from 'components';
+import {BasicButton as Button } from 'components';
+import { ComLib
+       , DataLib
+       , StrLib
+       , TransManager
+       , newScrmObj           } from 'common';
+
+class View extends React.Component{
+	/*------------------------------------------------------------------------------------------------*/
+	// [1. Default State Zone]
+	/*------------------------------------------------------------------------------------------------*/
+	constructor() {
+		super();
+			
+		this.snroTreeData    = null;
+		this.currsnroTreeRow = null;
+
+		this.state = {
+			dsSnroList : DataLib.datalist.getInstance(),	
+			dsSnroDefault : DataLib.datalist.getInstance(),		
+			treeProps: {
+				id      : "snroTree",
+				areaName: "시나리오 목록",
+				height  : '570px',
+				header: [
+					{headerName: '시나리오',field: 'SNRO_CONT' , fieldLen: 450, req: true, searchedTarget: true},
+					{headerName: '유형',	field: 'SNRO_TP_CD', fieldLen: 80, req: true,  type: 'sel', codeValue: 'SNRO_TP_CD'},
+					{headerName: '조합문자 타입',	field: 'CHG_CHAR_FOM_TP_CD', fieldLen: 100, req: true,  type: 'sel', codeValue: 'CHG_CHAR_FOM_TP_CD'},
+					{headerName: '답변',	field: 'ANS_CONT'  , fieldLen: 400, req: true},
+					{headerName: '유형',	field: 'ANS_TP_CD' , fieldLen: 80, req: true,  type: 'sel', codeValue: 'ANS_TP_CD'},
+					{headerName: '인터페이스',	field: 'IFS_ID' , fieldLen: 100},
+					{headerName: '사용여부', field: 'USE_YN'    , fieldLen: 80, req: true, type: 'sel', codeValue: 'USE_YN'},
+				]
+			},
+			btnProps : {
+				btnSearch : {
+					id       : 'btnSearch',
+					disabled : false,
+					value    : '조회',
+					hidden   : false
+				},
+				btnSave : {
+					id       : 'btnSave',
+					disabled : true,
+					value    : '저장',
+					hidden   : false
+				},
+				btnDefault: {
+					id       : 'btnDefault',
+					disabled : true,
+					value    : '디폴트 설정',
+					hidden   : false
+				},
+			},
+			selectboxProps : {
+				selUseYnSearch : {
+					id       : 'selUseYnSearch',
+					value    : '',
+					dataset  : ComLib.convComboList(ComLib.getCommCodeList("USE_YN"), newScrmObj.constants.select.argument.all),
+					width    : 80,
+					selected : 0,
+					disabled : false
+				},
+			},			
+			textFieldProps : {
+				iptSnroContSearch : {
+					id          : 'iptSnroContSearch',
+					name        : 'iptSnroContSearch',
+					value       : '',
+					placeholder : '시나리오 내용',
+					minLength   : 1,
+					maxLength   : 200,
+					readOnly    : false,
+					disabled    : false
+				},
+			}
+		}
+		this.setDefaltSNRO = this.setDefaltSNRO.bind(this);
+    }
+    
+	/*------------------------------------------------------------------------------------------------*/
+	// [2. OnLoad Event Zone]
+	/*------------------------------------------------------------------------------------------------*/
+	componentDidMount() {
+		
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (serviceid) => {
+		let chkCnt  = 0;
+		let returnVal = -1;
+
+		switch (serviceid) {
+			case 'QAM080000_R01':
+
+				break;
+
+			case 'QAM080000_R02':
+				let record = this.snroTreeData;
+
+				outer : for (let intA = 0; intA < record.length; intA ++) {
+					if (record[intA].rowtype !== newScrmObj.constants.crud.read) {
+						chkCnt ++;
+					}		
+
+					let header = this.state.treeProps.header;
+
+					for (let i = 0; i < header.length; i ++) {		
+						if (header[i].req === true) {
+							if (StrLib.isNull(record[intA][header[i].field])) {
+								ComLib.openDialog('A', 'COME0001', [Number(intA + 1) , header[i].headerName.replace(/\*/g,'')]);
+								returnVal = intA;
+
+								break outer;
+							}
+						}
+					}	
+				}
+
+				if (returnVal > -1) {
+					// this.bigCdGrid.moveRow(returnVal, true);
+					
+					return false;
+				}	
+
+				if (record.length < 1 || chkCnt === 0) {
+					ComLib.openDialog('A', 'COME0005');
+
+					return false;
+				}
+				break;
+			default : break;
+		}
+
+		return true;
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (...params) => {
+		let transId = params[0];
+
+		let transManager = new TransManager();
+
+		transManager.setTransId (transId);
+		transManager.setTransUrl(transManager.constants.url.common);
+		transManager.setCallBack(this.callback);
+
+		try {
+			switch (transId) {
+			case 'QAM080000_R01':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getSnorList",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsSnorListRecv",
+				});
+
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getSnorDefault",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsSnorDefaultRecv",
+				});
+
+				let snorCont = this.state.textFieldProps.iptSnroContSearch.value;
+				let useYn    = this.state.selectboxProps.selUseYnSearch.value;
+				transManager.addDataset('dsSearchParam', [{SRC_ITEM_NM: snorCont, SRC_ITEM_USE: useYn}]);
+				transManager.agent();
+
+				break;
+
+			case 'QAM080000_R02':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getSnorSeqNo",
+					datasetsend: "dsSnorList",
+					datasetrecv: "dsSnorSeqNoRecv",
+				});
+
+				transManager.addDataset('dsSnorList', [{EMPTY: ''}]);
+				transManager.agent();
+				break;
+
+			case 'QAM080000_H01':			
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.handle,
+					sqlmapid   : "QAM.H_handleSnorList",
+					datasetsend: "dsSnorList"
+				});
+
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.create,
+					sqlmapid   : "QAM.C_setSnorListSP",
+					datasetsend: "dsSnorList"
+				});
+
+				transManager.addDataset('dsSnorList', this.snroTreeData);
+				transManager.agent();
+				break;
+
+			case 'QAM080000_U01':			
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.update,
+					sqlmapid   : "QAM.U_setSnorDefault",
+					datasetsend: "dsSnorList"
+				});
+							
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getSnorDefault",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsSnorDefaultRecv",
+				});
+
+				let snorCont2 = this.state.textFieldProps.iptSnroContSearch.value;
+				let useYn2    = this.state.selectboxProps.selUseYnSearch.value;
+
+				transManager.addDataset('dsSearchParam', [{SRC_ITEM_NM: snorCont2, SRC_ITEM_USE: useYn2}]);
+				transManager.addDataset('dsSnorList', [{"ANS_CONT": params[1]}]);
+				transManager.agent();
+				break;
+
+			default : break;
+			}
+		} catch (err) {
+
+		}
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {
+		switch (res.id) {
+		case 'QAM080000_R01':
+			// tree 구조 한계로 state지연이되어 재조회시에 초기화가호 집어넣어야함
+			ComLib.setStateInitRecords(this, "dsSnroList", []);
+
+			if (res.data.dsSnorListRecv.length > 0) {
+				ComLib.setStateInitRecords(this, "dsSnroList", res.data.dsSnorListRecv);
+				ComLib.setStateInitRecords(this, "dsSnroDefault", res.data.dsSnorDefaultRecv);
+				
+				let state = this.state;
+
+				state['btnProps']['btnSave'].disabled = false;
+				state['btnProps']['btnDefault'].disabled = false;
+
+				this.setState(state);
+
+			} else {
+				//ComLib.setStateInitRecords(this, "dsSnroList", []);
+
+			}
+			
+			break;
+
+		case 'QAM080000_R02':
+			let newSeqNo = res.data.dsSnorSeqNoRecv[0].SEQ_NO;
+			if (newSeqNo === null) {
+				newSeqNo = 0;
+
+			} else {
+				newSeqNo = Number(newSeqNo) + 1;
+
+			}
+
+			let treeData = this.snroTreeData;
+			
+			for(let i = 0; i < treeData.length; i ++) {
+				if (treeData[i].ID === '') {
+					treeData[i].ID = newSeqNo;
+					newSeqNo += 1;
+				}
+			}
+
+			for(let i = 0; i < treeData.length; i ++) {
+				if (treeData[i].PARENT_ID === '') {
+					for(let j = 0; j < treeData.length; j ++) {
+						if (treeData[j].recid === treeData[i].parent) {							
+							treeData[i].PARENT_ID = treeData[j].ID;
+							
+							break;
+						}
+					}
+					if (treeData[i].PARENT_ID === '') {
+						treeData[i].PARENT_ID = 0;
+						
+					}
+				}
+			}
+			
+
+			for(let i = 0; i < treeData.length; i ++) {
+				delete treeData[i]['title'];
+
+				if (treeData[i].PARENT_ID === 0) {
+					treeData[i].BAS_PARENT_ID = treeData[i].ID;
+
+				} else {
+					for(let j = 0; j < treeData.length; j ++) {
+						if (treeData[j].ID === treeData[i].PARENT_ID) {	
+							treeData[i].BAS_PARENT_ID = treeData[j].BAS_PARENT_ID;		
+							break;			
+						}
+					}
+				}
+				
+			}
+
+			let records = this.state.dsSnroList.getRecords();
+
+			for (let i = 0; i < records.length; i ++) {
+				let orgData = records[this.datasetIndexOf("recid", i + 1, records)];
+				let treeDatai = treeData[this.datasetIndexOf("recid", i + 1, treeData)];
+				
+				let rtnVal = true;
+				
+				Object.keys(orgData).forEach(function(key){
+					if (orgData[key] !== treeDatai[key]) {
+						rtnVal = false;
+					}
+				});
+
+				if (rtnVal) {
+
+					treeData[this.datasetIndexOf("recid", i + 1, treeData)].rowtype = orgData.rowtype;
+										
+				} else {
+					if (treeData[this.datasetIndexOf("recid", i + 1, treeData)].rowtype === newScrmObj.constants.crud.read) {
+						treeData[this.datasetIndexOf("recid", i + 1, treeData)].rowtype = newScrmObj.constants.crud.update;
+					}
+					
+					
+				}
+			}
+
+			this.snroTreeData = treeData;
+			
+			this.transaction("QAM080000_H01");
+			
+			break;
+
+		case "QAM080000_H01":
+			ComLib.openDialog("A", "COMI0001", ["시나리오"]);
+
+			this.transaction("QAM080000_R01");
+
+			break;
+
+		case "QAM080000_U01":
+			ComLib.openDialog("A", "COMI0001", ["디폴트 시나리오"]);
+
+			if (res.data.dsSnorDefaultRecv.length > 0) {
+				ComLib.setStateRecords(this, "dsSnroDefault", res.data.dsSnorDefaultRecv);
+				
+			} else {
+				//ComLib.setStateInitRecords(this, "dsSnroList", []);
+
+			}			
+
+			break;	
+
+		default : break;
+		}
+	}
+	datasetIndexOf = (column, value, records) => {
+		var index = -1;
+		for (var i = 0; i < records.length; i++) {
+			if (records[i][column] === value) {
+				index = i;
+				break;
+			}
+		}
+		return index;
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	setDefaltSNRO (defaultSnro) {
+		this.transaction("QAM080000_U01", defaultSnro)
+
+	}
+    event = {
+		// 버튼 이벤트
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {
+				case "btnSearch":				
+						if (this.validation("QAM080000_R01")) this.transaction("QAM080000_R01");
+					
+					break;
+
+				case "btnSave":
+					if (this.validation("QAM080000_R02")) this.transaction("QAM080000_R02");
+					
+					break;
+
+				case "btnDefault":
+					let records  = this.state.dsSnroDefault.records;
+					
+					let option1 = { width: '500px', height: '460px', records: records, modaless: false, callback: () => {return;}}
+					ComLib.openPop('QAM080001', '디폴트 시나리오 작성', option1, this.setDefaltSNRO);
+
+					break;
+						
+				default : break;
+				}
+			}
+		},
+		tree : {
+			onChange: (e) => {
+                switch (e.id) {
+                case 'snroTree':
+					// 트리 안의 데이터가 바뛰면 넘어옴 트리 밖에서 트리의 데이터를 수정 하거나 하는 경우는 이 데이터 사용하여 
+					// 변경후 다시 setState 하여 트리로 넘길것
+                    this.snroTreeData = e.data;
+
+					console.log(e.data)
+                    break;
+
+                default: break;
+                }
+                
+			},
+			onRowSelect: (e) => {
+				//{id: this.props.id, data:viewNode.node, type: 'add'}
+				
+				this.currsnroTreeRow = e.data.id;
+		
+
+			},			
+        },
+        input : {
+			onChange: (e) => {
+				switch (e.target.id) {
+				case 'iptSnroContSearch':
+					let state = this.state;
+
+					state['textFieldProps']['iptSnroContSearch'].value = e.target.value;
+	
+					this.setState(state);
+					
+					break;
+
+				default: break;
+				}
+			},
+			onKeyPress: (e) => {
+				switch (e.target.id) {
+				case 'iptSnroContSearch':
+					if (e.key === 'Enter') {
+						if (this.validation("QAM080000_R01")) this.transaction("QAM080000_R01");
+					}
+					
+					break;
+
+				default: break;
+				}
+
+			}
+		},
+		selectbox: {
+			onChange: (e) => {
+				let state = this.state;
+
+				state['selectboxProps'][e.target.id].selected = e.target.selectedIndex;
+				state['selectboxProps'][e.target.id].value    = e.target.value;
+
+				this.setState(state);
+
+			}
+		}
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [7. render Zone]
+	//  - 화면 관련 내용 작성
+	/*------------------------------------------------------------------------------------------------*/
+	render () {
+		return (
+			<React.Fragment>
+                <FullPanel>
+                    <SearchPanel>
+                    	<RelativeGroup>
+							<LFloatArea>
+								<FlexPanel>
+									<Label value="시나리오내용"/>
+									<Textfield
+										width       = {300}
+										id          = {this.state.textFieldProps.iptSnroContSearch.id}
+										name        = {this.state.textFieldProps.iptSnroContSearch.name}
+										value       = {this.state.textFieldProps.iptSnroContSearch.value}
+										placeholder = {this.state.textFieldProps.iptSnroContSearch.placeholder}
+										minLength   = {this.state.textFieldProps.iptSnroContSearch.minLength}
+										maxLength   = {this.state.textFieldProps.iptSnroContSearch.maxLength}
+										readOnly    = {this.state.textFieldProps.iptSnroContSearch.readOnly}
+										disabled    = {this.state.textFieldProps.iptSnroContSearch.disabled}
+										onChange    = {this.event.input.onChange}
+										onKeyPress  = {this.event.input.onKeyPress}
+									/>
+									<Label value="사용여부"/>
+									<Selectbox
+										id       = {this.state.selectboxProps.selUseYnSearch.id}
+										value    = {this.state.selectboxProps.selUseYnSearch.value}
+										dataset  = {this.state.selectboxProps.selUseYnSearch.dataset}
+										width    = {this.state.selectboxProps.selUseYnSearch.width}
+										disabled = {this.state.selectboxProps.selUseYnSearch.disabled}
+										selected = {this.state.selectboxProps.selUseYnSearch.selected}
+										onChange = {this.event.selectbox.onChange}
+									/>
+								</FlexPanel>
+							</LFloatArea>
+							<RFloatArea>
+								<Button
+									color      = 'blue' 
+									fiiled	   = "o"
+									innerImage = {true} 
+									icon	   = {'srch'}  
+									id         = {this.state.btnProps.btnSearch.id}
+									value      = {this.state.btnProps.btnSearch.value}
+									disabled   = {this.state.btnProps.btnSearch.disabled}
+									hidden     = {this.state.btnProps.btnSearch.hidden}
+									onClick    = {this.event.button.onClick}
+									mt         = {5}
+								/>
+							</RFloatArea>
+						</RelativeGroup>
+                    </SearchPanel>
+					<ComponentPanel>
+						<Tree
+							id          = {this.state.treeProps.id}
+							areaName    = {this.state.treeProps.areaName}
+							data        = {this.state.dsSnroList}
+							height      = {this.state.treeProps.height}
+							header      = {this.state.treeProps.header}
+							onChange    = {this.event.tree.onChange}
+							addRowBtn   = {true}
+							delRowBtn   = {true}
+							onRowSelect = {this.event.tree.onRowSelect}
+							maxDepth    = {6}
+							searched    = {this.state.textFieldProps.iptSnroContSearch.value}
+							allowSearch = {true}
+							openAllonInitial = {true}
+						/>
+						<RelativeGroup>
+							<RFloatArea>	
+								<Button
+									color    = 'purple' 
+									fiiled   = "o" 
+									id       = {this.state.btnProps.btnDefault.id}
+									value    = {this.state.btnProps.btnDefault.value}
+									disabled = {this.state.btnProps.btnDefault.disabled}
+									hidden   = {this.state.btnProps.btnDefault.hidden}
+									onClick  = {this.event.button.onClick}
+									mt       = {5}
+								/>
+								<Button
+									color    = 'purple' 
+									fiiled   = "o" 
+									id       = {this.state.btnProps.btnSave.id}
+									value    = {this.state.btnProps.btnSave.value}
+									disabled = {this.state.btnProps.btnSave.disabled}
+									hidden   = {this.state.btnProps.btnSave.hidden}
+									onClick  = {this.event.button.onClick}
+									mt       = {5}
+								/>
+							</RFloatArea>
+						</RelativeGroup>
+					</ComponentPanel>   
+                </FullPanel>
+			</React.Fragment>
+		);
+	}
+}
+
+export default View;

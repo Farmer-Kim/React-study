@@ -1,0 +1,820 @@
+// STT 학습
+import React from 'react';
+import {ComponentPanel, FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup} from 'components';
+import {BasicButton as Button} from 'components';
+import {Grid, Tabs, TabPanel} from 'components';
+import {ComLib, DataLib, ExcelLib, TransManager, newScrmObj} from 'common';
+
+// import ReactFileReader from 'react-file-reader';
+// import ReactExport     from 'react-data-export'; // 엑셀파일 쓰기
+
+import STT030100 from '../STT030100';
+import STT030200 from '../STT030200';
+// import excel           from 'xlsx';
+
+// const ExcelFile  = ReactExport.ExcelFile;             // 엑셀 다운로드 관련
+// const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;  // 엑셀 다운로드 관련
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+		this.trainListGridApi = null;
+		this.trainListGrid    = null;
+
+		this.state = {
+			dsTrainList    : DataLib.datalist.getInstance(),
+			dsWordList     : DataLib.datalist.getInstance(),
+			dsSentenceList : DataLib.datalist.getInstance(),
+			dsTrainHistory : DataLib.datalist.getInstance(),
+			activeTab : 0,
+			buttonProps : {
+				btnDataDownload : {
+					id : 'btnDataDownload',
+					disabled : false,
+					value : '데이터 다운로드',
+					hidden : false,
+					color : 'green',
+				},
+				btnExcelUpload : {
+					id : 'btnExcelUpload',
+					disabled : false,
+					value : '파일업로드',
+					hidden : false,
+					color : 'green',
+				},
+				btnExecuteLearning : {
+					id : 'btnExecuteLearning',
+					disabled : false,
+					value : '학습진행',
+					hidden : false,
+					color : 'purple',
+				},
+				btnOpenLearningHist : {
+					id : 'btnOpenLearningHist',
+					disabled : false,
+					value : '학습로그',
+					hidden : false,
+					color : 'blue',
+				},				
+			},
+			gridProps : {
+				grdTrainList : {
+					areaName : '사용자학습목록',
+					id : 'grdTrainList',
+					header : 
+					[						  		
+						{headerName:  '학습일자',	field: 'TRN_DTM',		 colId: 'TRN_DTM',		}
+						,{headerName: '타이틀',	field: 'TRN_TIT',			colId: 'TRN_TIT',		editable: false }
+						,{headerName: '작업상태',	field: 'TRN_STATE',			colId: 'TRN_STATE',		editable: false,
+							cellEditorParams: { values : ComLib.getComCodeValue('CMN', 'TRN_STATE')},
+							valueFormatter : (params) => { return ComLib.getComCodeName('CMN', params.value, 'TRN_STATE')}}
+					],				
+					paging : {
+						start: 0,
+						size : Number(ComLib.getCentStndVl('00012','STND_VAL')),
+						page : 1,
+						loading: false
+					},					
+				},
+			},				
+			fileName: '',
+			exportFileFlag: false,
+			updateFlag: false // 변경금지 DS 변경할떄 리엑트 인식 못하는 경우 버그 잡기용
+		}
+		this.event.tab.onClick		= this.event.tab.onClick.bind(this);
+		this.event.button.onClick	= this.event.button.onClick.bind(this);
+	}
+	
+	/*------------------------------------------------------------------------------------------------*/
+	// [2. OnLoad Event Zone]
+	/*------------------------------------------------------------------------------------------------*/
+	componentDidMount () {
+		this.transaction("STT030000_R01");
+		
+	}
+
+	componentDidUpdate() {
+
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (serviceid) => {
+		switch (serviceid) {
+		case 'STT030000_R01':
+			break;
+		
+		case 'executeLearning':
+			if (!this.state.dsWordList.isUpdated() && !this.state.dsSentenceList.isUpdated()) {
+				ComLib.openDialog('A', 'SYSI0010', '변경 항목 없음');	
+
+				return false;
+			}
+			
+
+			break;
+		default : break;
+		}
+		return true;
+	}
+	handler = {
+		setDs : (transId) => {
+			switch (transId) {
+			case "STT030000_R01" :
+				let state = this.state;
+
+				state['gridProps']['grdTrainList']['paging'].start = 0;
+				state['gridProps']['grdTrainList']['paging'].page = 1;
+
+
+				this.setState(state, () => {
+					this.transaction('STT030000_R01');
+				});
+				break;
+			}
+		}
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (...params) => {		
+		let serviceid = params[0];
+		let transManager = new TransManager();
+		
+		transManager.setTransId(serviceid);
+		transManager.setTransUrl(transManager.constants.url.common);
+		transManager.setCallBack(this.callback);
+		
+		let state       = this.state;	
+		
+		let pageStart   = state['gridProps']['grdTrainList']['paging'].start;
+		let pageLimit   = state['gridProps']['grdTrainList']['paging'].size;
+
+		try {
+			switch (serviceid) {	
+			case 'STT030000_R01':					
+				transManager.addConfig({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "STT.R_getTrainList",
+					datasetsend: "dsPaging",
+					datasetrecv: "dsTrainList",
+				});
+				
+				transManager.addDataset('dsPaging', [{QUERY_START : pageStart,
+													  QUERY_LIMIT : pageLimit}]);
+				transManager.agent();
+
+				break;
+
+			case 'STT030000_R02':					
+				transManager.addConfig({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "STT.R_getTrainList",
+					datasetsend: "dsPaging",
+					datasetrecv: "dsTrainList",
+				});
+				
+				transManager.addDataset('dsPaging', [{QUERY_START : pageStart,
+													  QUERY_LIMIT : pageLimit}]);
+				transManager.agent();
+
+				break;
+
+			case 'STT030000_R03':
+				transManager.addConfig({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "STT.R_getTrainStateChk",
+					datasetsend: "dsEmpty",
+					datasetrecv: "dsTrainState",
+				});
+	
+				transManager.addDataset('dsEmpty', [{}]);
+				transManager.agent();
+
+				break;
+
+			// case 'STT030000_R03':
+			// 	transManager.addConfig({
+			// 		dao: transManager.constants.dao.base,
+			// 		crudh: transManager.constants.crudh.read,
+			// 		sqlmapid:"STT.R_getTrainHistory",
+			// 		datasetsend:"dsSearch",
+			// 		datasetrecv:"dsTrainHistory",
+			// 	});
+					
+			// 	let monthRangeArr = ComLib.getCommCodeList('TRAIN_LOG_MONTH');
+
+			// 	transManager.addDataset('dsSearch', [{MONTH_RANGE: monthRangeArr[0].CODE}]);
+			// 	transManager.agent();
+
+			// 	break;
+				  
+			case 'STT030000_C01':					
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.create,
+					sqlmapid:"STT.C_setTrainSchedule",
+					datasetsend:"dsTrainSchedule",
+				});
+				
+				let wordDs     = this.state.dsWordList.getRecords();
+				let sentenceDs = this.state.dsSentenceList.getRecords();
+				let combinedWordList = "";
+				let sentenceList     = "";
+
+				for(let i = 0; i < wordDs.length; i ++) {
+					if (wordDs[i].rowtype !== newScrmObj.constants.crud.remove) {
+						combinedWordList += wordDs[i].word;
+
+						if (i + 1 !== wordDs.length) {
+							combinedWordList += ',';
+						}
+					}					
+				}
+
+				for(let i = 0; i < sentenceDs.length; i ++) {
+					if (wordDs[i].rowtype !== newScrmObj.constants.crud.remove) {	
+						sentenceList += sentenceDs[i].sentence;
+	
+						if (i + 1 !== sentenceDs.length) {
+							sentenceList += ',';
+						}
+					}
+				}
+
+				transManager.addDataset('dsTrainSchedule', [{TRN_TIT: params[3], TRN_DTM: params[1] + params[2] + '0000', TRN_WORD: combinedWordList, TRN_SENT: sentenceList, TRN_TP: 'R' }]);
+				transManager.agent();
+				break;
+
+			case 'STT030000_U01':
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.update,
+					sqlmapid:"STT.U_setTrainDelete",
+					datasetsend:"dsIndex",
+				});
+	
+				transManager.addDataset('dsIndex', [{TRN_UNQ :params[1] }]);
+				transManager.agent();
+				break;
+			}
+		} catch (err) {
+
+		}
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {	
+		
+		let state = this.state;
+
+		switch (res.id) {
+			case 'STT030000_R01':	
+			let dsTrainList = res.data.dsTrainList;
+			let wordList     = dsTrainList[0].TRN_WORD.split(",");
+			let sentenceList = dsTrainList[0].TRN_SENT.split(",");
+			let dsWordList     = [];
+			let dsSentenceList = [];
+
+			for (let i = 0; i < wordList.length; i ++) {
+				dsWordList.push({word: wordList[i]})
+				
+			}
+
+			for (let i = 0; i < sentenceList.length; i ++) {
+				dsSentenceList.push({sentence: sentenceList[i]})
+				
+			}
+
+			ComLib.setStateInitRecords(this, "dsTrainList", dsTrainList);
+			ComLib.setStateInitRecords(this, "dsWordList", dsWordList);
+			ComLib.setStateInitRecords(this, "dsSentenceList", dsSentenceList);
+			
+			let rows = this.trainListGridApi.rowModel.rowsToDisplay;
+			rows[0].setSelected(true);
+
+			state['gridProps']['grdTrainList']['paging'].loading = false;
+			
+			this.setState(state);
+
+			break;
+
+		case 'STT030000_R02':				
+			ComLib.setStateInitRecords(this, "dsTrainList", res.data.dsTrainList);
+
+			state['gridProps']['grdTrainList']['paging'].loading = false;
+			
+			this.setState(state);
+
+			break;	
+
+		case 'STT030000_R03':
+			let stateChk = res.data.dsTrainState;
+			
+			if(stateChk[0].TrainUse_YN === 'X'){
+				ComLib.openDialog('A', 'SYSI0010', '이미 등록된 학습 완료 후 신규 등록이 가능합니다.\n학습 완료 후 시도하십시오.');	
+
+				return;
+		 
+			} else {
+				let option = { width: '500px', height: '400px', modaless: false, callback :  () => {return;}}
+
+				ComLib.openPop('STT030001', '학습진행', option, this.event.addNewTrainList);
+			}
+
+			break;
+
+		// case 'STT030000_R03':
+		// 	let dsTrainHistory = res.data.dsTrainHistory;
+
+		// 	ComLib.setStateInitRecords(this, "dsTrainHistory", dsTrainHistory);
+
+			
+
+		// 	break;
+
+		case 'STT030000_C01':	
+			if (this.validation("STT030000_R01")) this.handler.setDs('STT030000_R01');
+
+			break;
+
+		case 'STT030000_U01':
+			ComLib.openDialog('A', 'SYSI0010', '삭제 되엇습니다.');	
+
+			if (this.validation("STT030000_R01")) this.handler.setDs('STT030000_R01');
+
+			break;
+
+		default : break;
+		}
+	}
+
+	event = {
+		tab : {
+			onClick : (e) => {
+				this.setState({...this.state, activeTab : e});
+			}
+		},
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {
+				case "btnDataDownload":
+					this.onExelDownLoad();
+
+					break;
+
+				case "btnExcelUpload":
+					
+					break;
+
+				case "btnExecuteLearning":
+					if (this.validation('executeLearning')) {						
+						this.transaction('STT030000_R03')
+
+					}
+					
+					break;
+				// case "btnMisSenMan":
+				// 	option1 = { width: '1200px', height: '600px', modaless: false, callback : () => {} }
+				// 	ComLib.openPop('STT030002', '오인식문장관리', option1);
+				// 	break;
+
+				case "btnStudyLog":
+					let option = { width: '600px', height: '480px', modaless: false,callback : () => {} }
+
+					ComLib.openPop('STT030003', '학습로그', option);
+					
+					break;
+				default: break;
+				}
+			}
+		},
+		grid: {
+			onScrollEnd: (e) => {
+				let state = this.state;
+
+				if (!state['gridProps']['grdTrainList']['paging'].loading) {
+					state['gridProps']['grdTrainList']['paging'].start = state['gridProps']['grdTrainList']['paging'].start + state['gridProps']['grdTrainList']['paging'].size;
+					state['gridProps']['grdTrainList']['paging'].page = 1;
+
+
+					this.setState(state, () => {
+						this.transaction('STT030000_R02');
+					});
+				}
+			},
+			onGridReady: (e) => {
+				switch (e.id) {
+				case "grdTrainList":
+					this.trainListGridApi = e.gridApi;
+					this.trainListGrid    = e.grid;
+					
+					break;
+				default: break
+				}
+			},
+			onRowClicked: (e) => {
+				switch (e.id) {
+				case "grdTrainList":
+					let selectedRow = this.trainListGrid.getSelectedRows();
+					
+					let rows = this.trainListGridApi.rowModel.rowsToDisplay;
+					let row;
+
+					for (let i = 0; i < rows.length; i ++) {
+						if (rows[i].data.TRN_UNQ === e.data.TRN_UNQ){
+							row = this.trainListGridApi.rowModel.rowsToDisplay[i];
+							break;
+						}
+					}
+
+					if (row.selected !== true) {
+						row.setSelected(true);
+
+					} else {
+						let wordList     = selectedRow[0].TRN_WORD.split(",");
+						let sentenceList = selectedRow[0].TRN_SENT.split(",");
+						let dsWordList     = [];
+						let dsSentenceList = [];
+
+						for (let i = 0; i < wordList.length; i ++) {
+							dsWordList.push({word: wordList[i]})
+							
+						}
+
+						for (let i = 0; i < sentenceList.length; i ++) {
+							dsSentenceList.push({sentence: sentenceList[i]})
+							
+						}
+
+						ComLib.setStateInitRecords(this, "dsWordList", dsWordList);
+						ComLib.setStateInitRecords(this, "dsSentenceList", dsSentenceList);
+
+					}
+
+					break;
+				default: break;
+				}
+			},
+			onBeforeDeleteRow: () => {
+				let trnState  = this.trainListGrid.getSelectedRows()[0].TRN_STATE;
+				if (trnState === 'S' || trnState === 'Y') {
+					ComLib.openDialog('A', 'SYSI0010', '학습 진행중 이거나 적용중인 내역은 삭제 불가능');	
+
+					return false;
+
+				} else {	
+					ComLib.openDialog('C', 'SYSI0010', '정말 삭제하시겠습니까?'
+						, confirm => { 
+							if (confirm) {
+								let TRN_UNQ  = this.trainListGrid.getSelectedRows()[0].TRN_UNQ;
+
+								this.transaction("STT030000_U01" , TRN_UNQ);
+							}
+						}
+					);
+					
+					return false;
+				}
+			}
+		},
+		addNewTrainList: (e) => {
+			if (this.validation('STT030000_C01')) {
+				this.transaction('STT030000_C01', e.date, e.time, e.title )
+			} 
+		},
+		addCombineWord : (e) => {
+			let wordList = this.state.dsWordList;
+			let index = wordList.indexOf('word', e.targetWord);
+
+			if (index === -1) {
+				index = wordList.addRow();			
+
+				wordList.setValue(index, 'word', e.targetWord)
+
+			} else {	
+				let newWordList = JSON.parse(JSON.stringify(wordList.records))
+				let filteredOrgRecord = wordList.orgrecords.filter( row => (
+					row.word === e.targetWord 
+				))
+
+				if (filteredOrgRecord.length > 0) {
+					newWordList[index]['rowtype'] = newScrmObj.constants.crud.read;
+
+				} else {
+					newWordList[index]['rowtype'] = newScrmObj.constants.crud.create;
+
+				}
+
+				ComLib.setStateRecords(this, "dsWordList", newWordList)
+			}
+			this.setState({...this.state, updateFlag: !this.state.updateFlag})
+			
+		},
+		delCombineWord : (e) => {
+			let wordList = this.state.dsWordList;
+			let index = wordList.indexOf('word', e.targetWord);
+			let newWordList = JSON.parse(JSON.stringify(wordList.records))
+
+			newWordList[index]['rowtype'] = newScrmObj.constants.crud.remove;
+			
+			ComLib.setStateRecords(this, "dsWordList", newWordList)
+
+			//this.setState({...this.state, cmpWordList: this.state.dsWordList.getRecords()})
+
+		},
+		addSentence : (e) => {
+			let sentenceList = this.state.dsSentenceList;
+			let index = sentenceList.indexOf('sentence', e.targetSentence);
+
+			if (index === -1) {
+				index = sentenceList.addRow();			
+
+				sentenceList.setValue(index, 'sentence', e.targetSentence)
+
+			} else {	
+				let newSentenceList = JSON.parse(JSON.stringify(sentenceList.records))
+				let filteredOrgRecord = sentenceList.orgrecords.filter( row => (
+					row.sentence === e.targetSentence 
+				))
+
+				if (filteredOrgRecord.length > 0) {
+					newSentenceList[index]['rowtype'] = newScrmObj.constants.crud.read;
+
+				} else {
+					newSentenceList[index]['rowtype'] = newScrmObj.constants.crud.create;
+
+				}
+
+			}
+			this.setState({...this.state, updateFlag: !this.state.updateFlag})
+		},
+		delSentence : (e) => {
+			let sentenceList = this.state.dsSentenceList;
+			let index = sentenceList.indexOf('sentence', e.targetSentence);
+			let newSentenceList = JSON.parse(JSON.stringify(sentenceList.records))
+
+			newSentenceList[index]['rowtype'] = newScrmObj.constants.crud.remove;
+			
+			ComLib.setStateRecords(this, "dsSentenceList", newSentenceList)
+		}
+	}
+	onUploadFiles = async(files) => {
+		// const targetFile = files[0];
+		// // console.log('targetFile : ', targetFile);
+		// /// 파일 확장자 확인
+
+		// const targetFileName = targetFile.name;
+		// if ( targetFileName.substring(targetFileName.lastIndexOf('.'), targetFileName.length) !== '.xlsx' ) {
+		// 	ComLib.openDialog('A', 'SYSI0010', '업로드 가능한 파일 확장자는 xlsx 입니다.');	
+		// 	return;
+		// }
+
+		// ///read excel
+		// const reader = new FileReader();
+		// reader.onload = (e) => {
+		//   try {
+		// 	/* Parse data */
+		// 	const bstr = e.target.result;
+		// 	const wb = excel.read(bstr, {type:'array'});
+	
+		// 	/// 복합명사 시트 (첫번째 시트)
+		// 	const sheetNm1 = wb.SheetNames[0];
+			
+		// 	if(sheetNm1) {
+		// 	  const ws1 = wb.Sheets[sheetNm1];
+	
+		// 	  if(ws1.A1) {
+		// 		const cmpData = excel.utils.sheet_to_json(ws1, {header:1});
+		// 		let dsWordList     = [];
+
+		// 		for (let i = 0; i < cmpData.length; i ++) {
+		// 			if(!StrLib.isNull(cmpData[i])) {
+		// 				dsWordList.push({word: cmpData[i]})
+
+		// 			}
+		// 		}
+
+		// 		ComLib.setStateInitRecords(this, "dsWordList", dsWordList);
+
+		// 	  }
+		// 	}
+		
+		// 	/////////////////////////////////////
+		// 	/// 문장 시트 (두번째 시트)
+		// 	const sheetNm2 = wb.SheetNames[1];
+	
+		// 	if(sheetNm2) {
+		// 	  const ws2 = wb.Sheets[sheetNm2];
+	
+		// 	  if(ws2.A1) {
+		// 		const srtData = excel.utils.sheet_to_json(ws2, {header:1});
+				
+		// 		let dsSentenceList = [];
+				
+		// 		for (let i = 0; i < srtData.length; i ++) {
+		// 			if(!StrLib.isNull(srtData[i])) {
+		// 				dsSentenceList.push({sentence: srtData[i]})
+
+		// 			}					
+		// 		}
+		// 		ComLib.setStateInitRecords(this, "dsSentenceList", dsSentenceList);
+		// 	  }
+		// 	}
+		//   } catch(err) {
+		// 	ComLib.openDialog('A', 'SYSI0010', '파일 업로드를 실패하였습니다.\n파일을 확인해 주세요.');	
+		//   }
+		// };
+		// reader.readAsArrayBuffer(targetFile);
+	
+		// let req = new TransManager();
+	
+		// req.setTransUrl(CommonConstants.url.common);
+		// req.addConfig({
+		//   dao        : CommonConstants.dao.base,
+		//   crudh      : CommonConstants.crudh.read_one,
+		//   sqlmapid   : 'COM.P_proc_stt_set_log', 
+		//   datasetsend: 'reqInfo',
+		// });
+	
+		// let actUsr = sessionStorage.getItem("usrCd");
+		// let selectedTrnList = this.props.selectedTrnList;
+	
+		// req.addDataset('reqInfo', { TABLE: "TRAIN", KEY: selectedTrnList[0].TRN_UNQ, TYPE:"UE", ACT_USR: actUsr, ETC:''});
+		// req.agent();
+	
+	}
+	
+	onExelDownLoad = async() => {	
+		if (this.state.activeTab === 0) {
+			let header = [{headerName:  '복합명사',	field: 'word', colId: 'word'}]
+			ExcelLib.exportToExcel(header, this.state.dsWordList.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy), true, "복합명사");
+			
+		} else {
+			let header = [{headerName:  '문장',	field: 'sentence', colId: 'sentence'}]
+			ExcelLib.exportToExcel(header, this.state.dsSentenceList.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy), true, "문장");
+			
+
+		}
+		// ExcelLib.exportToExcel("test", , true);
+		
+		// let fileName = ''
+
+		// if (this.state.dsTrainList.records[0].length !== 0 ){
+		// 	let time   = new Date();
+			
+		// 	fileName += time.getFullYear();
+		// 	fileName += ("0" + time.getMonth()).slice(-2);
+		// 	fileName += ("0" + time.getDate()).slice(-2);
+		// 	fileName += time.getHours();
+		// 	fileName += time.getMinutes();
+		// 	fileName += time.getSeconds();
+		// 	fileName += "_학습수행_";
+		// 	fileName += this.state.dsTrainList.records[0].TRN_TIT;
+		// }
+		// this.setState({...this.state, exportFileFlag: true, filename: fileName}, this.setState({...this.state, exportFileFlag: false}));
+	}
+	render () {
+		return (
+			<React.Fragment>
+			<FullPanel>
+				<SubFullPanel>
+					<FlexPanel>
+						<ComponentPanel>
+							<RelativeGroup>
+								<RFloatArea>
+									<LFloatArea>
+										<Button 
+											id    = {this.state.buttonProps.btnExcelUpload.id} 
+											color = {this.state.buttonProps.btnExcelUpload.color} 
+											value = {this.state.buttonProps.btnExcelUpload.value}	
+											onClick= {this.event.button.onClick}
+											fiiled= {true} 										
+										/>
+										{/* <ReactFileReader  fileTypes={['.xlsx']} handleFiles={this.onUploadFiles}>
+											
+										</ReactFileReader> */}
+									</LFloatArea>	
+									<Button 
+										id     = {this.state.buttonProps.btnDataDownload.id} 
+										color  = {this.state.buttonProps.btnDataDownload.color} 
+										value  = {this.state.buttonProps.btnDataDownload.value}
+										onClick= {this.event.button.onClick}	
+										fiiled = {true} 										
+									/>																	
+									<Button 
+										id     = {this.state.buttonProps.btnExecuteLearning.id} 
+										color  = {this.state.buttonProps.btnExecuteLearning.color} 
+										value  = {this.state.buttonProps.btnExecuteLearning.value}
+										onClick= {this.event.button.onClick}	
+										fiiled = {true} 										
+									/>
+								</RFloatArea>
+							</RelativeGroup>
+							<Tabs tabWidth='100px' onClick = {this.event.tab.onClick}>
+								<TabPanel id = {'STT030100'} index={0} label={'복합명사'}>
+									<STT030100 
+										cmpWordList   = {this.state.dsWordList.getRecords()}
+										addCombineWord= {this.event.addCombineWord}
+										delCombineWord= {this.event.delCombineWord}
+										orgColor      = {'purple'}
+										newColor      = {'green'}
+									/>
+								</TabPanel>
+								<TabPanel id = {'STT030200'} index={1} label={'문장'}>
+									<STT030200
+										sentenceList= {this.state.dsSentenceList.getRecords()}
+										addSentence = {this.event.addSentence}
+										delSentence = {this.event.delSentence}
+										orgColor    = {'purple'}
+										newColor    = {'green'}
+									/>
+								</TabPanel>
+							</Tabs>
+						</ComponentPanel>
+						<ComponentPanel>
+							<Grid
+								areaName = {this.state.gridProps.grdTrainList.areaName}		
+								id       = {this.state.gridProps.grdTrainList.id}									
+								height   = "650px"
+								data     = {this.state.dsTrainList}
+								header   = {this.state.gridProps.grdTrainList.header}
+
+								addRowBtn   = {false}
+								delRowBtn   = {false}
+								dnlExcelBtn = {true}
+								rowNum      = {true}	
+								
+								paging   = {true}
+								infinite = {true}
+
+								totalRowCnt = {(this.state.dsTrainList.getRecords().length === 0) ? 0 : this.state.dsTrainList.getValue(0, 'totalcount')}
+								
+								onScrollEnd       = {this.event.grid.onScrollEnd}
+								onGridReady       = {this.event.grid.onGridReady}			
+								onRowClicked      = {this.event.grid.onRowClicked}
+								onBeforeDeleteRow = {this.event.grid.onBeforeDeleteRow}
+							/>
+							{/* <RelativeGroup>
+								<RFloatArea>
+									<Button 
+										id="btnStudyLog" 
+										mt="10px" 
+										color="blue"   
+										value="학습로그" 
+										onClick = {this.event.button.onClick}
+										fiiled = {true} 						
+									/>
+								</RFloatArea>
+							</RelativeGroup> */}
+						</ComponentPanel>
+					
+							</FlexPanel>
+					</SubFullPanel>
+					{/* {this.state.exportFileFlag ?
+						(<ExcelFile hideElement={true}
+									filename={this.state.filename}>
+							<ExcelSheet
+								name='복합명사'
+								dataSet={
+								[
+									{
+										columns: [],
+										data: this.state.dsWordList.records.map(item => (item.word ? [item.word] : [item])),
+										xSteps: 0,
+										ySteps: -1,
+									}
+								]
+								}
+							/>
+							<ExcelSheet
+								name='문장'
+								dataSet={
+								[
+									{
+										columns: [],
+										data: this.state.dsSentenceList.records.map(item => (item.sentence ? [item.sentence] : [item])),
+										xSteps: 0,
+										ySteps: -1,
+									}
+								]
+								}
+							/>
+						</ExcelFile>)
+						:
+						null
+					} */}
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

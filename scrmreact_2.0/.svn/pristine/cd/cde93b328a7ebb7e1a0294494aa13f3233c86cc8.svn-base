@@ -1,0 +1,338 @@
+// STT 학습
+import React from 'react';
+import {
+	AppPanel, HeadPanel, MiddlePanel, SidePanel, MainPanel, ComponentPanel, FooterPanel,
+	FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button} from 'components';
+import {Textfield} from 'components';
+import {StrLib, ComLib, DataLib, newScrmObj} from 'common';
+import styled from 'styled-components';
+
+
+//임시로 가운데 버튼 하드코딩
+// const wordStyle =
+// styled.div`
+
+// border-width: 2px 4px;
+// border-radius: 40px;
+// background: gold;
+// border: ridge gold;
+// `
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+		this.state = {
+
+			buttonProps : {
+				btnSearchProps : {
+					id : 'btnSearchProps',
+					disabled : false,
+					value : '조회',
+					hidden : false,
+					icon : 'srch',
+					innerImage : true ,
+					color : "purple",
+					 fiiled: "o" 
+				},
+				btnAddWordProps : {
+					id : 'btnAddWordProps',
+					disabled : true,
+					value : '추가',
+					hidden : false,
+					filled : "",
+					color : "green",					
+				}
+			},
+			textFieldProps : {
+				label : ' ',
+				id : 'createInputStd',
+				name : 'createInputStd',
+				value : '',
+				placeholder : '',
+				readOnly : false,
+				disabled : false,
+			},
+			addCombineWord : '',
+			addCombineWordList : [],
+
+			
+
+			dsStudyList : DataLib.datalist.getInstance()
+		}
+
+
+		this.event.iconClick.onClick = this.event.iconClick.onClick.bind(this);
+		this.event.input.onChange = this.event.input.onChange.bind(this);
+	}
+
+	static defaultProps = {
+		addCombineWordList : this.props,
+	
+	};	
+
+	componentDidMount () {
+
+	}
+
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/	
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/	
+	validation = (...params) => {
+
+		let transId = params[0];
+
+		switch (transId) {
+			case 'checkCompWord' :
+				let targetParams = params[1]
+
+				if(StrLib.isNull(targetParams))  {
+					ComLib.openDialog('A', '추가하실 복합명사를 입력해주세요.');					
+					return false;
+				}
+				console.log(targetParams);
+
+				if(!StrLib.isKor(targetParams)) {
+					ComLib.openDialog('A', '한글만 입력해주세요.');					
+					return false;
+				}
+
+				break;
+
+
+			default :
+				break;
+		}
+
+		return true;
+
+	}
+
+	
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {
+
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {
+					
+					case "btnAddWordProps" :
+
+						if(this.validation('checkCompWord', this.state.addCombineWord)){
+
+							let newWordArr = this.state.addCombineWord.split('\n');
+								
+							/// newWordArr내 중복검사
+							let checkDupleNewWordArr = newWordArr.reduce((accu, target)=>{if(accu.indexOf(target) == -1) accu.push(target); return accu;}, []);
+
+							let targetCompareList = this.state.addCombineWordList;
+
+							targetCompareList.map(item => console.log(item));
+
+							/// compareTarget 데이터 : [{word: "새로운단어", type: "new"}, "등록된단어"] 이므로 단어만 파싱
+							const filterCompareTarget = targetCompareList.map(item => (item.word ? item.word : item))
+
+							checkDupleNewWordArr = checkDupleNewWordArr.filter((item) => ((item.trim() !== '') && (filterCompareTarget.indexOf(item) === -1)))
+																		.map(item => {return {word: item, type: 'new'};});
+
+							let checkCnt = 0;
+							filterCompareTarget.forEach((item, index) => {									
+								item.forEach((word, index) => {
+									if(word.word === newWordArr[0]){											
+										checkCnt++	
+									}
+								})
+							});
+							
+							if(checkCnt === 0) filterCompareTarget.push(checkDupleNewWordArr);
+							
+							this.setState({...this.state, addCombineWordList : filterCompareTarget, addCombineWord : '',
+										textFieldProps : {...this.state.textFieldProps, value : '' }
+							});
+
+			
+
+						}
+
+					break;
+
+					default : break;
+
+				}
+
+
+			}
+
+		},
+		input : {
+			
+			onChange : (e) => {
+				// console.log("change");
+				// console.log(e);
+				switch (e.target.id) {
+					case 'createInputStd' :
+
+						// if(e.target.value === ' '){
+						// 	 = '';
+						// }
+
+						this.setState({...this.state, addCombineWord : e.target.value, textFieldProps : { ...this.state.textFieldProps, value : e.target.value.trim() }});
+
+						break;
+
+					default : break;
+				}
+			},
+			onKeyPress : (e) => {
+
+				switch (e.target.id) {
+
+					case 'createInputStd' :
+
+						if(e.key === 'Enter') {
+							
+							if(this.validation('checkCompWord', this.state.addCombineWord)){
+
+								let newWordArr = this.state.addCombineWord.split('\n');
+								
+
+								/// newWordArr내 중복검사
+								let checkDupleNewWordArr = newWordArr.reduce((accu, target)=>{if(accu.indexOf(target) == -1) accu.push(target); return accu;}, []);
+
+								let targetCompareList = this.state.addCombineWordList;
+
+								targetCompareList.map(item => console.log(item));
+
+								/// compareTarget 데이터 : [{word: "새로운단어", type: "new"}, "등록된단어"] 이므로 단어만 파싱
+								const filterCompareTarget = targetCompareList.map(item => (item.word ? item.word : item))
+
+								checkDupleNewWordArr = checkDupleNewWordArr.filter((item) => ((item.trim() !== '') && (filterCompareTarget.indexOf(item) === -1)))
+                                											.map(item => {return {word: item, type: 'new'};});
+
+								let checkCnt = 0;
+								filterCompareTarget.forEach((item, index) => {									
+									item.forEach((word, index) => {
+										if(word.word === newWordArr[0]){											
+											checkCnt++	
+										}
+									})
+								});
+								
+								if(checkCnt === 0) filterCompareTarget.push(checkDupleNewWordArr);
+								
+
+								this.setState({...this.state, addCombineWordList : filterCompareTarget, addCombineWord : '',
+											textFieldProps : {...this.state.textFieldProps, value : '' }
+								});
+												
+							}
+						}
+
+
+
+						
+
+						break;
+					default : break;
+
+				}
+			}
+
+		},
+		// 임시 기능 
+		iconClick : {
+
+			onClick : (e) => {
+				
+				const curName = e.currentTarget.name;
+				const element = document.getElementById(curName);
+				element.remove(); // id가 'div-02' 인 div를 제거합니다
+
+			}
+
+		}
+				
+	}
+		
+	render () {
+		return (
+			<React.Fragment>
+					<ComponentPanel>
+						<RelativeGroup>
+							<LFloatArea>
+								<Textfield/>
+							</LFloatArea>
+							<RFloatArea>
+									<Button value={this.state.buttonProps.btnSearchProps.value} 
+											color={this.state.buttonProps.btnSearchProps.color} 
+											fiiled={this.state.buttonProps.btnSearchProps.fiiled}  
+											id={this.state.buttonProps.btnSearchProps.id}  
+											innerImage = {this.state.buttonProps.btnSearchProps.innerImage}  											
+											icon = {this.state.buttonProps.btnSearchProps.icon}  											
+											
+											/>
+							</RFloatArea>
+						</RelativeGroup>
+					</ComponentPanel>
+
+					<ComponentPanel height ={"400px"}>
+						
+						<div style={{display: 'inline-block'}}>
+														
+
+														
+						{this.state.addCombineWordList.map((word, index )=> (							
+							<div id={"temp_" + index} style={{borderRadius: '10em', background : 'gold', marginLeft : '5px', marginRight : '5px', marginBottom : '5px', display : 'inline-block'}}>
+								{word[0].word} <a href="#" name={"temp_" + index} onClick={this.event.iconClick.onClick}> <i name={"temp_" + index} className="xi-close-min xi-x"></i></a>
+							</div>
+						))}
+						</div>
+
+					</ComponentPanel>
+
+					<ComponentPanel>
+						<RelativeGroup>
+							<LFloatArea>
+								<Textfield
+								
+								width = {300}
+								id = {this.state.textFieldProps.id}
+								name =  {this.state.textFieldProps.name}
+								value =  {this.state.textFieldProps.value}
+								placeholder =  {this.state.textFieldProps.placeholder}
+								// minLength =   {this.state.textFieldProps.minLength}
+								// maxLength =   {this.state.textFieldProps.maxLength}
+								readOnly =  {this.state.textFieldProps.readOnly}
+								disabled =  {this.state.textFieldProps.disabled}
+								onChange = {this.event.input.onChange}
+								onKeyPress = {this.event.input.onKeyPress}
+								/>
+							</LFloatArea>
+							<RFloatArea>
+								<Button value={this.state.buttonProps.btnAddWordProps.value} 
+										color={this.state.buttonProps.btnAddWordProps.color} 										
+										id={this.state.buttonProps.btnAddWordProps.id}  
+										fiiled = {this.state.buttonProps.btnAddWordProps.filled}
+										onClick = {this.event.button.onClick}
+								/>								
+							</RFloatArea>
+						</RelativeGroup>
+					</ComponentPanel>
+					
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

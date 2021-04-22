@@ -1,0 +1,354 @@
+// 키워드관리
+import React from 'react';
+import {
+	ComponentPanel, SearchPanel, FullPanel, SubFullPanel, Table, RFloatArea, RelativeGroup
+} from 'components';
+import {BasicButton as Button, Label} from 'components';
+import {RangeInputCalendar, Selectbox} from 'components';
+import { Grid} from 'components';
+import {ComLib, DataLib, StrLib, TransManager, DateLib} from 'common';
+import { newScrmObj } from '../../../common';
+
+class View extends React.Component {
+
+/*------------------------------------------------------------------------------------------------*/
+	// [1. Default State Zone]
+	/*------------------------------------------------------------------------------------------------*/
+	constructor(props){
+
+		super();
+
+		this.gridKeyword    = null;
+		this.gridKeywordApi = null;
+		this.state = {
+			dsKeywordList : DataLib.datalist.getInstance(),			
+
+			selectboxProps : {
+				id : 'keyType',
+				label : '키워드 타입',
+				dataset : [{}],
+				width : 200,
+				selected : 1,
+				disabled : false
+			},   
+
+			btnSearchProps : {
+				id : 'btnSearch',				
+				value : '조회'
+			},
+			
+			gridProps : {
+				id : 'keywordGrid',
+				header: [
+					{headerName: '키워드',		field: 'KEY_WORD',	colId: 'KEY_WORD',	editable: true,	req: true},
+					{headerName: '키워드 타입',	field: 'KEY_TYPE',	colId: 'KEY_TYPE',	editable: true,	req: true,	textAlign: 'center',
+					cellEditor: 'agSelectCellEditor',
+					cellEditorParams: { values : ComLib.getComCodeValue('KEYWORD')},
+					valueFormatter : (param) => ComLib.getComCodeName('KEYWORD', param.value)         
+				 },
+					{headerName: '등록자',		field: 'USR_CD',	colId: 'USR_CD', 	defaultValue : ComLib.getSession("gdsUserInfo")[0]["USR_NM"],	textAlign: 'center',},
+					{headerName: '등록일자',	field: 'REG_DTM',	colId: 'REG_DTM',	defaultValue : StrLib.setFormatData(DateLib.getTodayTime()),	textAlign: 'center', },
+					{headerName: '사용여부',	field: 'USE_YN',	colId: 'USE_YN',	editable: true,	defaultValue : 'Y',	width: 90,	resizable: false,	textAlign: 'center',
+									cellEditor: 'agSelectCellEditor',
+									cellEditorParams: { values : ComLib.getComCodeValue('USE_YN')},
+									valueFormatter : (param) => ComLib.getComCodeName('USE_YN', param.value)},
+				]
+			},				
+
+			rangeCalendarProps : {
+				label : '등록날짜',
+				id : 'iptRangeCal',
+				stId : 'iptRangeCalStrt',
+				endId : 'iptRangeCalEnd',
+				startDate : null,
+				endDate : null,
+				focusedInput : null
+			},
+
+			paging : {
+				start: 0,
+				size : 40,
+				page : 1
+			},
+	}
+	this.event.inputcalendar.onChange = this.event.inputcalendar.onChange.bind(this);
+	this.event.button.onClick = this.event.button.onClick.bind(this);
+	
+}
+	
+	/*------------------------------------------------------------------------------------------------*/
+	// [2. OnLoad Event Zone]
+	/*------------------------------------------------------------------------------------------------*/
+	componentDidMount () {
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (serviceid) => {
+		let record;
+	
+		switch (serviceid) {
+		case 'STT050000_R01':
+			if(this.state.rangeCalendarProps.startDate > this.state.rangeCalendarProps.endDate){
+				ComLib.openDialog('A', 'SYSI0010', ['검색시작일자가 검색종료일보다 클 수 없습니다.']);					
+				return false;
+			}
+			break;
+
+		case 'STT050000_H01':
+			record = this.state.dsKeywordList.records;
+			for ( let intA = 0; intA < record.length; intA ++ ) {
+				
+				let stnScrtHeader = this.state.gridProps.header;
+				for (let i = 0; i < stnScrtHeader.length; i ++) {						
+					if (stnScrtHeader[i].field === 'KEY_WORD' || stnScrtHeader[i].field === 'KEY_TYPE') {
+						if (StrLib.isNull(record[intA][stnScrtHeader[i].field])) {
+							ComLib.openDialog('A', 'COME0001', [Number(intA + 1) , stnScrtHeader[i].headerName.replace(/\*/g,'')]);
+							
+							return false;
+						}
+					}
+				}			
+			}
+			if (this.state.dsKeywordList.records.filter(item => item['rowtype'] === 'c').length === 0 && this.state.dsKeywordList.records.filter(item => item['rowtype'] === 'u').length === 0) {
+				ComLib.openDialog('A', 'COME0005');
+				return false;
+			}
+			break;	
+		default : break;
+		}
+		return true;
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (serviceid) => {
+		let transManager = new TransManager();
+		try {
+			switch (serviceid) {	
+			case 'STT050000_R01':					
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"STT.R_getKeywordList",
+					datasetsend:"dsKeyword",
+					datasetrecv:"dsRst",
+				});
+				let formData = Object.assign(this.state.rangeCalendarProps);
+				formData.KEY_TYPE = this.state.selectboxProps.value;	
+				transManager.addDataset('dsKeyword', [formData]);
+				transManager.agent();
+				break;
+
+			case 'STT050000_H01': 
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.handle,
+					sqlmapid:"STT.H_handleKeyword", 
+					datasetsend:"dsKeywordList",
+				});		
+				transManager.addDataset('dsKeywordList', this.state.dsKeywordList.getTransRecords());				
+				transManager.agent();
+				break;
+			}
+		} catch (err) {
+
+		}
+	}
+/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {		
+		switch (res.id) {
+			case 'STT050000_R01':
+				this.setState({...this.state, selectboxProps : {...this.state.selectboxProps, dataset : [{"name" : "전체" , "value" : "ALL"}] }});													
+				ComLib.setStateInitRecords(this, "dsKeywordList", res.data.dsRst);
+				break;	
+			case 'STT050000_H01':
+				this.transaction("STT050000_R01");
+				break;
+			default : break;
+			}
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {
+		button: {		
+			onClick: (e) => {				
+			switch (e.target.id) {			
+			case 'btnSearch':					
+				if (this.validation("STT050000_R01")) this.transaction("STT050000_R01");
+				break;				
+			case 'btnSave':								
+				if (this.validation("STT050000_H01")) this.transaction("STT050000_H01");
+				break;
+			default : break;
+			}
+			}
+		},
+		grid: {	
+			onCellValueChanged: (e) => {
+				switch (e.id) {
+				case "keywordGrid":			
+					if(e.col === "KEY_WORD")
+						e.data[e.index].OLD_KEY_WORD = e.oldValue;
+					else if(e.col === "KEY_TYPE")
+						e.data[e.index].OLD_KEY_TYPE = e.oldValue;
+
+					ComLib.setStateRecords(this, "dsKeywordList", e.data);
+					break;
+				default: break;
+				}
+			},			
+			onGridReady : (e) => {
+				switch (e.id) {
+				case "keywordGrid":
+					this.gridKeyword = e.grid;						
+					this.gridKeywordApi = e.gridApi;
+					break;
+				default: break;
+				}
+			},
+
+			onInsertRow : (e) => {		
+				switch (e.id) {
+				case "keywordGrid":	
+				break;
+				default: break;
+				}
+			},
+		},
+
+		inputcalendar : {		
+			onChange : (e) => {					
+				switch (e.target.id) {									
+				case 'iptRangeCal' :							
+					this.setState({...this.state, rangeCalendarProps : {...this.state.rangeCalendarProps, startDate : e.startDate, endDate : e.endDate}});
+					break;
+				default : break;
+				}				
+			},
+			onFocusChange : (e) => {
+				switch (e.target.id) {
+				case 'iptRangeCal' :
+					this.setState({...this.state, rangeCalendarProps : {...this.state.rangeCalendarProps, focusedInput : e.focusedInput}});
+					break;
+				default : break;
+				}
+			}
+		},
+
+		selectbox : {
+			onChange : (e) => {	
+				switch (e.id) {
+				case 'keyType' :																			
+					this.setState({...this.state, selectboxProps : {...this.state.selectboxProps, selected : e.target.selectedIndex, value : e.target.value}});																
+					break;
+				default : break;
+				}
+			}
+		},
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [7. render Zone]
+	//  - 화면 관련 내용 작성
+	/*------------------------------------------------------------------------------------------------*/
+	render () {		
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<SearchPanel>
+							<Table  
+							colGrp = {[{width: '4%'}, {width: '15%'}, {width: '5%'}, {width: '50%'},{width: '10%'}]}
+							tbData = {[
+								[  	
+									{type : 'D', value : <div style={{marginTop:'-9px'}}><Label value={this.state.rangeCalendarProps.label}/></div>},
+									{type : 'D', value :
+									<RangeInputCalendar
+										id = {this.state.rangeCalendarProps.id}
+										strtId  = {this.state.rangeCalendarProps.stId}
+										endId  = {this.state.rangeCalendarProps.endId}
+										startDate = {this.state.rangeCalendarProps.startDate}
+										endDate = {this.state.rangeCalendarProps.endDate}
+										onChange = {this.event.inputcalendar.onChange}
+									/>},	
+
+									{type : 'D', value : <div style={{marginTop:'-9px'}}><Label value={this.state.selectboxProps.label}/></div> },
+									{type : 'D', value : 
+									<Selectbox
+										 id = {this.state.selectboxProps.id}
+										 dataset = {ComLib.convComboList(ComLib.getCommCodeList('KEYWORD'), newScrmObj.constants.select.argument.all)}								
+										 width = {this.state.selectboxProps.width}
+										 disabled = {this.state.selectboxProps.disabled}
+										 selected = {this.state.selectboxProps.selected}
+										 onChange= {this.event.selectbox.onChange}
+									/> },	
+						
+									{type : 'D', value : 
+									<RFloatArea>
+									<Button 
+										id = {this.state.btnSearchProps.id}
+										color = 'blue' 
+										fiiled = "o"
+										innerImage = {true} 
+										icon = {'srch'} 
+										mt  = {5}
+										value = {this.state.btnSearchProps.value}								
+										onClick = {this.event.button.onClick}										
+									/>
+									</RFloatArea>									
+										},	
+								],								
+							]}
+						/>		
+						</SearchPanel>
+					<SubFullPanel>
+						<ComponentPanel>
+							<Grid
+								id={this.state.gridProps.id} ref={this.state.gridProps.id}
+								areaName = {"키워드 목록"}
+								height= {600}
+								header = {this.state.gridProps.header}
+								rowNum = {true}
+								data = {this.state.dsKeywordList} 
+								onCellValueChanged = {this.event.grid.onCellValueChanged}
+								onGridReady = {this.event.grid.onGridReady}			
+								onInsertRow	=  {this.event.grid.onInsertRow}
+								onDeleteRow = {this.event.grid.onDeleteRow}		
+							/>
+							<RelativeGroup>
+								<RFloatArea>									
+									<Button
+										id = "btnSave" 
+										value = {"저장"} 
+										onClick = {this.event.button.onClick} 										
+										color="purple" 
+										fiiled="o"
+										mt={5}
+									/>
+								</RFloatArea>
+							</RelativeGroup>
+						</ComponentPanel>
+					</SubFullPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

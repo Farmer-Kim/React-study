@@ -1,0 +1,2231 @@
+// 평가항목관리
+import React from 'react';
+import { ComponentPanel
+	   , FlexPanel
+	   , FullPanel
+	   , SubFullPanel
+	   , SearchPanel
+	   , LFloatArea, RFloatArea
+	   , RelativeGroup
+	   , Textfield
+	   , Selectbox
+	   , Grid
+	   , Label 
+	   , Textarea              } from 'components';
+//버튼 컴포넌트
+import { BasicButton as Button } from 'components';
+import { ComLib
+	   , DataLib
+	   , TransManager 
+	   , StrLib
+	   , newScrmObj
+	   , DateLib              } from 'common';
+
+class View extends React.Component {
+	constructor() {
+		super();
+			
+		this.vlaItemGridApi = null;
+		this.vlaContGridApi = null;
+		this.vlaStndGridApi = null;
+
+		this.vlaItemGrid = null;
+		this.vlaContGrid = null;
+		this.vlaStndGrid = null;
+
+		this.currntRowItem = '';
+		this.currntRowCont = '';
+		this.currntRowStnd = '';
+		
+		this.currntItemTempCd = 0;
+		this.currntContTempCd = 0;
+		this.currntStndTempCd = 0;
+		
+		this.maxStndTempCd = 0;
+		this.maxStndTempCd = 0;
+		this.maxStndTempCd = 0;
+		
+		this.copyRow = false;
+
+		this.state = {		
+			dsVlaItemList : DataLib.datalist.getInstance(),
+			dsVlaContList : DataLib.datalist.getInstance(),
+			dsVlaStndList : DataLib.datalist.getInstance(),
+
+			btnProps : {
+				btnVlaSearch : {
+					id       : 'btnVlaSearch',
+					disabled : false,
+					value    : '조회',
+					hidden   : false
+				},
+				btnVlaItemSave : {
+					id       : 'btnVlaItemSave',
+					disabled : false,
+					value    : '저장',
+					hidden   : false
+				},
+				btnVlaContSave : {
+					id       : 'btnVlaContSave',
+					disabled : false,
+					value    : '저장',
+					hidden   : false
+				},
+				btnVlaStndCopy : {
+					id       : 'btnVlaStndCopy',
+					disabled : false,
+					value    : '복사',
+					hidden   : false
+				},
+				btnVlaStndSave : {
+					id       : 'btnVlaStndSave',
+					disabled : false,
+					value    : '저장',
+					hidden   : false
+				},
+
+			},
+			
+			grdProps : {
+				grdVlaItem : {
+					id : 'grdVlaItem',
+					areaName : '평가항목',
+					header: [
+						{headerName: '평가항목',	field: 'VLA_ITM_NM',	colId: 'VLA_ITM_NM', editable: false, width: 400, req: true},
+						{headerName: '사용여부',	field: 'USE_YN',		colId: 'USE_YN',	 editable: false, width: 100, req: true, textAlign: 'center',
+							cellEditor: 'agSelectCellEditor',
+							cellEditorParams: { values : ComLib.getComCodeValue('USE_YN')},
+							valueFormatter : (param) => ComLib.getComCodeName('USE_YN', param.value)},
+						{headerName: '정렬순서',	field: 'SORT_ORD',		colId: 'SORT_ORD',	 editable: false, width: 100, req: true, textAlign: 'center', resizable: false},
+					],
+				},
+				grdVlaCont : {
+					id : 'grdVlaCont',
+					areaName : '평가내용',
+					header: [
+						{headerName: '평가내용',	field: 'VLA_CONT_NM',	colId: 'VLA_CONT_NM', editable: false, width: 400, req: true},
+						{headerName: '사용여부',	field: 'USE_YN',		colId: 'USE_YN',	  editable: false, width: 100, req: true, textAlign: 'center',
+							cellEditor: 'agSelectCellEditor',
+							cellEditorParams: { values : ComLib.getComCodeValue('USE_YN')},
+							valueFormatter : (param) => ComLib.getComCodeName('USE_YN', param.value)},
+						{headerName: '정렬순서',	field: 'SORT_ORD',		colId: 'SORT_ORD',	  editable: false, width: 100, req: true, textAlign: 'center', resizable: false},
+					],
+				},
+				grdVlaStnd : {
+					id : 'grdVlaStnd',
+					areaName : '평가기준',
+					header: [
+						{headerName: '평가기준',	field: 'VLA_STND_NM',	colId: 'VLA_STND_NM',editable: false, width: 380, req: true},
+						{headerName: '배점',		field: 'SCO',	    	colId: 'SCO',	     editable: false, width: 80 , req: true, textAlign: 'center'},
+						{headerName: '사용여부',	field: 'USE_YN',		colId: 'USE_YN',	 editable: false, width: 95 , req: true, textAlign: 'center',
+							cellEditor: 'agSelectCellEditor',
+							cellEditorParams: { values : ComLib.getComCodeValue('USE_YN')},
+							valueFormatter : (param) => ComLib.getComCodeName('USE_YN', param.value)},
+						{headerName: '정렬순서',	field: 'SORT_ORD',		colId: 'SORT_ORD',	 editable: false, width: 95 , req: true, textAlign: 'center', resizable: false},
+					],
+				},
+											
+			},
+
+			textFieldProps : {
+				iptVlaSearch : {
+					id          : 'iptVlaSearch',
+					name        : 'iptVlaSearch',
+					value       : '',
+					placeholder : '평가항목',
+					minLength   : 1,
+					maxLength   : 50,
+					readOnly    : false,
+					disabled    : false
+				},
+				iptVlaItem : {
+					id          : 'iptVlaItem',
+					name        : 'iptVlaItem',
+					value       : '',
+					placeholder : '평가항목',
+					minLength   : 1,
+					maxLength   : 50,
+					readOnly    : false,
+					disabled    : false
+				},
+				iptVlaItemSort : {
+					id          : 'iptVlaItemSort',
+					name        : 'iptVlaItemSort',
+					value       : '',
+					placeholder : '',
+					type        : 'onlyNum',
+					minLength   : 1,
+					maxLength   : 3,
+					readOnly    : false,
+					disabled    : false
+				},
+				iptVlaCont : {
+					id          : 'iptVlaCont',
+					name        : 'iptVlaCont',
+					value       : '',
+					placeholder : '평가내용',
+					minLength   : 1,
+					maxLength   : 50,
+					readOnly    : false,
+					disabled    : false
+				},
+				iptVlaContSort : {
+					id          : 'iptVlaContSort',
+					name        : 'iptVlaContSort',
+					value       : '',
+					placeholder : '',
+					type        : 'onlyNum',
+					minLength   : 1,
+					maxLength   : 3,
+					readOnly    : false,
+					disabled    : false
+				},		
+				iptVlaStndNm : {
+					id          : 'iptVlaStndNm',
+					name        : 'iptVlaStndNm',
+					value       : '',
+					placeholder : '평가기준',
+					minLength   : 1,
+					maxLength   : 100,
+					readOnly    : false,
+					disabled    : false
+				},
+				iptVlaStndExpl : {
+					id          : 'iptVlaStndExpl',
+					name        : 'iptVlaStndExpl',
+					value       : '',
+					placeholder : '설명',
+					minLength   : 1,
+					maxLength   : 200,
+					readOnly    : false,
+					disabled    : false,
+					rows        : 8
+				},	
+				iptVlaStndSort : {
+					id          : 'iptVlaStndSort',
+					name        : 'iptVlaStndSort',
+					value       : '',
+					placeholder : '',
+					type        : 'onlyNum',
+					minLength   : 1,
+					maxLength   : 3,
+					readOnly    : false,
+					disabled    : false
+				},	 
+			},
+			selectboxProps : {
+				selVlaSearch : {
+					id : 'selVlaSearch',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("USE_YN"), newScrmObj.constants.select.argument.all),
+					width : 80,
+					selected : 0,
+					disabled : false
+				},
+				selVlaItemUseYn : {
+					id : 'selVlaItemUseYn',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("USE_YN")),
+					width : 80,
+					selected : 0,
+					disabled : false
+				},
+				selVlaContUseYn : {
+					id : 'selVlaContUseYn',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("USE_YN")),
+					width : 80,
+					selected : 0,
+					disabled : false
+				},
+				selVlaStndUseYn : {
+					id : 'selVlaStndUseYn',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("USE_YN")),
+					selected : 0,
+					disabled : false
+				},
+				selSco : {
+					id : 'selSco',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("VLA_SCO")),
+					selected : 0,
+					disabled : false
+				},
+			},
+			test : 0
+		}
+		this.event.input.onChange = this.event.input.onChange.bind(this);
+	
+	}
+	/*------------------------------------------------------------------------------------------------*
+		0) Custom Event Zone 
+		rowFinder = 조회후 가장 마지막에 선택되어져 있던 행으로 재 포커싱을 하기 위한 함수
+	------------------------------------------------------------------------------------------------*/	
+	numRtnVal = (value) => {
+		if(StrLib.isNull(value)) {
+			return value;
+		} 
+		return typeof value === 'string' ? value.replace(/[^0-9]/g,"") : value.toString().replace(/[^0-9]/g,"");
+		
+	}
+
+	rowFinder = (targetRecords, targetColumn, currentRow) => {
+		let rowNum = 0;
+
+		if (targetRecords === undefined || targetRecords === null) {
+			return rowNum;
+
+		} 
+		
+		if (!StrLib.isNull(currentRow)) {
+			for (let i = 0; i < targetRecords.length; i++) {
+				if (targetRecords[i][targetColumn] === currentRow) {
+					rowNum = i;
+					break;
+				}
+			}
+		}
+
+		return rowNum;
+
+	}
+	/*------------------------------------------------------------------------------------------------*
+		1) componentDidMount () => init 함수 개념으로 이해하는게 빠름
+		=> 컴포넌트가 마운트된 직후, 호출 ->  해당 함수에서 this.setState를 수행할 시, 갱신이 두번 일어나 render()함수가 두번 발생 -> 성능 저하 가능성
+	------------------------------------------------------------------------------------------------*/
+	componentDidMount () {
+		this.transaction("QAM010000_R01");
+	}
+	/*------------------------------------------------------------------------------------------------*
+		2) componentDidUpdate () => 갱신이 일어나 직후에 호춮 (최초 렌더링 시에는 호출되지 않음)
+		=> prevProps와 현재 props를 비교할 수 있음 -> 조건문으로 감싸지 않고 setState를 실행할 시, 무한 반복 가능성 -> 반드시 setState를 쓰려면 조건문으로 작성
+	------------------------------------------------------------------------------------------------*/
+	componentDidUpdate (prevProps, prevState, snapshot) {
+		// console.log("updated!!");
+		// console.log(this.state.dsGrp);
+	}
+	/*------------------------------------------------------------------------------------------------*
+		3) componentWillUnmount () => 컴포넌트가 마운트 해제되어 제거되기 직전에 호출
+		=> 타이머 제거, 네트워크 요청 취소 등 수행 -> 마운트가 해제되기 때문에 setState를 호출하면 안됨
+	------------------------------------------------------------------------------------------------*/
+	componentWillUnmount () {
+
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	// QAM010000_R01 : 평가항목 조회
+	// QAM010000_R02 : 평가내용 조회
+	// QAM010000_R02 : 평가기준 조회
+	// QAM010000_U01 : 평가항목 수정
+	// QAM010000_U02 : 평가내용 수정
+	// QAM010000_C01 : 평가항목 신규 추가
+	// QAM010000_C02 : 평가내용 신규 추가
+	// QAM010000_C03 : 평가기준 버젼 업 추가 (기존 수정시 신규로 버젼업 저장)
+	// QAM010000_C04 : 평가기준 행복사 추가
+	// QAM010000_C05 : 평가기준 신규 추가
+	// QAM010000_C06 : 평가기준 이력 추가 
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (...params) => {
+		let transId = params[0];
+		let chkCnt  = 0;
+		let returnVal = -1;
+			
+		switch (transId) {
+		case 'QAM010000_R01':
+
+			break;
+		
+		case 'QAM010000_R02':
+
+			break;
+
+		case 'QAM010000_R03':
+
+			break;
+
+		case 'QAM010000_R04':
+			let itemRecord = this.vlaItemGrid.gridDataset.records;
+
+			outer : for (let intA = 0; intA < itemRecord.length; intA ++) {
+				if (itemRecord[intA].rowtype !== newScrmObj.constants.crud.read) {
+					chkCnt ++;
+				}		
+				
+				let itemHeader = this.state.grdProps.grdVlaItem.header;
+				
+				for (let i = 0; i < itemHeader.length; i ++) {		
+					if (itemHeader[i].req === true) {
+						if (StrLib.isNull(itemRecord[intA][itemHeader[i].field])) {
+							let vlaItemRows = this.vlaItemGridApi.rowModel.rowsToDisplay;
+							let itemRowNum = 0;
+							
+							for (let i = 0; i < vlaItemRows.length; i ++) {
+								if (vlaItemRows[i].data.TEMP_CD === itemRecord[intA].TEMP_CD){									
+									itemRowNum = i;
+
+									break;
+								}
+							}
+
+							ComLib.openDialog('A', 'COME0001', [Number(itemRowNum + 1) , itemHeader[i].headerName.replace(/\*/g,'')]);
+		
+							returnVal = intA;
+
+							break outer;
+						}
+					}
+				}								
+			}
+
+			if (returnVal > -1) {
+				this.vlaItemGrid.moveRow(returnVal, true);
+				
+				return false;
+			}	
+
+			if (itemRecord.length < 1 || chkCnt === 0) {
+				ComLib.openDialog('A', 'COME0005');
+
+				return false;
+			}
+			break;
+		
+		case 'QAM010000_R05':
+			let contRecord = this.vlaContGrid.gridDataset.records;
+
+			outer : for (let intA = 0; intA < contRecord.length; intA ++) {
+				if (contRecord[intA].rowtype !== newScrmObj.constants.crud.read) {
+					chkCnt ++;
+				}		
+				
+				let contHeader = this.state.grdProps.grdVlaCont.header;
+				
+				for (let i = 0; i < contHeader.length; i ++) {		
+					if (contHeader[i].req === true) {
+						if (StrLib.isNull(contRecord[intA][contHeader[i].field])) {
+							let vlaContRows = this.vlaContGridApi.rowModel.rowsToDisplay;
+							let contRowNum = 0;
+							
+							for (let i = 0; i < vlaContRows.length; i ++) {
+								if (vlaContRows[i].data.TEMP_CD === contRecord[intA].TEMP_CD){									
+									contRowNum = i;
+
+									break;
+								}
+							}
+
+							ComLib.openDialog('A', 'COME0001', [Number(contRowNum + 1) , contHeader[i].headerName.replace(/\*/g,'')]);
+		
+							returnVal = intA;
+
+							break outer;
+						}
+					}
+				}						
+			}
+
+			if (returnVal > -1) {
+				this.vlaContGrid.moveRow(returnVal, true);
+				
+				return false;
+			}	
+
+			if (contRecord.length < 1 || chkCnt === 0) {
+				ComLib.openDialog('A', 'COME0005');
+
+				return false;
+			}
+			break;
+
+		case 'QAM010000_R06':
+			let stndRecord = this.vlaStndGrid.gridDataset.records;
+
+			outer : for (let intA = 0; intA < stndRecord.length; intA ++) {
+				if (stndRecord[intA].rowtype !== newScrmObj.constants.crud.read) {
+					chkCnt ++;
+				}		
+				
+				let stndHeader = this.state.grdProps.grdVlaStnd.header;
+				
+				for (let i = 0; i < stndHeader.length; i ++) {		
+					if (stndHeader[i].req === true) {
+						if (StrLib.isNull(stndRecord[intA][stndHeader[i].field])) {
+							let vlaStndRows = this.vlaStndGridApi.rowModel.rowsToDisplay;
+							let stndRowNum = 0;
+							
+							for (let i = 0; i < vlaStndRows.length; i ++) {
+								if (vlaStndRows[i].data.TEMP_CD === stndRecord[intA].TEMP_CD){									
+									stndRowNum = i;
+
+									break;
+								}
+							}
+
+							ComLib.openDialog('A', 'COME0001', [Number(stndRowNum + 1) , stndHeader[i].headerName.replace(/\*/g,'')]);
+		
+							returnVal = intA;
+
+							break outer;
+						}
+					}
+				}					
+			}
+
+			if (returnVal > -1) {
+				this.vlaStndGrid.moveRow(returnVal, true);
+				
+				return false;
+			}	
+
+			if (stndRecord.length < 1 || chkCnt === 0) {
+				ComLib.openDialog('A', 'COME0005');
+
+				return false;
+			}
+			break;
+
+		default: break;
+		}
+
+		return true;
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	// QAM010000_R01 : 평가항목 조회
+	// QAM010000_R02 : 평가내용 조회
+	// QAM010000_R02 : 평가기준 조회
+	// QAM010000_U01 : 평가항목 수정
+	// QAM010000_U02 : 평가내용 수정
+	// QAM010000_C01 : 평가항목 신규 추가
+	// QAM010000_C02 : 평가내용 신규 추가
+	// QAM010000_C03 : 평가기준 버젼 업 추가 (기존 수정시 신규로 버젼업 저장)
+	// QAM010000_C04 : 평가기준 행복사 추가
+	// QAM010000_C05 : 평가기준 신규 추가
+	// QAM010000_C06 : 평가기준 이력 추가
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (...params) => {
+		let transId = params[0];
+		let searchItem, searchItemUse;
+
+		let transManager = new TransManager();
+		
+		transManager.setTransId (transId);
+		transManager.setTransUrl(transManager.constants.url.common);
+		transManager.setCallBack(this.callback);
+
+		try  {
+			switch (transId) {
+			case 'QAM010000_R01':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getVlaItem",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsVlaItemRecv",
+				});
+
+				searchItem    = this.state.textFieldProps.iptVlaSearch.value.trim();
+				searchItemUse = this.state.selectboxProps.selVlaSearch.dataset[this.state.selectboxProps.selVlaSearch.selected].value;
+								
+				transManager.addDataset('dsSearchParam', [{"SRC_ITEM_NM" : searchItem
+														 , "SRC_ITEM_USE": searchItemUse}]);
+				transManager.agent();
+
+				break;
+
+			case 'QAM010000_R02':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getVlaCont",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsVlaContRecv",
+				});
+
+				transManager.addDataset('dsSearchParam', [{"VLA_ITM_CD": this.currntRowItem}]);
+				transManager.agent();
+
+				break;
+
+			case 'QAM010000_R03':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getVlaStnd",
+					datasetsend: "dsSearchParam",
+					datasetrecv: "dsVlaStndRecv",
+				});
+
+				transManager.addDataset('dsSearchParam', [{"VLA_CONT_CD": this.currntRowCont}]);
+				transManager.agent();
+
+				break;
+
+			case 'QAM010000_R04':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getVlaItemCd",
+					datasetsend: "dsEmptyParam",
+					datasetrecv: "dsVlaItemCd",
+				});
+
+				transManager.addDataset('dsEmptyParam', [{"empty": ''}]);
+				transManager.agent();
+
+				break;
+
+			case 'QAM010000_R05':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getVlaContCd",
+					datasetsend: "dsEmptyParam",
+					datasetrecv: "dsVlaContCd",
+				});
+
+				transManager.addDataset('dsEmptyParam', [{"empty": ''}]);
+				transManager.agent();
+
+				break;				
+
+			case 'QAM010000_R06':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "QAM.R_getVlaStndCd",
+					datasetsend: "dsEmptyParam",
+					datasetrecv: "dsVlaStndCd",
+				});
+
+				transManager.addDataset('dsEmptyParam', [{"empty": ''}]);
+				transManager.agent();
+
+				break;
+				
+			case 'QAM010000_H01':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.handle,
+					sqlmapid   : "QAM.H_handleVlaItemList",
+					datasetsend: "dsVlaItemSend",
+				});
+
+				transManager.addDataset('dsVlaItemSend', params[1]);
+				transManager.agent();
+
+				break
+
+			case 'QAM010000_H02':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.handle,
+					sqlmapid   : "QAM.H_handleVlaContList",
+					datasetsend: "dsVlaContSend",
+				});
+
+				transManager.addDataset('dsVlaContSend', params[1]);
+				transManager.agent();
+
+				break
+				
+			case 'QAM010000_H03':
+				let record = params[1];
+				
+				let dsVlaStndUpdate = [];
+				let dsVlaStndNew    = [];
+				
+				for (let i = 0; i < record.length; i ++) {
+					if (record[i].rowtype === newScrmObj.constants.crud.create) {
+						record[i].VLA_STND_VERS = 'SV' + DateLib.getToday().substr(0, 4) +'0001';						
+						dsVlaStndNew.push(record[i])						
+
+					} else if (record[i].rowtype === newScrmObj.constants.crud.update) {						
+						dsVlaStndUpdate.push(record[i]);
+
+					}
+				}
+
+				if (dsVlaStndUpdate.length > 0) {
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.create,
+						sqlmapid   : "QAM.C_addVlaStndVersionUp",
+						datasetsend: "dsVlaStndUpdate",
+					});
+		
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.update,
+						sqlmapid   : "QAM.U_setVlaStnd",
+						datasetsend: "dsVlaStndUpdate",
+					});
+
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.create,
+						sqlmapid   : "QAM.C_addVlaStndSPUpdate",
+						datasetsend: "dsVlaStndUpdate",
+					});
+
+					transManager.addDataset('dsVlaStndUpdate', dsVlaStndUpdate);
+				}
+				
+				if (dsVlaStndNew.length > 0) {
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.create,
+						sqlmapid   : "QAM.C_addVlaStnd",
+						datasetsend: "dsVlaStndNew",
+					});
+					
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.create,
+						sqlmapid   : "QAM.C_addVlaStndSP",
+						datasetsend: "dsVlaStndNew",
+					});
+
+					transManager.addDataset('dsVlaStndNew', dsVlaStndNew);
+				}
+								
+				transManager.agent();
+
+				break	
+
+
+			default: break;
+			}
+		} catch (err) {
+
+		}
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	// QAM010000_R01 : 평가항목 조회
+	// QAM010000_R02 : 평가내용 조회
+	// QAM010000_R02 : 평가기준 조회
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {
+		let data, useIndex, rtnNode;
+		let itemRowNm = 0;
+		let contRowNm = 0;
+		let stndRowNm = 0;
+
+		let state = this.state;
+		
+		if (res.data.dsVlaItemRecv !== undefined) itemRowNm = this.rowFinder(res.data.dsVlaItemRecv, "VLA_ITM_CD" , this.currntRowItem);
+		if (res.data.dsVlaContRecv !== undefined) contRowNm = this.rowFinder(res.data.dsVlaContRecv, "VLA_CONT_CD", this.currntRowCont);
+		if (res.data.dsVlaStndRecv !== undefined) stndRowNm = this.rowFinder(res.data.dsVlaStndRecv, "VLA_STND_CD", this.currntRowStnd);
+						
+		switch (res.id) {
+		case 'QAM010000_R01':
+			if (res.data.dsVlaItemRecv.length > 0) {
+				let tempItemCd = 0;
+				let dsVlaItem = res.data.dsVlaItemRecv;
+
+				for (let i = 0; i < dsVlaItem.length; i ++) {
+					dsVlaItem[i].TEMP_CD = tempItemCd;
+					tempItemCd ++;
+				}
+				
+
+				ComLib.setStateInitRecords(this, "dsVlaItemList", dsVlaItem);
+
+				let resData = dsVlaItem[itemRowNm];
+
+				if (resData.USE_YN === "Y") {
+					useIndex = 0
+
+				} else {
+					useIndex = 1
+
+				}
+				
+				this.currntRowItem  = resData.VLA_ITM_CD;				
+				this.currntItemTempCd = resData.TEMP_CD;
+				this.maxItemTempCd = tempItemCd;
+
+				state['textFieldProps']['iptVlaItem'].value     = resData.VLA_ITM_NM;
+				state['textFieldProps']['iptVlaItemSort'].value = resData.SORT_ORD;
+
+				state['selectboxProps']['selVlaItemUseYn'].selected = useIndex;
+				state['selectboxProps']['selVlaItemUseYn'].value    = resData.USE_YN;
+
+				this.setState(state);
+																		
+				this.vlaItemGridApi.forEachNode((node, idx) => {if (idx === itemRowNm) data = node;});
+				
+				if (data === undefined) {
+					this.vlaItemGridApi.forEachNode((node, idx) => {
+						if (idx === (this.vlaItemGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy).length-1)) rtnNode = node;
+					});
+					rtnNode.setSelected(true);
+					
+					this.vlaItemGridApi.ensureIndexVisible(rtnNode['rowIndex'], 'top');
+				} else {
+					data.setSelected(true);
+
+					this.vlaItemGridApi.ensureIndexVisible(itemRowNm, 'top');
+				}
+
+				if (this.validation("QAM010000_R02")) this.transaction("QAM010000_R02");
+
+			} else {
+				ComLib.setStateInitRecords(this, "dsVlaItemList", []);
+				ComLib.setStateInitRecords(this, "dsVlaContList", []);
+				ComLib.setStateInitRecords(this, "dsVlaStndList", []);
+				
+				this.currntItemTempCd = 0;
+				this.maxItemTempCd = 0;
+				this.maxContTempCd = 0;
+				this.maxStndTempCd = 0;
+			}
+			
+			break;
+
+		case 'QAM010000_R02':
+			if (res.data.dsVlaContRecv.length > 0) {
+				let tempContCd = 0;
+				let dsVlaCont = res.data.dsVlaContRecv;
+
+				for (let i = 0; i < dsVlaCont.length; i ++) {
+					dsVlaCont[i].TEMP_CD = tempContCd;
+					tempContCd ++;
+				}				
+
+				ComLib.setStateRecords(this, "dsVlaContList", dsVlaCont);
+							
+				let resData = dsVlaCont[contRowNm];
+
+				if (resData.USE_YN === "Y") {
+					useIndex = 0
+
+				} else {
+					useIndex = 1
+
+				}
+
+				this.currntRowCont = resData.VLA_CONT_CD;
+				this.currntContTempCd = resData.TEMP_CD;
+				this.maxContTempCd = tempContCd;
+
+				state['textFieldProps']['iptVlaCont'].value     = resData.VLA_CONT_NM;
+				state['textFieldProps']['iptVlaContSort'].value = resData.SORT_ORD;	
+				state['textFieldProps']['iptVlaCont'].disabled     = false;
+				state['textFieldProps']['iptVlaContSort'].disabled = false;		
+
+				state['selectboxProps']['selVlaContUseYn'].selected = useIndex;
+				state['selectboxProps']['selVlaContUseYn'].value    = resData.USE_YN;
+				state['selectboxProps']['selVlaContUseYn'].disabled = false;
+
+				this.setState(state);
+
+				this.vlaContGridApi.forEachNode((node, idx) => {if (idx === contRowNm) data = node;});
+
+				if (data === undefined) {
+					this.vlaContGridApi.forEachNode((node, idx) => {
+						if (idx === (this.vlaContGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy).length-1)) rtnNode = node;
+					});
+					rtnNode.setSelected(true);
+					
+					this.vlaContGridApi.ensureIndexVisible(rtnNode['rowIndex'], 'top');
+				} else {
+					data.setSelected(true);
+
+					this.vlaContGridApi.ensureIndexVisible(contRowNm, 'top');
+				}	
+
+				if (this.validation("QAM010000_R03")) this.transaction("QAM010000_R03");
+
+			} else {
+				ComLib.setStateInitRecords(this, "dsVlaContList", []);
+				ComLib.setStateInitRecords(this, "dsVlaStndList", []);
+				
+				this.currntRowCont = '';
+				this.currntRowStnd = '';
+
+				this.currntContTempCd = 0;
+				this.currntStndTempCd = 0;
+				this.maxContTempCd = 0;
+				this.maxStndTempCd = 0;
+
+				state['textFieldProps']['iptVlaCont'].value     = '';
+				state['textFieldProps']['iptVlaContSort'].value = '';
+				state['textFieldProps']['iptVlaStndNm'].value   = '';
+				state['textFieldProps']['iptVlaStndExpl'].value = '';
+				state['textFieldProps']['iptVlaStndSort'].value = '';
+
+				state['textFieldProps']['iptVlaCont'].disabled     = true;
+				state['textFieldProps']['iptVlaContSort'].disabled = true;
+				state['textFieldProps']['iptVlaStndNm'].disabled   = true;
+				state['textFieldProps']['iptVlaStndExpl'].disabled = true;
+				state['textFieldProps']['iptVlaStndSort'].disabled = true;
+
+				state['selectboxProps']['selVlaContUseYn'].selected = 0;
+				state['selectboxProps']['selVlaContUseYn'].value    = '사용';
+				state['selectboxProps']['selVlaStndUseYn'].selected = 0;
+				state['selectboxProps']['selVlaStndUseYn'].value    = '사용';
+				state['selectboxProps']['selSco'].selected          = 0;
+				state['selectboxProps']['selSco'].value             = '0';
+
+				state['selectboxProps']['selVlaContUseYn'].disabled = true;
+				state['selectboxProps']['selVlaStndUseYn'].disabled = true;
+				state['selectboxProps']['selSco'].disabled          = true;
+
+				this.setState(state);
+			}
+			
+			break;
+			
+		case 'QAM010000_R03':
+			if (res.data.dsVlaStndRecv.length > 0) {
+				let tempStndCd = 0;
+				let dsVlaStnd = res.data.dsVlaStndRecv;
+
+				for (let i = 0; i < dsVlaStnd.length; i ++) {
+					dsVlaStnd[i].TEMP_CD = tempStndCd;
+					tempStndCd ++;
+				}
+
+				ComLib.setStateInitRecords(this, "dsVlaStndList", dsVlaStnd);
+			
+				let resData = dsVlaStnd[stndRowNm];
+
+				if (resData.USE_YN === "Y") {
+					useIndex = 0
+
+				} else {
+					useIndex = 1
+
+				}
+
+				let scoIndex = resData.SCO;
+
+				this.currntRowStnd = resData.VLA_STND_CD;
+				this.currntStndTempCd = resData.TEMP_CD;
+				this.maxStndTempCd = tempStndCd;
+
+				state['textFieldProps']['iptVlaStndNm'].value   = resData.VLA_STND_NM;
+				state['textFieldProps']['iptVlaStndExpl'].value = resData.VLA_EXPL;
+				state['textFieldProps']['iptVlaStndSort'].value = resData.SORT_ORD;
+
+				state['textFieldProps']['iptVlaStndNm'].disabled   = false;
+				state['textFieldProps']['iptVlaStndExpl'].disabled = false;
+				state['textFieldProps']['iptVlaStndSort'].disabled = false;
+
+				state['selectboxProps']['selVlaStndUseYn'].selected = useIndex;
+				state['selectboxProps']['selVlaStndUseYn'].value    = resData.USE_YN;
+				state['selectboxProps']['selSco'].selected          = scoIndex;
+				state['selectboxProps']['selSco'].value             = scoIndex;
+				
+				state['selectboxProps']['selVlaStndUseYn'].disabled = false;				
+				state['selectboxProps']['selSco'].disabled          = false;
+
+				this.setState(state);
+
+				this.vlaStndGridApi.forEachNode((node, idx) => {if (idx === stndRowNm) data = node;});
+
+				if (data === undefined) {
+					this.vlaStndGridApi.forEachNode((node, idx) => {
+						if (idx === (this.vlaStndGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy).length-1)) rtnNode = node;
+					});
+					rtnNode.setSelected(true);
+					
+					this.vlaStndGridApi.ensureIndexVisible(rtnNode['rowIndex'], 'top');
+				} else {
+					data.setSelected(true);
+
+					this.vlaStndGridApi.ensureIndexVisible(stndRowNm, 'top');
+				}
+
+			} else {
+				ComLib.setStateInitRecords(this, "dsVlaStndList", []);
+
+				this.currntRowStnd = '';
+				this.currntStndTempCd = 0;
+				this.maxStndTempCd = 0;
+
+				state['textFieldProps']['iptVlaStndNm'].value   = '';
+				state['textFieldProps']['iptVlaStndExpl'].value = '';
+				state['textFieldProps']['iptVlaStndSort'].value = '';
+
+				state['textFieldProps']['iptVlaStndNm'].disabled   = true;
+				state['textFieldProps']['iptVlaStndExpl'].disabled = true;
+				state['textFieldProps']['iptVlaStndSort'].disabled = true;
+
+				state['selectboxProps']['selVlaStndUseYn'].selected = 0;
+				state['selectboxProps']['selVlaStndUseYn'].value    = '사용';
+				state['selectboxProps']['selSco'].selected          = 0;
+				state['selectboxProps']['selSco'].value             = 0;
+				
+				state['selectboxProps']['selVlaStndUseYn'].disabled = true;
+				state['selectboxProps']['selSco'].disabled          = true;
+
+				this.setState(state);
+
+			}
+			
+			break;
+
+		case 'QAM010000_R04':
+			let newItemCd = res.data.dsVlaItemCd[0].VLA_ITM_CD
+			let dsVlaItem = this.vlaItemGrid.gridDataset.getRecords();
+			let itemCnt = 0;
+
+			for (let i = 0; i < dsVlaItem.length; i ++) {
+				if (dsVlaItem[i].rowtype === newScrmObj.constants.crud.create) {
+					dsVlaItem[i].VLA_ITM_CD = 'I' + Number(Number(newItemCd.substr(1)) + itemCnt);
+					
+					itemCnt ++;
+				}
+			}
+
+			this.transaction("QAM010000_H01", dsVlaItem)
+			break;
+
+		case 'QAM010000_R05':
+			let newContCd = res.data.dsVlaContCd[0].VLA_CONT_CD
+			let dsVlaCont = this.vlaContGrid.gridDataset.getRecords();
+			let contCnt = 0;
+
+			for (let i = 0; i < dsVlaCont.length; i ++) {
+				if (dsVlaCont[i].rowtype === newScrmObj.constants.crud.create) {
+					dsVlaCont[i].VLA_CONT_CD = 'C' + Number(Number(newContCd.substr(1)) + contCnt);
+					contCnt ++;
+				}
+			}
+
+			this.transaction("QAM010000_H02", dsVlaCont)
+			break;
+			
+		case 'QAM010000_R06':
+			let newStndCd = res.data.dsVlaStndCd[0].VLA_STND_CD
+			let dsVlaStnd = this.vlaStndGrid.gridDataset.getRecords();
+			let stndCnt = 0;
+
+			for (let i = 0; i < dsVlaStnd.length; i ++) {
+				if (dsVlaStnd[i].rowtype === newScrmObj.constants.crud.create) {
+					dsVlaStnd[i].VLA_STND_CD = 'S' + Number(Number(newStndCd.substr(1)) + stndCnt);
+					stndCnt ++;
+				}
+			}
+
+			this.transaction("QAM010000_H03", dsVlaStnd)
+			break;
+
+			
+			case 'QAM010000_H01':
+				ComLib.openDialog("A", "COMI0001", ["평가항목"]);
+	
+				this.transaction("QAM010000_R01");
+	
+				break;
+	
+			case 'QAM010000_H02':			
+				ComLib.openDialog("A", "COMI0001", ["평가내용"]);
+				
+				this.transaction("QAM010000_R02");
+				
+				break;
+	
+			case 'QAM010000_H03':			
+				ComLib.openDialog("A", "COMI0001", ["평가기준"]);
+	
+				this.transaction("QAM010000_R03")
+				
+				break;		
+	
+			default: break;
+		}
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {
+		button : {
+			onClick : (e) => {		
+				switch (e.target.id) {					
+				case 'btnVlaSearch':
+					this.currntRowItem = '';
+					this.currntRowCont = '';
+					this.currntRowStnd = '';
+
+					this.currntItemTempCd = 0;
+					this.currntContTempCd = 0;
+					this.currntStndTempCd = 0;
+
+					if (this.validation("QAM010000_R01")) this.transaction("QAM010000_R01");
+
+					break;
+
+				case 'btnVlaItemSave':
+					if (this.validation("QAM010000_R04")) this.transaction("QAM010000_R04");
+					
+					break;
+
+				case 'btnVlaContSave':
+					if (this.validation("QAM010000_R05")) this.transaction("QAM010000_R05");
+					
+					break;
+
+				case 'btnVlaStndCopy':	
+					if (this.vlaStndGridApi.getSelectedRows().length > 0) {
+						this.copyRow = true;
+						this.vlaStndGrid.addGridRow();
+
+					} else {
+						ComLib.openDialog('A', 'COME0006', ['평가항목', '선택']);
+
+					}
+
+					break;
+				
+				case 'btnVlaStndSave':
+					if (this.validation("QAM010000_R06")) this.transaction("QAM010000_R06");
+
+					break;
+
+				default: break;
+				}
+			}
+
+		},
+
+		input : {
+			onChange : (e) => {
+				let itemRecords = this.vlaItemGrid.gridDataset.records;
+				let contRecords = this.vlaContGrid.gridDataset.records;
+				let stndRecords = this.vlaStndGrid.gridDataset.records;
+
+				let itemRowNm = this.rowFinder(itemRecords, "TEMP_CD", this.currntItemTempCd);
+				let contRowNm = this.rowFinder(contRecords, "TEMP_CD", this.currntContTempCd);
+				let stndRowNm = this.rowFinder(stndRecords, "TEMP_CD", this.currntStndTempCd);
+
+				let itemSetRow = false;
+				let contSetRow = false;
+				let stndSetRow = false;
+
+				let state = this.state;
+
+				state['textFieldProps'][e.target.id].value = e.target.value;
+				
+				switch (e.target.id) {
+				case "iptVlaItem":
+					this.vlaItemGrid.gridDataset.setValue(itemRowNm, "VLA_ITM_NM"  , e.target.value);
+					itemSetRow = true;
+					break;
+
+				case "iptVlaItemSort":
+					this.vlaItemGrid.gridDataset.setValue(itemRowNm, "SORT_ORD"  , this.numRtnVal(e.target.value));
+					itemSetRow = true;
+					break;
+
+				case "iptVlaCont":
+					this.vlaContGrid.gridDataset.setValue(contRowNm, "VLA_CONT_NM"  , e.target.value);
+					contSetRow = true;
+					break;
+					
+				case "iptVlaContSort":
+					this.vlaContGrid.gridDataset.setValue(contRowNm, "SORT_ORD"  , this.numRtnVal(e.target.value));
+					contSetRow = true;
+					break;
+
+				case "iptVlaStndNm":
+					this.vlaStndGrid.gridDataset.setValue(stndRowNm, "VLA_STND_NM"  , e.target.value);
+					stndSetRow = true;
+					break;
+
+				case "iptVlaStndExpl":
+					this.vlaStndGrid.gridDataset.setValue(stndRowNm, "VLA_EXPL"  , e.target.value);
+					stndSetRow = true;
+					break;
+
+				case "iptVlaStndSort":
+					this.vlaStndGrid.gridDataset.setValue(stndRowNm, "SORT_ORD"  , this.numRtnVal(e.target.value));
+					stndSetRow = true;
+					break;	
+
+				default: break
+				}
+
+				if (itemSetRow) {	
+					this.vlaItemGrid.gridDataset.setRecords(itemRecords);
+					
+					this.vlaItemGridApi.setRowData(this.vlaItemGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+
+					let vlaItemRows = this.vlaItemGridApi.rowModel.rowsToDisplay;
+					let vlaItemRow;
+
+					for (let i = 0; i < vlaItemRows.length; i ++) {
+						if (vlaItemRows[i].data.TEMP_CD === itemRecords[itemRowNm].TEMP_CD){
+							vlaItemRow = this.vlaItemGridApi.rowModel.rowsToDisplay[i];
+							break;
+						}
+					}
+
+					if (vlaItemRow.selected !== true) {
+						vlaItemRow.setSelected(true);
+					}	
+				}
+
+				if (contSetRow) {	
+					this.vlaContGrid.gridDataset.setRecords(contRecords);
+
+					this.vlaContGridApi.setRowData(this.vlaContGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+
+					let vlaContRows = this.vlaContGridApi.rowModel.rowsToDisplay;
+					let vlaContRow;
+
+					for (let i = 0; i < vlaContRows.length; i ++) {
+						if (vlaContRows[i].data.TEMP_CD === contRecords[contRowNm].TEMP_CD){
+							vlaContRow = this.vlaContGridApi.rowModel.rowsToDisplay[i];
+							break;
+						}
+					}
+
+					if (vlaContRow.selected !== true) {
+						vlaContRow.setSelected(true);
+					}
+				}
+
+				if (stndSetRow) {	
+					this.vlaStndGrid.gridDataset.setRecords(stndRecords);
+
+					this.vlaStndGridApi.setRowData(this.vlaStndGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+					
+					let vlaStndRows = this.vlaStndGridApi.rowModel.rowsToDisplay;
+					let vlaStndRow;
+
+					for (let i = 0; i < vlaStndRows.length; i ++) {
+						if (vlaStndRows[i].data.TEMP_CD === stndRecords[stndRowNm].TEMP_CD){
+							vlaStndRow = this.vlaStndGridApi.rowModel.rowsToDisplay[i];
+							break;
+						}
+					}
+
+					if (vlaStndRow.selected !== true) {
+						vlaStndRow.setSelected(true);
+					}
+				}
+				this.setState(state);
+			},
+			onKeyPress: (e) => {
+				switch (e.target.id) {
+				case 'iptVlaSearch':
+					if (e.key === 'Enter') {
+						if (this.validation("QAM010000_R01")) this.transaction("QAM010000_R01");
+					}
+					
+					break;
+
+				default: break;
+				}
+
+			}
+		},
+
+		selectbox: {
+			onChange: (e) => {
+				let itemRecords = this.vlaItemGrid.gridDataset.records;
+				let contRecords = this.vlaContGrid.gridDataset.records;
+				let stndRecords = this.vlaStndGrid.gridDataset.records;
+
+				let itemRowNm = this.rowFinder(itemRecords, "TEMP_CD", this.currntItemTempCd);
+				let contRowNm = this.rowFinder(contRecords, "TEMP_CD", this.currntContTempCd);
+				let stndRowNm = this.rowFinder(stndRecords, "TEMP_CD", this.currntStndTempCd);
+
+				let itemSetRow = false;
+				let contSetRow = false;
+				let stndSetRow = false;
+
+				let state = this.state;
+
+				state['selectboxProps'][e.target.id].selected = e.target.selectedIndex;
+				state['selectboxProps'][e.target.id].value    = e.target.value;
+								
+				switch (e.target.id) {
+				case 'selVlaItemUseYn':
+					this.vlaItemGrid.gridDataset.setValue(itemRowNm, "USE_YN"  , e.target.value);
+					itemSetRow = true;
+					break;
+
+				case 'selVlaContUseYn':
+					this.vlaContGrid.gridDataset.setValue(contRowNm, "USE_YN"  , e.target.value);
+					contSetRow = true;
+					break;
+
+				case 'selVlaStndUseYn':
+					this.vlaStndGrid.gridDataset.setValue(stndRowNm, "USE_YN"  , e.target.value);
+					stndSetRow = true;
+					break;
+
+				case 'selSco':
+					this.vlaStndGrid.gridDataset.setValue(stndRowNm, "SCO"  , e.target.value);
+					stndSetRow = true;
+					break;
+						
+				default: break;
+				}
+
+				if (itemSetRow) {	
+					this.vlaItemGrid.gridDataset.setRecords(itemRecords);
+
+					this.vlaItemGridApi.setRowData(this.vlaItemGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+					
+					let vlaItemRows = this.vlaItemGridApi.rowModel.rowsToDisplay;
+					let vlaItemRow;
+
+					for (let i = 0; i < vlaItemRows.length; i ++) {
+						if (vlaItemRows[i].data.TEMP_CD === itemRecords[itemRowNm].TEMP_CD){
+							vlaItemRow = this.vlaItemGridApi.rowModel.rowsToDisplay[i];
+							break;
+						}
+					}
+
+					if (vlaItemRow.selected !== true) {
+						vlaItemRow.setSelected(true);
+					}
+									
+				}
+
+				if (contSetRow) {	
+					this.vlaContGrid.gridDataset.setRecords(contRecords);
+
+					this.vlaContGridApi.setRowData(this.vlaContGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+
+					let vlaContRows = this.vlaContGridApi.rowModel.rowsToDisplay;
+					let vlaContRow;
+
+					for (let i = 0; i < vlaContRows.length; i ++) {
+						if (vlaContRows[i].data.TEMP_CD === contRecords[contRowNm].TEMP_CD){
+							vlaContRow = this.vlaContGridApi.rowModel.rowsToDisplay[i];
+							break;
+						}
+					}
+
+					if (vlaContRow.selected !== true) {
+						vlaContRow.setSelected(true);
+					}
+				}
+
+				if (stndSetRow) {	
+					this.vlaStndGrid.gridDataset.setRecords(stndRecords);
+
+					this.vlaStndGridApi.setRowData(this.vlaStndGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+				
+					let vlaStndRows = this.vlaStndGridApi.rowModel.rowsToDisplay;
+					let vlaStndRow;
+
+					for (let i = 0; i < vlaStndRows.length; i ++) {
+						if (vlaStndRows[i].data.TEMP_CD === stndRecords[stndRowNm].TEMP_CD){
+							vlaStndRow = this.vlaStndGridApi.rowModel.rowsToDisplay[i];
+							break;
+						}
+					}
+
+					if (vlaStndRow.selected !== true) {
+						vlaStndRow.setSelected(true);
+					}
+				}
+				this.setState(state);
+
+			}
+		},
+		
+		grid: {
+			onSelectionChanged : (e) => {
+				switch (e.id) {
+				case "grdVlaItem":
+					if (this.vlaItemGrid.gridDataset.getRecords().length === 0) {
+						alert(0)
+					}
+					
+					break;
+
+				case "grdVlaCont":
+					if (this.vlaContGrid.gridDataset.getRecords().length === 0) {
+						alert(0)
+					}
+
+					break;
+
+				case "grdVlaStnd":
+					if (this.vlaStndGrid.gridDataset.getRecords().length === 0) {
+						alert(0)
+					}
+
+					break;
+
+				default: break
+				}
+			},
+			onGridReady : (e) => {
+				switch (e.id) {
+				case "grdVlaItem":
+					this.vlaItemGridApi = e.gridApi;
+					this.vlaItemGrid    = e.grid;
+					
+					break;
+
+				case "grdVlaCont":
+					this.vlaContGridApi = e.gridApi;
+					this.vlaContGrid    = e.grid;
+
+					break;
+
+				case "grdVlaStnd":
+					this.vlaStndGridApi = e.gridApi;
+					this.vlaStndGrid    = e.grid;
+
+					break;
+
+				default: break
+				}
+				
+			},
+			onRowClicked: (e) => {
+				let itemCd  = "";
+				let contCd  = "";
+				let stndCd  = "";
+
+				let useIndex;
+				let state = this.state;
+
+				switch (e.id) {
+				case 'grdVlaItem':
+					itemCd  = e.data.VLA_ITM_CD
+
+					if (e.data.USE_YN === "Y") {
+						useIndex = 0
+
+					} else {
+						useIndex = 1
+
+					}
+					this.currntRowItem = itemCd;
+					this.currntRowCont = '';
+					this.currntRowStnd = '';
+					
+					this.currntItemTempCd = e.data.TEMP_CD;
+					this.currntContTempCd = 0;
+					this.currntStndTempCd = 0;
+
+					state['textFieldProps']['iptVlaItem'].value     = e.data.VLA_ITM_NM;
+					state['textFieldProps']['iptVlaItemSort'].value = e.data.SORT_ORD;
+					
+					state['selectboxProps']['selVlaItemUseYn'].selected = useIndex;
+					state['selectboxProps']['selVlaItemUseYn'].value    = e.data.USE_YN;
+
+					this.setState(state);
+
+					if (this.validation("QAM010000_R02")) this.transaction("QAM010000_R02");
+
+					let itemRow = this.vlaItemGridApi.rowModel.rowsToDisplay[e.index];
+
+					itemRow.setSelected(true);
+
+					break;
+
+				case 'grdVlaCont':
+					contCd  = e.data.VLA_CONT_CD
+
+					if (e.data.USE_YN === "Y") {
+						useIndex = 0
+
+					} else {
+						useIndex = 1
+
+					}
+
+					this.currntRowCont = contCd;
+					this.currntRowStnd = '';
+					
+					this.currntContTempCd = e.data.TEMP_CD;
+					this.currntStndTempCd = 0;
+
+					state['textFieldProps']['iptVlaCont'].value     = e.data.VLA_CONT_NM;
+					state['textFieldProps']['iptVlaContSort'].value = e.data.SORT_ORD;
+					
+					state['selectboxProps']['selVlaContUseYn'].selected = useIndex;
+					state['selectboxProps']['selVlaContUseYn'].value    = e.data.USE_YN;
+
+					this.setState(state);
+
+					if (this.validation("QAM010000_R03")) this.transaction("QAM010000_R03");
+					
+					let contRow = this.vlaContGridApi.rowModel.rowsToDisplay[e.index];
+
+					contRow.setSelected(true);
+
+					break;
+
+				case 'grdVlaStnd':
+					stndCd  = e.data.VLA_STND_CD
+
+					if (e.data.USE_YN === "Y") {
+						useIndex = 0
+
+					} else {
+						useIndex = 1
+
+					}
+
+					let scoIndex = e.data.SCO;
+
+					this.currntRowStnd = stndCd;
+					this.currntStndTempCd = e.data.TEMP_CD;
+										
+					state['textFieldProps']['iptVlaStndNm'].value   = e.data.VLA_STND_NM;
+					state['textFieldProps']['iptVlaStndExpl'].value = e.data.VLA_EXPL;
+					state['textFieldProps']['iptVlaStndSort'].value = e.data.SORT_ORD;
+					
+					state['selectboxProps']['selVlaStndUseYn'].selected = useIndex;
+					state['selectboxProps']['selVlaStndUseYn'].value    = e.data.USE_YN;
+					state['selectboxProps']['selSco'].selected          = scoIndex;
+					state['selectboxProps']['selSco'].value             = e.data.SCO;
+
+					this.setState(state);
+
+					let stndRow = this.vlaStndGridApi.rowModel.rowsToDisplay[e.index];
+
+					stndRow.setSelected(true);
+
+					break;
+							
+				default: break;
+				}
+			},
+			onDeleteRow: (e) => {		
+				let state = this.state;
+				let itemRow, contRow, stndRow;
+				let itemCd, contCd, stndCd;
+				let itemUseIndex, contUseIndex, stndUseIndex;
+
+				switch (e.id) {
+				case 'grdVlaItem':
+					itemRow = this.vlaItemGridApi.rowModel.rowsToDisplay[e.index - 1];
+
+					itemRow.setSelected(true);
+
+					this.vlaItemGridApi.ensureIndexVisible(e.index - 1, 'middle');	
+
+					let itemData = itemRow.data;
+					
+					itemCd  = itemData.VLA_ITM_CD
+
+					if (itemData.USE_YN === "Y") {
+						itemUseIndex = 0
+
+					} else {
+						itemUseIndex = 1
+
+					}
+
+					this.currntRowItem = itemCd;
+					this.currntRowCont = '';
+					this.currntRowStnd = '';
+					
+					this.currntItemTempCd = itemData.TEMP_CD;
+					this.currntContTempCd = 0;
+					this.currntStndTempCd = 0;
+
+					state['textFieldProps']['iptVlaItem'].value     = itemData.VLA_ITM_NM;
+					state['textFieldProps']['iptVlaItemSort'].value = itemData.SORT_ORD;
+					
+					state['selectboxProps']['selVlaItemUseYn'].selected = itemUseIndex;
+					state['selectboxProps']['selVlaItemUseYn'].value    = itemData.USE_YN;
+
+					this.setState(state);
+
+					if (this.validation("QAM010000_R02")) this.transaction("QAM010000_R02");
+
+					break;
+
+				case 'grdVlaCont':
+					contRow = this.vlaContGridApi.rowModel.rowsToDisplay[e.index - 1];
+
+					if (contRow !== undefined) {
+						contRow.setSelected(true);
+
+						this.vlaContGridApi.ensureIndexVisible(e.index - 1, 'middle');	
+	
+						let contData = contRow.data;
+	
+						contCd  = contData.VLA_CONT_CD
+						
+						if (contData.USE_YN === "Y") {
+							contUseIndex = 0
+	
+						} else {
+							contUseIndex = 1
+	
+						}
+	
+						this.currntRowCont = contCd;
+						this.currntRowStnd = '';
+						
+						this.currntContTempCd = contData.TEMP_CD;
+						this.currntStndTempCd = 0;
+	
+						state['textFieldProps']['iptVlaCont'].value     = contData.VLA_CONT_NM;
+						state['textFieldProps']['iptVlaContSort'].value = contData.SORT_ORD;
+						
+						state['selectboxProps']['selVlaContUseYn'].selected = contUseIndex;
+						state['selectboxProps']['selVlaContUseYn'].value    = contData.USE_YN;
+	
+						
+					} else {
+						this.currntRowCont = '';
+						this.currntRowStnd = '';
+						
+						this.currntContTempCd = 0;
+						this.currntStndTempCd = 0;
+	
+						state['textFieldProps']['iptVlaCont'].value        = '';
+						state['textFieldProps']['iptVlaCont'].disabled     = true;
+						state['textFieldProps']['iptVlaContSort'].value    = '';
+						state['textFieldProps']['iptVlaContSort'].disabled = true;
+						
+						state['selectboxProps']['selVlaContUseYn'].selected = 0;
+						state['selectboxProps']['selVlaContUseYn'].value    = '사용';
+						state['selectboxProps']['selVlaContUseYn'].disabled = true;
+					}
+					
+					this.setState(state);
+
+					if (this.validation("QAM010000_R03")) this.transaction("QAM010000_R03");
+					
+					break;
+
+				case 'grdVlaStnd':
+					stndRow = this.vlaStndGridApi.rowModel.rowsToDisplay[e.index - 1];
+
+					if (stndRow !== undefined) {
+						stndRow.setSelected(true);
+
+						this.vlaStndGridApi.ensureIndexVisible(e.index - 1, 'middle');	
+	
+						let stndData = stndRow.data;
+	
+						stndCd  = stndData.VLA_STND_CD
+	
+						if (stndData.USE_YN === "Y") {
+							stndUseIndex = 1
+	
+						} else {
+							stndUseIndex = 2
+	
+						}
+	
+						let scoIndex = stndData.SCO;
+	
+						this.currntRowStnd = stndCd;
+						this.currntStndTempCd = stndData.TEMP_CD;
+											
+						state['textFieldProps']['iptVlaStndNm'].value   = stndData.VLA_STND_NM;
+						state['textFieldProps']['iptVlaStndExpl'].value = stndData.VLA_EXPL;
+						state['textFieldProps']['iptVlaStndSort'].value = stndData.SORT_ORD;	
+						
+						state['selectboxProps']['selVlaStndUseYn'].selected = stndUseIndex;
+						state['selectboxProps']['selVlaStndUseYn'].value    = stndData.USE_YN;	
+						state['selectboxProps']['selSco'].selected          = scoIndex;
+						state['selectboxProps']['selSco'].value             = stndData.SCO;
+	
+					} else {
+						this.currntRowStnd = "";
+						this.currntStndTempCd = 0;
+											
+						state['textFieldProps']['iptVlaStndNm'].value   = "";
+						state['textFieldProps']['iptVlaStndExpl'].value = "";
+						state['textFieldProps']['iptVlaStndSort'].value = "";
+						state['textFieldProps']['iptVlaStndNm'].disabled   = true;
+						state['textFieldProps']['iptVlaStndExpl'].disabled = true;
+						state['textFieldProps']['iptVlaStndSort'].disabled = true;	
+						
+						state['selectboxProps']['selVlaStndUseYn'].selected = 0;
+						state['selectboxProps']['selVlaStndUseYn'].value    = "사용";					
+						state['selectboxProps']['selVlaStndUseYn'].disabled = true;
+						state['selectboxProps']['selSco'].selected          = 0;
+						state['selectboxProps']['selSco'].value             = 0;
+						state['selectboxProps']['selSco'].disabled          = true;
+							
+					}
+					
+					this.setState(state);
+
+					break;
+							
+				default: break;
+				}
+			},
+			onBeforeInsertRow: (e) => {
+				let state = this.state;
+				let rtnVal = true
+				if (this.copyRow) {
+					state['textFieldProps']['iptVlaStndNm'].value   = ComLib.isNull(state['textFieldProps']['iptVlaStndNm'].value) ? "" : "[COPY]" + state['textFieldProps']['iptVlaStndNm'].value;
+					state['textFieldProps']['iptVlaStndExpl'].value = ComLib.isNull(state['textFieldProps']['iptVlaStndExpl'].value) ? "" : "[COPY]" + state['textFieldProps']['iptVlaStndExpl'].value;
+
+					this.setState(state)
+
+					return {'rtn': rtnVal};
+				}				
+
+				switch (e.id) {
+					case "grdVlaItem":
+						this.currntRowItem = '';
+						this.currntRowCont = '';
+						this.currntRowStnd = '';
+					
+						this.currntItemTempCd = 0;
+						this.currntContTempCd = 0;
+						this.currntStndTempCd = 0;
+
+						state['textFieldProps']['iptVlaItem'].value     = '';
+						state['textFieldProps']['iptVlaItemSort'].value = '';
+						state['textFieldProps']['iptVlaCont'].value     = '';
+						state['textFieldProps']['iptVlaContSort'].value = '';
+						state['textFieldProps']['iptVlaStndNm'].value   = '';
+						state['textFieldProps']['iptVlaStndExpl'].value = '';
+						state['textFieldProps']['iptVlaStndSort'].value = '';
+	
+						state['selectboxProps']['selVlaItemUseYn'].selected = 0;
+						state['selectboxProps']['selVlaItemUseYn'].value    = '사용';
+						state['selectboxProps']['selVlaContUseYn'].selected = 0;
+						state['selectboxProps']['selVlaContUseYn'].value    = '사용';
+						state['selectboxProps']['selVlaStndUseYn'].selected = 0;
+						state['selectboxProps']['selVlaStndUseYn'].value    = '사용';
+						state['selectboxProps']['selSco'].selected          = 0;
+						state['selectboxProps']['selSco'].value             = 0;
+	
+						this.setState(state);
+	
+						ComLib.setStateRecords(this, "dsVlaContList", []);
+						ComLib.setStateRecords(this, "dsVlaStndList", []);
+	
+						rtnVal = true;
+
+						break;
+	
+					case "grdVlaCont":
+						if (this.vlaItemGridApi.getSelectedRows()[0].rowtype !== 'r') {
+							ComLib.openDialog('A', 'COME0006', ['평가항목', '저장']);
+
+							rtnVal = false;
+						} else {
+							this.currntRowCont = '';
+							this.currntRowStnd = '';
+							
+							this.currntContTempCd = 0;
+							this.currntStndTempCd = 0;						
+							
+							let state = this.state
+							state['textFieldProps']['iptVlaCont'].value        = '';
+							state['textFieldProps']['iptVlaCont'].disabled     = false;
+							state['textFieldProps']['iptVlaContSort'].value    = '';
+							state['textFieldProps']['iptVlaContSort'].disabled = false;
+							state['textFieldProps']['iptVlaStndNm'].value   = '';
+							state['textFieldProps']['iptVlaStndExpl'].value = '';
+							state['textFieldProps']['iptVlaStndSort'].value = '';
+		
+							state['selectboxProps']['selVlaContUseYn'].selected = 0;	
+							state['selectboxProps']['selVlaContUseYn'].value    = '사용';						
+							state['selectboxProps']['selVlaContUseYn'].disabled = false;
+							state['selectboxProps']['selVlaStndUseYn'].selected = 0;
+							state['selectboxProps']['selVlaStndUseYn'].value    = '사용';
+							state['selectboxProps']['selSco'].selected          = 0;
+							state['selectboxProps']['selSco'].value             = 0;
+		
+							this.setState(state);
+
+							ComLib.setStateRecords(this, "dsVlaStndList", []);
+
+							rtnVal = true;
+						}
+	
+						break;
+	
+					case "grdVlaStnd":
+						if (this.vlaContGridApi.getSelectedRows().length <= 0) {
+							ComLib.openDialog('A', 'COME0008', ['평가내용']);
+							rtnVal = false;
+						} else if (this.vlaContGridApi.getSelectedRows()[0].rowtype !== 'r') {
+							ComLib.openDialog('A', 'COME0006', ['평가내용', '저장']);
+							rtnVal = false;
+						} else {
+							this.currntRowStnd = '';
+
+							this.currntStndTempCd = 0;
+
+							state['textFieldProps']['iptVlaStndNm'].value   = '';
+							state['textFieldProps']['iptVlaStndExpl'].value = '';
+							state['textFieldProps']['iptVlaStndSort'].value = '';
+							state['textFieldProps']['iptVlaStndNm'].disabled    = false;
+							state['textFieldProps']['iptVlaStndExpl'].disabled  = false;			
+							state['textFieldProps']['iptVlaStndSort'].disabled  = false;
+	
+							state['selectboxProps']['selVlaStndUseYn'].selected = 0;
+							state['selectboxProps']['selVlaStndUseYn'].value    = '사용';					
+							state['selectboxProps']['selVlaStndUseYn'].disabled = false;
+							state['selectboxProps']['selSco'].selected          = 0;
+							state['selectboxProps']['selSco'].value             = 0;					
+							state['selectboxProps']['selSco'].disabled          = false;
+	
+							this.setState(state);
+
+							rtnVal = true;
+						}
+	
+						break;
+	
+					default: break
+					}
+				return {'rtn': rtnVal};			
+			},
+			onInsertRow: (e) => {	
+				let state;
+
+				let itemRecords = this.vlaItemGrid.gridDataset.records;
+				let contRecords = this.vlaContGrid.gridDataset.records;
+				let stndRecords = this.vlaStndGrid.gridDataset.records;
+
+				if (this.copyRow) {
+					this.copyRow = false;
+
+					state = this.state;				
+					
+					stndRecords[e.index].VLA_STND_NM = state['textFieldProps']['iptVlaStndNm'].value;
+					stndRecords[e.index].VLA_EXPL    = state['textFieldProps']['iptVlaStndExpl'].value;
+					stndRecords[e.index].USE_YN      = state['selectboxProps']['selVlaStndUseYn'].value;
+					stndRecords[e.index].SCO         = state['selectboxProps']['selSco'].value;
+					stndRecords[e.index].SORT_ORD    = state['textFieldProps']['iptVlaStndSort'].value;
+
+					stndRecords[e.index].TEMP_CD     = this.maxStndTempCd + 1;
+					stndRecords[e.index].VLA_ITM_CD  = this.currntRowItem;
+					stndRecords[e.index].VLA_CONT_CD = this.currntRowCont;
+										
+					this.maxStndTempCd ++;
+					this.currntStndTempCd = this.maxStndTempCd;
+
+					this.vlaStndGrid.gridDataset.setRecords(stndRecords);
+
+					this.vlaStndGridApi.setRowData(this.vlaStndGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+					this.vlaStndGridApi.rowModel.rowsToDisplay[e.index].setSelected(true);
+					this.vlaStndGridApi.ensureIndexVisible(e.index, 'middle');
+				
+				}
+
+
+				switch (e.id) {
+				case "grdVlaItem":	
+					itemRecords[e.index].TEMP_CD = this.maxItemTempCd + 1;
+					itemRecords[e.index].USE_YN = 'Y';
+					this.maxItemTempCd ++;
+					this.currntItemTempCd = this.maxItemTempCd;
+
+					this.vlaItemGrid.gridDataset.setRecords(itemRecords);
+
+					this.vlaItemGridApi.setRowData(this.vlaItemGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+					this.vlaItemGridApi.rowModel.rowsToDisplay[e.index].setSelected(true);
+					this.vlaItemGridApi.ensureIndexVisible(e.index, 'middle');	
+
+					console.log(this.vlaItemGrid.gridDataset)
+					break;
+
+				case "grdVlaCont":	
+					contRecords[e.index].TEMP_CD = this.maxContTempCd + 1;
+					contRecords[e.index].VLA_ITM_CD = this.currntRowItem;
+					contRecords[e.index].USE_YN = 'Y';
+
+					this.maxContTempCd ++;
+					this.currntContTempCd = this.maxContTempCd;		
+
+					this.vlaContGrid.gridDataset.setRecords(contRecords);
+										
+					this.vlaContGridApi.setRowData(this.vlaContGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+					this.vlaContGridApi.rowModel.rowsToDisplay[e.index].setSelected(true);
+					this.vlaContGridApi.ensureIndexVisible(e.index, 'middle');
+
+					break;
+
+				case "grdVlaStnd":	
+					stndRecords[e.index].TEMP_CD = this.maxStndTempCd + 1;
+					stndRecords[e.index].VLA_ITM_CD = this.currntRowItem;
+					stndRecords[e.index].VLA_CONT_CD = this.currntRowCont;
+					stndRecords[e.index].USE_YN = 'Y';
+					stndRecords[e.index].SCO = 0;
+					
+					this.maxStndTempCd ++;
+					this.currntStndTempCd = this.maxStndTempCd;
+
+					this.vlaStndGrid.gridDataset.setRecords(stndRecords);
+
+					this.vlaStndGridApi.setRowData(this.vlaStndGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+					this.vlaStndGridApi.rowModel.rowsToDisplay[e.index].setSelected(true);
+					this.vlaStndGridApi.ensureIndexVisible(e.index, 'middle');
+					
+					break;
+
+				default: break
+				}
+			}
+		}
+	}
+
+	resetCont() {
+			
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [7. render Zone]
+	//  - 화면 관련 내용 작성
+	/*------------------------------------------------------------------------------------------------*/
+	render () {
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<SearchPanel>
+						<RelativeGroup>
+							<LFloatArea>
+								<FlexPanel>
+									<Label value="평가항목"/>								
+									<Textfield
+										width       = {500}
+										id          = {this.state.textFieldProps.iptVlaSearch.id}
+										name        = {this.state.textFieldProps.iptVlaSearch.name}
+										value       = {this.state.textFieldProps.iptVlaSearch.value}
+										placeholder = {this.state.textFieldProps.iptVlaSearch.placeholder}
+										minLength   = {this.state.textFieldProps.iptVlaSearch.minLength}
+										maxLength   = {this.state.textFieldProps.iptVlaSearch.maxLength}
+										readOnly    = {this.state.textFieldProps.iptVlaSearch.readOnly}
+										
+										disabled    = {this.state.textFieldProps.iptVlaSearch.disabled}
+										onChange    = {this.event.input.onChange}
+										onKeyPress  = {this.event.input.onKeyPress}
+									/>
+									<Label value="사용여부"/>
+									<Selectbox
+										id       = {this.state.selectboxProps.selVlaSearch.id}
+										value    = {this.state.selectboxProps.selVlaSearch.value}
+										dataset  = {this.state.selectboxProps.selVlaSearch.dataset}
+										width    = {this.state.selectboxProps.selVlaSearch.width}
+										disabled = {this.state.selectboxProps.selVlaSearch.disabled}
+										selected = {this.state.selectboxProps.selVlaSearch.selected}
+										onChange = {this.event.selectbox.onChange}
+									/>
+								</FlexPanel>
+							</LFloatArea>
+							<RFloatArea>								
+								<Button
+									color      = 'blue' 
+									fiiled	   = "o"
+									innerImage = {true} 
+									icon	   = {'srch'} 									
+									id         = {this.state.btnProps.btnVlaSearch.id}
+									value      = {this.state.btnProps.btnVlaSearch.value}
+									disabled   = {this.state.btnProps.btnVlaSearch.disabled}
+									hidden     = {this.state.btnProps.btnVlaSearch.hidden}
+									onClick    = {this.event.button.onClick}
+									mt         = {5}
+								/>
+							</RFloatArea>
+						</RelativeGroup>
+					</SearchPanel>
+					<SubFullPanel>
+						<FlexPanel>
+							<ComponentPanel>
+								<Grid
+									id        = {this.state.grdProps.grdVlaItem.id} 
+									areaName  = {this.state.grdProps.grdVlaItem.areaName} 
+									header    = {this.state.grdProps.grdVlaItem.header}
+									data      = {this.state.dsVlaItemList}
+									height    = "245px"
+									rowNum    = {true}
+
+									onGridReady  = {this.event.grid.onGridReady}
+									onRowClicked = {this.event.grid.onRowClicked}		
+									onDeleteRow  = {this.event.grid.onDeleteRow}
+									onInsertRow  = {this.event.grid.onInsertRow}	
+									onBeforeInsertRow = {this.event.grid.onBeforeInsertRow}	
+									onSelectionChanged = {this.event.grid.onSelectionChanged}				
+								/>
+								<SubFullPanel>
+									<RelativeGroup>
+										<LFloatArea>
+											<FlexPanel>
+												<Label value="평가항목" req={true}/>
+												<Textfield
+													width       = {500}
+													id          = {this.state.textFieldProps.iptVlaItem.id}
+													name        = {this.state.textFieldProps.iptVlaItem.name}
+													value       = {this.state.textFieldProps.iptVlaItem.value}
+													placeholder = {this.state.textFieldProps.iptVlaItem.placeholder}
+													minLength   = {this.state.textFieldProps.iptVlaItem.minLength}
+													maxLength   = {this.state.textFieldProps.iptVlaItem.maxLength}
+													readOnly    = {this.state.textFieldProps.iptVlaItem.readOnly}
+													disabled    = {this.state.textFieldProps.iptVlaItem.disabled}
+													onChange    = {this.event.input.onChange}
+												/>												
+											</FlexPanel>
+											<FlexPanel>
+												<Label value="사용여부" req={true}/>
+												<Selectbox
+													id       = {this.state.selectboxProps.selVlaItemUseYn.id}
+													value    = {this.state.selectboxProps.selVlaItemUseYn.value}
+													dataset  = {this.state.selectboxProps.selVlaItemUseYn.dataset}
+													width    = {this.state.selectboxProps.selVlaItemUseYn.width}
+													disabled = {this.state.selectboxProps.selVlaItemUseYn.disabled}
+													selected = {this.state.selectboxProps.selVlaItemUseYn.selected}
+													onChange = {this.event.selectbox.onChange}
+												/>
+												<Label value="정렬순서" req={true}/>
+												<Textfield
+													width       = {100}
+													id          = {this.state.textFieldProps.iptVlaItemSort.id}
+													name        = {this.state.textFieldProps.iptVlaItemSort.name}
+													value       = {this.state.textFieldProps.iptVlaItemSort.value}
+													placeholder = {this.state.textFieldProps.iptVlaItemSort.placeholder}
+													minLength   = {this.state.textFieldProps.iptVlaItemSort.minLength}
+													maxLength   = {this.state.textFieldProps.iptVlaItemSort.maxLength}
+													readOnly    = {this.state.textFieldProps.iptVlaItemSort.readOnly}
+													disabled    = {this.state.textFieldProps.iptVlaItemSort.disabled}
+													type        = {this.state.textFieldProps.iptVlaItemSort.type}	
+													onChange    = {this.event.input.onChange}
+												/>
+											</FlexPanel>
+										</LFloatArea>
+										<RFloatArea>	
+											<Button
+												color    = 'purple' 
+												fiiled	 = "o"
+												id       = {this.state.btnProps.btnVlaItemSave.id}
+												value    = {this.state.btnProps.btnVlaItemSave.value}
+												disabled = {this.state.btnProps.btnVlaItemSave.disabled}
+												hidden   = {this.state.btnProps.btnVlaItemSave.hidden}
+												onClick  = {this.event.button.onClick}
+												mt       = {5}
+											/>						
+										</RFloatArea>
+									</RelativeGroup>
+								</SubFullPanel>
+							</ComponentPanel>
+							<ComponentPanel>
+								<Grid
+									id        = {this.state.grdProps.grdVlaCont.id} 
+									areaName  = {this.state.grdProps.grdVlaCont.areaName} 
+									header    = {this.state.grdProps.grdVlaCont.header}
+									data      = {this.state.dsVlaContList}
+									height    = "245px"
+									rowNum    = {true}
+
+									onGridReady  = {this.event.grid.onGridReady}
+									onRowClicked = {this.event.grid.onRowClicked}	
+									onDeleteRow  = {this.event.grid.onDeleteRow}
+									onInsertRow  = {this.event.grid.onInsertRow}
+									onBeforeInsertRow = {this.event.grid.onBeforeInsertRow}	
+									onSelectionChanged = {this.event.grid.onSelectionChanged}								
+								/>
+								<SubFullPanel>
+									<RelativeGroup>
+										<LFloatArea>
+											<FlexPanel>
+												<Label value="평가내용" req={true}/>
+												<Textfield
+													width       = {500}
+													id          = {this.state.textFieldProps.iptVlaCont.id}
+													name        = {this.state.textFieldProps.iptVlaCont.name}
+													value       = {this.state.textFieldProps.iptVlaCont.value}
+													placeholder = {this.state.textFieldProps.iptVlaCont.placeholder}
+													minLength   = {this.state.textFieldProps.iptVlaCont.minLength}
+													maxLength   = {this.state.textFieldProps.iptVlaCont.maxLength}
+													readOnly    = {this.state.textFieldProps.iptVlaCont.readOnly}
+													disabled    = {this.state.textFieldProps.iptVlaCont.disabled}
+													onChange    = {this.event.input.onChange}
+												/>												
+											</FlexPanel>
+											<FlexPanel>
+												<Label value="사용여부" req={true}/>
+												<Selectbox
+													id       = {this.state.selectboxProps.selVlaContUseYn.id}
+													value    = {this.state.selectboxProps.selVlaContUseYn.value}
+													dataset  = {this.state.selectboxProps.selVlaContUseYn.dataset}
+													width    = {this.state.selectboxProps.selVlaContUseYn.width}
+													disabled = {this.state.selectboxProps.selVlaContUseYn.disabled}
+													selected = {this.state.selectboxProps.selVlaContUseYn.selected}
+													onChange = {this.event.selectbox.onChange}
+												/>
+												<Label value="정렬순서" req={true}/>
+												<Textfield
+													width       = {100}
+													id          = {this.state.textFieldProps.iptVlaContSort.id}
+													name        = {this.state.textFieldProps.iptVlaContSort.name}
+													value       = {this.state.textFieldProps.iptVlaContSort.value}
+													placeholder = {this.state.textFieldProps.iptVlaContSort.placeholder}
+													minLength   = {this.state.textFieldProps.iptVlaContSort.minLength}
+													maxLength   = {this.state.textFieldProps.iptVlaContSort.maxLength}
+													readOnly    = {this.state.textFieldProps.iptVlaContSort.readOnly}
+													disabled    = {this.state.textFieldProps.iptVlaContSort.disabled}
+													type        = {this.state.textFieldProps.iptVlaContSort.type}	
+													onChange    = {this.event.input.onChange}
+												/>
+											</FlexPanel>
+										</LFloatArea>
+										<RFloatArea>
+											<Button
+												color    = 'purple' 
+												fiiled   = "o"
+												id       = {this.state.btnProps.btnVlaContSave.id}
+												value    = {this.state.btnProps.btnVlaContSave.value}
+												disabled = {this.state.btnProps.btnVlaContSave.disabled}
+												hidden   = {this.state.btnProps.btnVlaContSave.hidden}
+												onClick  = {this.event.button.onClick}
+												mt       = {5}
+											/>	
+										</RFloatArea>
+									</RelativeGroup>
+								</SubFullPanel>
+							</ComponentPanel>
+						</FlexPanel>
+					</SubFullPanel>
+					<SubFullPanel>
+						<FlexPanel>
+							<ComponentPanel>
+								<Grid
+									id        = {this.state.grdProps.grdVlaStnd.id} 
+									areaName  = {this.state.grdProps.grdVlaStnd.areaName} 
+									header    = {this.state.grdProps.grdVlaStnd.header}
+									data      = {this.state.dsVlaStndList}
+									height    = "240px"
+									rowNum    = {true}
+
+									onGridReady  = {this.event.grid.onGridReady}
+									onRowClicked = {this.event.grid.onRowClicked}
+									onDeleteRow  = {this.event.grid.onDeleteRow}
+									onInsertRow  = {this.event.grid.onInsertRow}
+									onBeforeInsertRow = {this.event.grid.onBeforeInsertRow}	
+									onSelectionChanged = {this.event.grid.onSelectionChanged}						
+								/>
+							</ComponentPanel>
+							<ComponentPanel>
+								<FlexPanel>	
+									<SubFullPanel>														
+										<SubFullPanel>  
+											<div style={{width: '10%', display: 'block', float: 'left', marginBottom:  '4px'}}>    
+												<Label value="평가기준" req={true}/>
+											</div> 
+											<div style={{width: '90%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+												<Textfield
+													id          = {this.state.textFieldProps.iptVlaStndNm.id}
+													name        = {this.state.textFieldProps.iptVlaStndNm.name}
+													value       = {this.state.textFieldProps.iptVlaStndNm.value}
+													placeholder = {this.state.textFieldProps.iptVlaStndNm.placeholder}
+													minLength   = {this.state.textFieldProps.iptVlaStndNm.minLength}
+													maxLength   = {this.state.textFieldProps.iptVlaStndNm.maxLength}
+													readOnly    = {this.state.textFieldProps.iptVlaStndNm.readOnly}
+													disabled    = {this.state.textFieldProps.iptVlaStndNm.disabled}
+													onChange    = {this.event.input.onChange}
+												/>
+											</div>
+										</SubFullPanel>
+										<SubFullPanel>  
+											<div style={{width: '10%', display: 'block', float: 'left', marginBottom:  '4px'}}>    
+												<Label value="설명"/>
+											</div> 
+											<div style={{width: '90%',  display: 'block', float: 'left'}}>
+												<Textarea
+													id          = {this.state.textFieldProps.iptVlaStndExpl.id}
+													name        = {this.state.textFieldProps.iptVlaStndExpl.name}
+													value       = {this.state.textFieldProps.iptVlaStndExpl.value}
+													placeholder = {this.state.textFieldProps.iptVlaStndExpl.placeholder}
+													minLength   = {this.state.textFieldProps.iptVlaStndExpl.minLength}
+													maxLength   = {this.state.textFieldProps.iptVlaStndExpl.maxLength}
+													readOnly    = {this.state.textFieldProps.iptVlaStndExpl.readOnly}
+													disabled    = {this.state.textFieldProps.iptVlaStndExpl.disabled}
+													rows        = {this.state.textFieldProps.iptVlaStndExpl.rows}
+													onChange    = {this.event.input.onChange}
+													onKeyPress  = {this.event.input.onKeyPress}
+												/>
+											</div>
+										</SubFullPanel>
+										<SubFullPanel>  
+											<div style={{width: '10%', display: 'block', float: 'left', marginBottom:  '4px'}}>    
+												<Label value="사용여부" req={true}/>
+											</div> 
+											<div style={{width: '23%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+												<Selectbox
+													id       = {this.state.selectboxProps.selVlaStndUseYn.id}
+													value    = {this.state.selectboxProps.selVlaStndUseYn.value}
+													dataset  = {this.state.selectboxProps.selVlaStndUseYn.dataset}
+													disabled = {this.state.selectboxProps.selVlaStndUseYn.disabled}
+													selected = {this.state.selectboxProps.selVlaStndUseYn.selected}
+													onChange = {this.event.selectbox.onChange}
+												/>
+											</div>
+											<div style={{width: '9%', display: 'block', float: 'left', marginBottom:  '4px', marginLeft: '1%'}}>    
+												<Label value="배점" req={true}/>
+											</div> 
+											<div style={{width: '22%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+												<Selectbox
+													id       = {this.state.selectboxProps.selSco.id}
+													value    = {this.state.selectboxProps.selSco.value}
+													dataset  = {this.state.selectboxProps.selSco.dataset}
+													disabled = {this.state.selectboxProps.selSco.disabled}
+													selected = {this.state.selectboxProps.selSco.selected}
+													onChange = {this.event.selectbox.onChange}
+												/>
+											</div>
+											<div style={{width: '10%', display: 'block', float: 'left', marginBottom:  '4px', marginLeft: '1%'}}>    
+												<Label value="정렬순서" req={true}/>
+											</div> 
+											<div style={{width: '24%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+												<Textfield
+													id          = {this.state.textFieldProps.iptVlaStndSort.id}
+													name        = {this.state.textFieldProps.iptVlaStndSort.name}
+													value       = {this.state.textFieldProps.iptVlaStndSort.value}
+													placeholder = {this.state.textFieldProps.iptVlaStndSort.placeholder}
+													minLength   = {this.state.textFieldProps.iptVlaStndSort.minLength}
+													maxLength   = {this.state.textFieldProps.iptVlaStndSort.maxLength}
+													readOnly    = {this.state.textFieldProps.iptVlaStndSort.readOnly}
+													disabled    = {this.state.textFieldProps.iptVlaStndSort.disabled}
+													type        = {this.state.textFieldProps.iptVlaStndSort.type}	
+													onChange    = {this.event.input.onChange}
+												/>
+											</div>
+										</SubFullPanel>
+										<SubFullPanel>
+											<RFloatArea>
+												<Button
+													color    = 'green' 
+													fiiled   = "o" 
+													id       = {this.state.btnProps.btnVlaStndCopy.id}
+													value    = {this.state.btnProps.btnVlaStndCopy.value}
+													disabled = {this.state.btnProps.btnVlaStndCopy.disabled}
+													hidden   = {this.state.btnProps.btnVlaStndCopy.hidden}
+													onClick  = {this.event.button.onClick}
+													mt       = {10}
+												/>
+												<Button
+													color    = 'purple' 
+													fiiled   = "o"
+													id       = {this.state.btnProps.btnVlaStndSave.id}
+													value    = {this.state.btnProps.btnVlaStndSave.value}
+													disabled = {this.state.btnProps.btnVlaStndSave.disabled}
+													hidden   = {this.state.btnProps.btnVlaStndSave.hidden}
+													onClick  = {this.event.button.onClick}
+													mt       = {5}
+												/>
+											</RFloatArea>
+										</SubFullPanel>
+									</SubFullPanel>
+								</FlexPanel>
+							</ComponentPanel>
+						</FlexPanel>
+					</SubFullPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

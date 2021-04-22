@@ -1,0 +1,589 @@
+//STT 결과조회
+import React from 'react';
+
+import {
+	ComponentPanel, FullPanel, RFloatArea, LFloatArea, RelativeGroup, SearchPanel, FlexPanel, SubFullPanel
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button, Label} from 'components';
+import {Textfield, RangeInputCalendar, Selectbox} from 'components';
+import {Grid} from 'components';
+import {StrLib, TransManager, ComLib, DataLib, newScrmObj, DateLib} from 'common';
+import axios from 'axios';
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+
+		this.state = {
+			btnProps : {
+				btnSearchProps : {
+					id : 'btnJobFileSearchList',
+					disabled : false,
+					value : '조회',
+					hidden : false
+				},
+			},
+			gridSttResultList : {
+				areaName : 'STT결과조회',
+				id : 'gridSttResultList',
+				header : 				
+				[					
+					 {headerName: '콜 아이디',	field: 'call_id',		colId: 'call_id',		editable: true, }
+					,{headerName: '콜 종류',	field: 'call_tp',		 colId: 'call_tp',		editable: false, width : '130', 
+						valueFormatter : (params) => { return ComLib.getComCodeName('CMN', params.value,'CALL_TP')}
+					}
+					,{headerName: '등록시간',	field: 'reg_dtm',	    colId: 'reg_dtm',	editable: false}	
+					,{headerName: '파일 사이즈',field: 'file_size',		colId: 'file_size',	editable: false}
+					,{headerName: '녹취길이',	field: 'rec_tm',	colId: 'rec_length',	editable: false}
+					,{headerName: '상담내용',	field: 'highlight',   	colId: 'highlight',	editable: false, 					
+						cellRenderer : (params) => { 
+							let text = params.value;
+							let cnt = text.indexOf('@')
+							let strCnt = text.substring(0, cnt);
+
+							text = text.substring(cnt + 1, text.length); 
+
+							let start = text.indexOf('<strong>')	
+							
+							start = start - 10;
+							if (start < 0) {
+								start = 0
+							}
+
+							text = text.substring(start); 
+													
+							let end = text.indexOf('</strong>')
+
+							end = end + 20;
+							if (end > text.length) {
+								end = text.length
+							}
+																		
+							text = text.substring(0, end); 
+							text = (start === 0 ? "" : "...") + text + "... (" + strCnt + ")"; 
+							
+							return text 
+						
+						
+						}
+					}
+					,{headerName: '상담내용',	    field: 'ACTION_ICON',	colId: 'ACTION_ICON',	width: 100, 
+						cellRenderer: 'actionButton', 
+						fiiled: true,
+						color: 'blue'
+					},
+				]
+			},
+			rangeCalendarProps : {
+				rgcSearchJob : {
+					label : '작업기간',
+					id : 'searchJobDateCalender',
+					strtId : 'searchJobDateCalenderStart',
+					endId : 'searchJobDateCalenderEnd',
+					startDate : DateLib.getToday(),
+					endDate : DateLib.getToday(),
+				},
+				rgcSearchCall : {
+					label : '통화기간',
+					id : 'searchCallDateCalender',
+					strtId : 'searchCallDateCalenderStart',
+					endId : 'searchCallDateCalenderEnd',
+					startDate : null,
+					endDate : null,
+				}
+			},
+			selectboxProps : {
+				selCallTP : {
+					id : 'selCallTP',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList('CMN', 'CALL_TP'), newScrmObj.constants.select.argument.all),
+					width : '100%',
+					selected : 0,
+					disabled : false,
+					label : "콜구분"
+				}
+			},
+			textFieldProps : {
+				txtSearch : {
+					id : 'txtSearch',
+					name : 'txtSearch',
+					value : '',
+					placeholder : '',
+					minLength : 1,
+					maxLength : 10,
+					readOnly : false,
+					disabled : false,
+					label : '검색어',
+					width : '100%'
+					
+				}
+			},
+			dsSttResultInfo : DataLib.datalist.getInstance(),
+			dsSrch: DataLib.datalist.getInstance([{CENT_CD: ComLib.setOrgComboValue("CENT_CD"), TEAM_CD: ComLib.setOrgComboValue("TEAM_CD"), USR_CD: ""}]),
+			// dsGrp: DataLib.datalist.getInstance([{CENT_CD: "", TEAM_CD: ComLib.setOrgComboValue("TEAM_CD"), USR_CD: ""}]), disabled : false,			
+		}
+		this.event.button.onClick = this.event.button.onClick.bind(this);
+		this.event.inputcalendar.onChange = this.event.inputcalendar.onChange.bind(this);
+		this.event.input.onChange   = this.event.input.onChange.bind(this);
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+		// [2. React Lifecycle Method Zone] ==> 리액트 컴포넌트 생명주기 메소드
+		// 참고 site : https://ko.reactjs.org/docs/react-component.html#constructor
+	/*------------------------------------------------------------------------------------------------*/
+	/*------------------------------------------------------------------------------------------------*
+		1) componentDidMount () => init 함수 개념으로 이해하는게 빠름
+		=> 컴포넌트가 마운트된 직후, 호출 ->  해당 함수에서 this.setState를 수행할 시, 갱신이 두번 일어나 render()함수가 두번 발생 -> 성능 저하 가능성
+	 ------------------------------------------------------------------------------------------------*/
+	componentDidMount () {
+		// console.log(ComLib.getSession("gdsConstList"))
+		// console.log(ComLib.getConstList(this.state.dsSrch))
+		// if (this.validation("STT020000_R01")) this.transaction("STT020000_R01");
+
+	}
+	/*------------------------------------------------------------------------------------------------*
+		2) componentDidUpdate () => 갱신이 일어나 직후에 호춮 (최초 렌더링 시에는 호출되지 않음)
+		=> prevProps와 현재 props를 비교할 수 있음 -> 조건문으로 감싸지 않고 setState를 실행할 시, 무한 반복 가능성 -> 반드시 setState를 쓰려면 조건문으로 작성
+	 ------------------------------------------------------------------------------------------------*/
+	componentDidUpdate (prevProps, prevState, snapshot) {
+		
+	}
+	/*------------------------------------------------------------------------------------------------*
+		3) componentWillUnmount () => 컴포넌트가 마운트 해제되어 제거되기 직전에 호출
+		=> 타이머 제거, 네트워크 요청 취소 등 수행 -> 마운트가 해제되기 때문에 setState를 호출하면 안됨
+	 ------------------------------------------------------------------------------------------------*/
+	componentWillUnmount () {
+
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (transId) => {
+
+		switch (transId) {
+			case 'STT020000_R01' :
+				if(StrLib.isNull(this.state.rangeCalendarProps.rgcSearchJob.startDate) || StrLib.isNull(this.state.rangeCalendarProps.rgcSearchJob.endDate) )  {
+					ComLib.openDialog('A', 'COME0004', ['시작일자', '종료일자']);
+					return false;
+				}
+				if(this.state.rangeCalendarProps.rgcSearchJob.startDate > this.state.rangeCalendarProps.rgcSearchJob.endDate ) {
+					ComLib.openDialog('A', 'SYSI0010', ['검색 시작일자가 종료일자보다 클 수 없습니다.']);
+					return false;
+				}
+				break;
+			default :
+				break;
+		}
+		return true;
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (transId) => {
+		let transManager = new TransManager();
+		try {
+			switch (transId) {
+			case 'STT020000_R01':
+				transManager.setTransId(transId);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"STT.R_JobHistory",
+					datasetsend:"dsSrchParamInfo",
+					datasetrecv:"dsSttResultInfo",
+				});
+				transManager.addDataset('dsSrchParamInfo', [this.setSearchParam()]);
+				transManager.agent();
+				break;
+			default : break;
+			}
+		} catch (err) {
+
+		}
+
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {
+		switch (res.id) {
+		case 'STT020000_R01':
+			if(res.data.dsSttResultInfo.length > 0) {
+				ComLib.setStateInitRecords(this, "dsSttResultInfo", res.data.dsSttResultInfo);
+			} else {
+				ComLib.setStateRecords(this, "dsSttResultInfo", "");
+			}
+			break;
+		default : break;
+		}
+	}
+
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	setSearchParam = () => {
+		let dsSrchParamInfo = {};
+		dsSrchParamInfo.JOB_START_DATE = this.state.rangeCalendarProps.rgcSearchJob.startDate;
+		dsSrchParamInfo.JOB_END_DATE = this.state.rangeCalendarProps.rgcSearchJob.endDate 
+		dsSrchParamInfo.JOB_STATE = this.state.selectboxProps.seJobStateSearch.value;
+		dsSrchParamInfo.CENT_CD = this.state.selectboxProps.selCallTP.value;
+		dsSrchParamInfo.TEAM_CD = this.state.selectboxProps.selTeamList.value;
+		dsSrchParamInfo.CONST_CD = this.state.selectboxProps.selUserList.value;
+		return dsSrchParamInfo;
+		
+	}
+
+	setTransDate = () => {
+		let dsSrchParamInfo = {"query":{"bool":{"must":[]}},"highlight": {"fields": {"stt_rslt": {}},"pre_tags": ["<strong>"],"post_tags": ["</strong>"]}};
+		let must = [];
+			must.push({"match":{"stt_rslt": {"query":this.state.textFieldProps.txtSearch.value}}})
+
+		if (!StrLib.isNull(this.state.rangeCalendarProps.rgcSearchJob.startDate)) {
+			must.push({"range":{"reg_dtm":{"gte":this.state.rangeCalendarProps.rgcSearchJob.startDate,"lte":this.state.rangeCalendarProps.rgcSearchJob.endDate,"format": "yyyyMMdd"}}})
+
+		}
+		if (!StrLib.isNull(this.state.selectboxProps.selCallTP.value)) {
+			must.push({"match":{"call_tp": {"query":this.state.selectboxProps.selCallTP.value}}})
+
+		}
+		must.push({"match":{"const_cd": {"query":"10000013"}}});
+		must.push({"match":{"job_tp": {"query":"R"}}});
+		dsSrchParamInfo.query.bool.must = must;
+
+		return dsSrchParamInfo;
+
+	}
+	
+	test = async() => {
+		let transdata = JSON.stringify(this.setTransDate())
+		let data = transdata.replace(/%/g, '％').replace(/=/g, '＝').replace(/&amp;/g, '＆').replace(/&/g, '＆');
+				
+		const reqOptions = {
+			method: 'post',
+
+			url: 'http://192.168.0.248:9200/stt_data/_search?pretty',
+			data: data,
+			headers: {				
+				"Content-Type": 'application/json',
+			},
+		};
+		try {
+			console.log('request => ');			
+			console.log(reqOptions);
+			
+			const resData = await axios(reqOptions);
+			console.log('response => ');
+			let state = this.state;
+			
+			console.log(resData);
+			let orgData = resData.data.hits.hits;
+			
+			let gridData = []
+
+			for (let i = 0; i < orgData.length; i ++) {
+				gridData.push(orgData[i]._source)
+				gridData[i].highlight = orgData[i].highlight.stt_rslt.length + "@" + orgData[i].highlight.stt_rslt[0]  ;
+				gridData[i].ACTION_ICON = 'message'
+			}
+			console.log("toGrid => ")
+			console.log(gridData)
+
+			ComLib.setStateInitRecords(this, "dsSttResultInfo", gridData);
+			
+			//return resData;
+
+		} catch (err) {
+			console.log('catch => ');
+			console.log(err);
+			ComLib.openDialog('A', 'SYSI0010', ['서버 오류 발생\n로그를 확인하십시오.']);
+		}
+				
+	}
+	event = {
+		// 버튼 이벤트
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {
+				case "btnJobFileSearchList" :
+					this.test();
+					// if(this.validation("STT020000_R01")) {
+					// 	this.transaction("STT020000_R01");
+					// }
+					break;
+				default : break;
+				}
+			}
+		}, 
+		inputcalendar : {
+			onChange : (e) => {
+				switch (e.target.id) {
+				case 'searchJobDateCalender':
+					
+					this.setState({...this.state, 
+							rangeCalendarProps : {...this.state.rangeCalendarProps
+													, rgcSearchJob : 
+														{...this.state.rangeCalendarProps.rgcSearchJob, startDate : e.startDate, endDate : e.endDate}
+												}});
+				break; 
+				case 'searchCallDateCalender':
+					this.setState({...this.state, 
+						rangeCalendarProps : {...this.state.rangeCalendarProps
+												, rgcSearchCall : 
+													{...this.state.rangeCalendarProps.rgcSearchCall, startDate : e.startDate, endDate : e.endDate}
+											}});
+				break;
+				default : break;
+				}
+			}
+		},
+		selectbox: {
+			onChange: (e) => {
+				switch (e.id) {
+				case 'seJobStateSearch':
+					this.setState({...this.state, 
+							selectboxProps : {...this.state.selectboxProps
+													, seJobStateSearch : 
+														{...this.state.selectboxProps.seJobStateSearch, selected : e.target.selectedIndex, value : e.target.value}
+											}});
+				break;
+				case 'selCallTP':
+					this.setState({...this.state, 
+						selectboxProps : {...this.state.selectboxProps
+												, selCallTP : 
+													{...this.state.selectboxProps.selCallTP, selected : e.target.selectedIndex, value : e.target.value}
+										}});
+					ComLib.setStateValue(this, "dsSrch", 0, "CENT_CD", e.target.value, "TEAM_CD", "");
+					
+				break;
+				case 'selTeamList':
+					this.setState({...this.state, 
+						selectboxProps : {...this.state.selectboxProps
+												, selTeamList : 
+													{...this.state.selectboxProps.selTeamList, selected : e.target.selectedIndex, value : e.target.value}
+										}});
+					ComLib.setStateValue(this, "dsSrch", 0, "TEAM_CD", e.target.value);	
+				break;
+				case 'selUserList':
+					this.setState({...this.state, 
+						selectboxProps : {...this.state.selectboxProps
+												, selUserList : 
+													{...this.state.selectboxProps.selUserList, selected : e.target.selectedIndex, value : e.target.value}
+										}});
+					ComLib.setStateValue(this, "dsSrch", 0, "CONST_CD", e.target.value);	
+				break;
+				case 'selReqUserList':
+					this.setState({...this.state, 
+						selectboxProps : {...this.state.selectboxProps
+												, selReqUserList : 
+													{...this.state.selectboxProps.selReqUserList, selected : e.target.selectedIndex, value : e.target.value}
+										}});
+				break;
+				default : break;
+				}
+			},
+		},
+		grid: {
+			onActionCellClicked : (e) => {
+				console.log(e)
+				let option = { width: '600px', height: '740px', modaless: true, callId : e.data.call_id, useUuid: false}
+				ComLib.openPlayer(option);
+				
+			},
+			onGridReady : (e) => {
+
+			},
+			//스크롤이 필요한가에 대한 검토 현재는 미적용
+			onScrollEnd: (e) => {
+				// if (e.page === this.state.gridProps.paging.page) {
+					this.setState({...this.state
+						, gridProps : { ...this.state.gridProps
+							, paging : { ...this.state.gridProps.paging
+								, start : this.state.gridProps.paging.start + this.state.gridProps.paging.size
+								, page : this.state.gridProps.paging.page + 1
+							}
+						}
+					}, () => {
+						this.transaction("SAM010000_R01");
+					});
+				// }
+			},
+		},
+		input : {
+			onChange : (e) => {
+				switch (e.target.id) {
+					case 'txtSearch' :
+						this.setState({...this.state
+							, textFieldProps : { ...this.state.textFieldProps
+								,txtSearch : { ...this.state.textFieldProps.txtSearch, value : e.target.value }
+							}});
+					break;
+					default : break;
+				}
+			},
+			onKeyPress: (e) => {
+				switch (e.target.id) {
+				case 'txtSearch' :
+					if (e.key === 'Enter') {
+						// if(this.validation("STT020000_R01")) {
+						// 	this.transaction("STT020000_R01")
+						// }
+					}
+					break;
+				default: break;
+				}
+			},
+		},
+	}	
+
+	
+
+	render () {
+		return (
+			
+			<React.Fragment>
+				<FullPanel>
+				<SearchPanel>
+						<RelativeGroup>
+							<LFloatArea>
+								<FlexPanel>
+									<Label value={this.state.rangeCalendarProps.rgcSearchJob.label} req={true}/>
+									<RangeInputCalendar
+										id = {this.state.rangeCalendarProps.rgcSearchJob.id}
+										strtId  = {this.state.rangeCalendarProps.rgcSearchJob.strtId}
+										endId  = {this.state.rangeCalendarProps.rgcSearchJob.endId}	
+										startDate = {this.state.rangeCalendarProps.rgcSearchJob.startDate}
+										endDate = {this.state.rangeCalendarProps.rgcSearchJob.endDate}
+										onChange = {this.event.inputcalendar.onChange}
+									/>									
+									<Label value="검색어"/>
+									<Textfield
+										width       = {300}
+										id          = {this.state.textFieldProps.txtSearch.id}
+										name        = {this.state.textFieldProps.txtSearch.name}
+										value       = {this.state.textFieldProps.txtSearch.value}
+										placeholder = {this.state.textFieldProps.txtSearch.placeholder}
+										minLength   = {this.state.textFieldProps.txtSearch.minLength}
+										maxLength   = {this.state.textFieldProps.txtSearch.maxLength}
+										readOnly    = {this.state.textFieldProps.txtSearch.readOnly}
+										disabled    = {this.state.textFieldProps.txtSearch.disabled}
+										onChange    = {this.event.input.onChange}
+										onKeyPress  = {this.event.input.onKeyPress}
+									/>
+									<Label value={this.state.selectboxProps.selCallTP.label}/>
+									<Selectbox
+										id       = {this.state.selectboxProps.selCallTP.id}
+										value    = {this.state.dsSrch.records[0]["CENT_CD"]}
+										dataset  = {this.state.selectboxProps.selCallTP.dataset}
+										width    = {this.state.selectboxProps.selCallTP.width}
+										disabled = {this.state.selectboxProps.selCallTP.disabled}
+										onChange = {this.event.selectbox.onChange}
+									/>
+								</FlexPanel>
+							</LFloatArea>
+							<RFloatArea>
+								<Button
+									color= 'blue' fiiled= {true} innerImage={true} icon = {'srch'}
+									id = {this.state.btnProps.btnSearchProps.id}
+									value = {this.state.btnProps.btnSearchProps.value}
+									disabled = {this.state.btnProps.btnSearchProps.disabled}
+									hidden = {this.state.btnProps.btnSearchProps.hidden}
+									onClick = {this.event.button.onClick}
+									mt = {5}
+								/>
+							</RFloatArea>
+						</RelativeGroup>
+					</SearchPanel>
+					{/* <SearchPanel>
+						<div className="ie_flow_root" style={{alignItems:"center", display:"flow-root"}}>
+							<LFloatArea>											
+								<FlexPanel>
+									<Label value={"등록 날자"}/>
+									<RangeInputCalendar
+										width       = {900}
+										id = {this.state.rangeCalendarProps.rgcSearchJob.id}
+										strtId  = {this.state.rangeCalendarProps.rgcSearchJob.strtId}
+										endId  = {this.state.rangeCalendarProps.rgcSearchJob.endId}	
+										startDate = {this.state.rangeCalendarProps.rgcSearchJob.startDate}
+										endDate = {this.state.rangeCalendarProps.rgcSearchJob.endDate}
+										onChange = {this.event.inputcalendar.onChange}
+									/>
+									<Label value={"검색어"} req={true}/>
+									<Textfield
+										width       = {300}
+										id          = {this.state.textFieldProps.txtSearch.id}
+										name        = {this.state.textFieldProps.txtSearch.name}
+										value       = {this.state.textFieldProps.txtSearch.value}
+										placeholder = {this.state.textFieldProps.txtSearch.placeholder}
+										minLength   = {this.state.textFieldProps.txtSearch.minLength}
+										maxLength   = {this.state.textFieldProps.txtSearch.maxLength}
+										readOnly    = {this.state.textFieldProps.txtSearch.readOnly}
+										disabled    = {this.state.textFieldProps.txtSearch.disabled}
+										onChange    = {this.event.input.onChange}
+										onKeyPress  = {this.event.input.onKeyPress}
+									/>
+									<Label value={this.state.selectboxProps.selCallTP.label}/>
+									<Selectbox
+										
+										id = {this.state.selectboxProps.selCallTP.id}
+										dataset = {this.state.selectboxProps.selCallTP.dataset}
+										value = {this.state.dsSrch.records[0]["CENT_CD"]}
+										width = {this.state.selectboxProps.selCallTP.width}
+										disabled = {this.state.selectboxProps.selCallTP.disabled}
+										onChange = {this.event.selectbox.onChange}
+									/>
+								</FlexPanel>
+							</LFloatArea>
+							<RFloatArea>
+								<Button 
+									id = {this.state.btnProps.btnSearchProps.id}
+									color = 'blue' 
+									value = {this.state.btnProps.btnSearchProps.value}
+									disabled = {this.state.btnProps.btnSearchProps.disabled}
+									hidden = {this.state.btnProps.btnSearchProps.hidden}
+									onClick = {this.event.button.onClick}
+									icon = {'srch'}
+									innerImage={true}
+									fiiled = "o"
+								/>
+							</RFloatArea>
+						</div>
+					</SearchPanel> */}
+							<ComponentPanel>
+								<Grid
+									areaName = {this.state.gridSttResultList.areaName}
+									id       = {this.state.gridSttResultList.id}
+									height   = "600px"
+									header   = {this.state.gridSttResultList.header}
+									data     = {this.state.dsSttResultInfo}
+
+									addRowBtn   = {false}
+									delRowBtn   = {false}
+									dnlExcelBtn = {true}
+									rowNum      = {true}							
+									paging      = {true}
+									infinite    = {true}
+									suppressRowClickSelection = {true}
+
+									totalRowCnt = {(this.state.dsSttResultInfo.getRecords().length === 0) ? 0 : this.state.dsSttResultInfo.getValue(0, 'totalcount')}
+
+									onGridReady        = {this.event.grid.onGridReady}	
+									onScrollEnd        = {this.event.grid.onScrollEnd}		
+									onActionCellClicked= {this.event.grid.onActionCellClicked}			
+
+								/>
+							</ComponentPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

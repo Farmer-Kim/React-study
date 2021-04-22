@@ -1,0 +1,150 @@
+import React from 'react';
+import {
+	AppPanel, HeadPanel, MiddlePanel, SidePanel, MainPanel, ComponentPanel, SearchPanel,
+	FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup
+} from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button} from 'components';
+import {Label, InputCalendar, Textfield } from 'components';
+import {ScrmRadialBarChart, Grid, Table} from 'components';
+import {ComLib, DataLib, newScrmObj, DateLib} from 'common';
+
+class View extends React.Component {
+	constructor(props) {
+		super();
+		this.state = {
+			isDateExist    : false,
+			isDateApplied  : false,
+			textFieldProps : {
+				iptDefaultSnro : {
+					id          : 'iptDefaultSnro',
+					name        : 'iptDefaultSnro',
+					placeholder : 'default',
+					value       : '',
+					minLength   : 1,
+					maxLength   : 60,
+					readOnly    : false,
+					disabled    : false
+				},			
+			},
+			btnProps : {			
+				btnSave : {
+					id       : 'btnSave',
+					disabled : false,
+					value    : '저장',
+					hidden   : false
+				},				
+			},			
+		}
+		this.event.button.onClick = this.event.button.onClick.bind(this);
+	}
+
+	componentDidMount () {
+		let records = this.props.options.records;
+
+		let state = this.state;		
+
+		state['textFieldProps']['iptDefaultSnro'].value = records[0].ANS_CONT;
+
+		this.setState(state)
+	}
+
+	validation = (...params) => {
+		let targetId = params[0];
+		
+		switch (targetId) {
+			case 'btnSave':
+				let state = this.state;
+				let records = this.props.options.records;
+				let defaultSnro = state['textFieldProps']['iptDefaultSnro'].value;
+
+				if (ComLib.isNull(defaultSnro)) {
+					ComLib.openDialog('A', 'COME0008', ['디폴트 시나리오']);
+					return false;
+				}
+
+				if (defaultSnro === records[0].ANS_CONT) {
+					ComLib.openDialog('A', 'SYSI0010', ['디폴트 시나리오가 변경되지 않았습니다.']);
+					return false;
+				}
+
+				this.props.onCallbackFunc(defaultSnro);
+				this.props.onClose();									
+					
+				break;			
+		
+			default :
+				break;
+		}
+
+		return true;
+	}
+
+	event = {
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {	
+				case 'btnSave':
+					this.validation(e.target.id)					
+					
+					break;				
+
+				default: break;
+				}
+			}
+		},
+		input : {
+			onChange: (e) => {
+				let state = this.state;
+
+				state['textFieldProps'][e.target.id].value = e.target.value;
+
+				this.setState(state);
+
+			}
+		}
+	}
+
+	render () {
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<SearchPanel>
+						<RelativeGroup>
+							<LFloatArea>
+								<div style={{width: "90px", float: "left", textAlign: "left", marginLeft: "10px"}}>
+									<Label value="디폴트 시나리오"/>
+								</div>
+								<Textfield
+									id          = {this.state.textFieldProps.iptDefaultSnro.id}
+									name        = {this.state.textFieldProps.iptDefaultSnro.name}
+									value       = {this.state.textFieldProps.iptDefaultSnro.value}
+									placeholder = {this.state.textFieldProps.iptDefaultSnro.placeholder}
+									minLength   = {this.state.textFieldProps.iptDefaultSnro.minLength}
+									maxLength   = {this.state.textFieldProps.iptDefaultSnro.maxLength}
+									readOnly    = {this.state.textFieldProps.iptDefaultSnro.readOnly}
+									disabled    = {this.state.textFieldProps.iptDefaultSnro.disabled}
+									onChange     = {this.event.input.onChange}
+									width       = {300}
+								/>
+							</LFloatArea>
+						</RelativeGroup>										
+						<SubFullPanel>					
+							<Button
+								color    = 'purple' 
+								fiiled   = "o" 
+								id       = {this.state.btnProps.btnSave.id}
+								value    = {this.state.btnProps.btnSave.value}
+								disabled = {this.state.btnProps.btnSave.disabled}
+								hidden   = {this.state.btnProps.btnSave.hidden}
+								onClick  = {this.event.button.onClick}
+							/>
+						</SubFullPanel>
+					</SearchPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+
+export default View;

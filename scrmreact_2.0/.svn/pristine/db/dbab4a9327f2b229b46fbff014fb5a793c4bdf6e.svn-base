@@ -1,0 +1,89 @@
+import COM010000 from 'containers/com/COM010000';
+
+import QAM010000 from 'containers/qam/QAM010000';
+import QAM020000 from 'containers/qam/QAM020000';
+import QAM030000 from 'containers/qam/QAM030000';
+import QAM040000 from 'containers/qam/QAM040000';
+import QAM050000 from 'containers/qam/QAM050000';
+import QAM060000 from 'containers/qam/QAM060000';
+import QAM070000 from 'containers/qam/QAM070000';
+import QAM080000 from 'containers/qam/QAM080000';
+
+import STA010000 from 'containers/sta/STA010000';
+import STA030000 from 'containers/sta/STA030000';
+
+import STT010000 from 'containers/stt/STT010000';
+import STT020000 from 'containers/stt/STT020000';
+import STT030000 from 'containers/stt/STT030000';
+
+import STT060000 from 'containers/stt/STT060000';
+import STT070000 from 'containers/stt/STT070000';
+import STT080000 from 'containers/stt/STT080000';
+
+import SYS010000 from 'containers/sys/SYS010000';
+import SYS020000 from 'containers/sys/SYS020000';
+import SYS030000 from 'containers/sys/SYS030000';
+import SYS040000 from 'containers/sys/SYS040000';
+import SYS050000 from 'containers/sys/SYS050000';
+
+
+import SUP010000 from 'containers/sup/SUP010000';
+import SUP020000 from 'containers/sup/SUP020000';
+import SUP030000 from 'containers/sup/SUP030000';
+import SUP040000 from 'containers/sup/SUP040000';
+import SUP050000 from 'containers/sup/SUP050000';
+
+import SAM000000 from 'containers/sam/SAM000000';
+import SAM010000 from 'containers/sam/SAM010000';
+import SAM020000 from 'containers/sam/SAM020000';
+import SAM030000 from 'containers/sam/SAM030000';
+import SAM040000 from 'containers/sam/SAM040000';
+
+
+import BOT010000 from 'containers/bot/BOT010000';
+
+export const appRoute = [
+	{ id: 'BASE',		path: "/base",				exact: true,	component: SAM010000 },
+	{ id: 'COM010000',	path: "/com/COM010000",		exact: true,	component: COM010000 },
+	{ id: 'QAM010000',	path: "/qam/QAM010000",		exact: true,	component: QAM010000 },
+	{ id: 'QAM020000',	path: "/qam/QAM020000",		exact: true,	component: QAM020000 },
+	{ id: 'QAM030000',	path: "/qam/QAM030000",		exact: true,	component: QAM030000 },
+	{ id: 'QAM040000',	path: "/qam/QAM040000",		exact: true,	component: QAM040000 },
+	{ id: 'QAM050000',	path: "/qam/QAM050000",		exact: true,	component: QAM050000 },
+	{ id: 'QAM050000',	path: "/qam/QAM050000",		exact: true,	component: QAM050000 },
+	{ id: 'QAM060000',	path: "/qam/QAM060000",		exact: true,	component: QAM060000 },
+	{ id: 'QAM070000',	path: "/qam/QAM070000",		exact: true,	component: QAM070000 },
+	{ id: 'QAM080000',	path: "/qam/QAM080000",		exact: true,	component: QAM080000 },
+	{ id: 'STA010000',	path: "/sta/STA010000",		exact: true,	component: STA010000 },	
+	{ id: 'STA030000',	path: "/sta/STA030000",		exact: true,	component: STA030000 },
+	
+	{ id: 'STT010000',	path: "/stt/STT010000",		exact: true,	component: STT010000 },
+	{ id: 'STT020000',	path: "/stt/STT020000",		exact: true,	component: STT020000 },
+	{ id: 'STT030000',	path: "/stt/STT030000",		exact: true,	component: STT030000 },
+
+	{ id: 'STT060000',	path: "/stt/STT060000",		exact: true,	component: STT060000 },
+	{ id: 'STT070000',	path: "/stt/STT070000",		exact: true,	component: STT070000 },
+	{ id: 'STT080000',	path: "/stt/STT080000",		exact: true,	component: STT080000 },
+
+
+	{ id: 'SYS010000',	path: "/sys/SYS010000",		exact: true,	component: SYS010000 },
+	{ id: 'SYS020000',	path: "/sys/SYS020000",		exact: true,	component: SYS020000 },
+	{ id: 'SYS030000',	path: "/sys/SYS030000",		exact: true,	component: SYS030000 },
+	{ id: 'SYS040000',	path: "/sys/SYS040000",		exact: true,	component: SYS040000 },
+	{ id: 'SYS050000',	path: "/sys/SYS050000",		exact: true,	component: SYS050000 },
+	
+	{ id: 'SUP010000',	path: "/sup/SUP010000",		exact: true,	component: SUP010000 },
+	{ id: 'SUP020000',	path: "/sup/SUP020000",		exact: true,	component: SUP020000 },
+	{ id: 'SUP030000',	path: "/sup/SUP030000",		exact: true,	component: SUP030000 },
+	{ id: 'SUP040000',	path: "/sup/SUP040000",		exact: true,	component: SUP040000 },
+	{ id: 'SUP050000',	path: "/sup/SUP050000",		exact: true,	component: SUP050000 },
+
+	{ id: 'BOT010000',	path: "/bot/BOT010000",	exact: true,	component: BOT010000 },
+
+	
+	{ id: 'SAM000000',	path: "/sam/SAM010000",		exact: true,	component: SAM000000 },
+	{ id: 'SAM010000',	path: "/sam/SAM010000",		exact: true,	component: SAM010000 },
+	{ id: 'SAM020000',	path: "/sam/SAM020000",		exact: true,	component: SAM020000 },
+	{ id: 'SAM030000',	path: "/sam/SAM030000",		exact: true,	component: SAM030000 },
+	{ id: 'SAM040000',	path: "/sam/SAM040000",		exact: true,	component: SAM040000 }
+];

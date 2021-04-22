@@ -1,0 +1,284 @@
+import React from 'react';
+
+import {BasicButton as Button, LFloatArea, FlexPanel, FullPanel, ComponentPanel} from 'components';
+import {Textfield, Label } from 'components';
+import {SearchPanel, RelativeGroup} from 'components';
+import {ComLib} from 'common';
+import axios from 'axios';
+
+
+/*------------------------------------------------------------------------------------------------*/
+// [0. Default Dataset Zone]
+/*------------------------------------------------------------------------------------------------*/
+
+
+class Index extends React.Component{
+    /*------------------------------------------------------------------------------------------------*/
+    // [1. Default State Zone]
+    /*------------------------------------------------------------------------------------------------*/
+    state = {
+		return: "결과 : ",
+        textFieldProps : {
+			iptSnroContSearch : {
+				id          : 'iptSnroContSearch',
+				name        : 'iptSnroContSearch',
+				value       : '',
+				placeholder : '시나리오 내용',
+				minLength   : 1,
+				maxLength   : 200,
+				readOnly    : false,
+				disabled    : false
+			},
+			iptSeqNo : {
+				id          : 'iptSeqNo',
+				name        : 'iptSeqNo',
+				value       : '',
+				placeholder : 'SEQ_NO',
+				minLength   : 1,
+				maxLength   : 200,
+				readOnly    : false,
+				disabled    : false
+			},
+			iptInType : {
+				id          : 'iptInType',
+				name        : 'iptInType',
+				value       : '',
+				placeholder : 'IN_TYPE',
+				minLength   : 1,
+				maxLength   : 200,
+				readOnly    : false,
+				disabled    : false
+			},
+			iptCmbText : {
+				id          : 'iptCmbText',
+				name        : 'iptCmbText',
+				value       : '',
+				placeholder : '',
+				minLength   : 1,
+				maxLength   : 200,
+				readOnly    : false,
+				disabled    : false
+			},
+			iptCmbCd : {
+				id          : 'iptCmbCd',
+				name        : 'iptCmbCd',
+				value       : '',
+				placeholder : '',
+				minLength   : 1,
+				maxLength   : 200,
+				readOnly    : false,
+				disabled    : false
+			},
+		},
+		btnProps : {
+			btnSearch : {
+				id       : 'btnSearch',
+				disabled : false,
+				value    : '조회',
+				hidden   : false
+			},
+		},
+
+    }
+    
+    /*------------------------------------------------------------------------------------------------*/
+    // [2. OnLoad Event Zone]
+    /*------------------------------------------------------------------------------------------------*/
+    
+    /*------------------------------------------------------------------------------------------------*/
+    // [3. validation Event Zone]
+    //  - validation 관련 정의
+    /*------------------------------------------------------------------------------------------------*/
+   
+    /*------------------------------------------------------------------------------------------------*/
+    // [4. transaction Event Zone]
+    //  - transaction 관련 정의
+    /*------------------------------------------------------------------------------------------------*/
+   
+    /*------------------------------------------------------------------------------------------------*/
+    // [5. Callback Event Zone]
+    //  - Callback 관련 정의
+    /*------------------------------------------------------------------------------------------------*/
+   
+    /*------------------------------------------------------------------------------------------------*/
+    // [6. event Zone]
+    //  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	test = async() => {
+		//console.log("fn test()")
+		let transdata = JSON.stringify({transdata:{requestDataSet : {"SNRO_TP_CD"         : this.state.textFieldProps.iptInType.value, 
+																	 "SNRO_CONT"          : this.state.textFieldProps.iptSnroContSearch.value,
+																	 "TGT_SEQ"            : this.state.textFieldProps.iptSeqNo.value,
+																	 "SNRO_CMB_TEXT"      : this.state.textFieldProps.iptCmbText.value,
+																	 "CHG_CHAR_FOM_TP_CD" : this.state.textFieldProps.iptCmbCd.value}}})
+		
+		let data = transdata.replace(/%/g, '％').replace(/=/g, '＝').replace(/&amp;/g, '＆').replace(/&/g, '＆');
+		
+
+		console.log(data)
+		console.log(data)
+		console.log(data)
+		console.log(data)
+		const reqOptions = {
+			method: 'post',
+
+			url: ComLib.getSession("SVR_URL") + '/callbot.service.do',
+			data: data,
+			headers: {				
+				"Content-Type": 'application/json',
+			},
+			retry: 0,
+		};
+		try {
+			const resData = await axios(reqOptions);
+			console.log('response => ');
+			console.log(resData);
+			let state = this.state;
+			state['return'] = resData.data;
+			this.setState(state)
+
+			
+			return resData;
+
+		} catch (err) {
+			console.log('catch => ');
+			console.log(err);
+			ComLib.openDialog('A', 'SYSI0010', ['서버 오류 발생\n로그를 확인하십시오.']);
+		}
+				
+	}
+    event = {
+		// 버튼 이벤트
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {
+				case "btnSearch":				
+						this.test();
+					
+					break;						
+				default : break;
+				}
+			}
+		},
+        input : {
+			onChange: (e) => {
+				let state = this.state;
+
+				state['textFieldProps'][e.target.id].value = e.target.value;
+
+				this.setState(state);
+			},
+		},
+	}
+    /*------------------------------------------------------------------------------------------------*/
+    // [7. render Zone]
+    //  - 화면 관련 내용 작성
+    /*------------------------------------------------------------------------------------------------*/
+    render () {
+        return (
+            <React.Fragment>
+                 <FullPanel>
+                    <SearchPanel>
+                    	<RelativeGroup>
+							<LFloatArea>
+								<FlexPanel>
+									<Label value="시나리오내용"/>
+									<Textfield
+										width       = {300}
+										id          = {this.state.textFieldProps.iptSnroContSearch.id}
+										name        = {this.state.textFieldProps.iptSnroContSearch.name}
+										value       = {this.state.textFieldProps.iptSnroContSearch.value}
+										placeholder = {this.state.textFieldProps.iptSnroContSearch.placeholder}
+										minLength   = {this.state.textFieldProps.iptSnroContSearch.minLength}
+										maxLength   = {this.state.textFieldProps.iptSnroContSearch.maxLength}
+										readOnly    = {this.state.textFieldProps.iptSnroContSearch.readOnly}
+										disabled    = {this.state.textFieldProps.iptSnroContSearch.disabled}
+										onChange    = {this.event.input.onChange}
+									/>
+									<Label value="TGT_SEQ"/>
+									<Textfield
+										width       = {100}
+										id          = {this.state.textFieldProps.iptSeqNo.id}
+										name        = {this.state.textFieldProps.iptSeqNo.name}
+										value       = {this.state.textFieldProps.iptSeqNo.value}
+										placeholder = {this.state.textFieldProps.iptSeqNo.placeholder}
+										minLength   = {this.state.textFieldProps.iptSeqNo.minLength}
+										maxLength   = {this.state.textFieldProps.iptSeqNo.maxLength}
+										readOnly    = {this.state.textFieldProps.iptSeqNo.readOnly}
+										disabled    = {this.state.textFieldProps.iptSeqNo.disabled}
+										onChange    = {this.event.input.onChange}
+									/>
+									<Label value="SNRO_TP_CD"/>
+									<Textfield
+										width       = {100}
+										id          = {this.state.textFieldProps.iptInType.id}
+										name        = {this.state.textFieldProps.iptInType.name}
+										value       = {this.state.textFieldProps.iptInType.value}
+										placeholder = {this.state.textFieldProps.iptInType.placeholder}
+										minLength   = {this.state.textFieldProps.iptInType.minLength}
+										maxLength   = {this.state.textFieldProps.iptInType.maxLength}
+										readOnly    = {this.state.textFieldProps.iptInType.readOnly}
+										disabled    = {this.state.textFieldProps.iptInType.disabled}
+										onChange    = {this.event.input.onChange}
+									/>
+									<Label value="SNRO_CMB_TEXT"/>
+									<Textfield
+										width       = {100}
+										id          = {this.state.textFieldProps.iptCmbText.id}
+										name        = {this.state.textFieldProps.iptCmbText.name}
+										value       = {this.state.textFieldProps.iptCmbText.value}
+										placeholder = {this.state.textFieldProps.iptCmbText.placeholder}
+										minLength   = {this.state.textFieldProps.iptCmbText.minLength}
+										maxLength   = {this.state.textFieldProps.iptCmbText.maxLength}
+										readOnly    = {this.state.textFieldProps.iptCmbText.readOnly}
+										disabled    = {this.state.textFieldProps.iptCmbText.disabled}
+										onChange    = {this.event.input.onChange}
+									/>
+									<Label value="CHG_CHAR_FOM_TP_CD"/>
+									<Textfield
+										width       = {100}
+										id          = {this.state.textFieldProps.iptCmbCd.id}
+										name        = {this.state.textFieldProps.iptCmbCd.name}
+										value       = {this.state.textFieldProps.iptCmbCd.value}
+										placeholder = {this.state.textFieldProps.iptCmbCd.placeholder}
+										minLength   = {this.state.textFieldProps.iptCmbCd.minLength}
+										maxLength   = {this.state.textFieldProps.iptCmbCd.maxLength}
+										readOnly    = {this.state.textFieldProps.iptCmbCd.readOnly}
+										disabled    = {this.state.textFieldProps.iptCmbCd.disabled}
+										onChange    = {this.event.input.onChange}
+									/>								
+									<Button
+										color      = 'blue' 
+										fiiled	   = "o"
+										innerImage = {true} 
+										icon	   = {'srch'}  
+										id         = {this.state.btnProps.btnSearch.id}
+										value      = {this.state.btnProps.btnSearch.value}
+										disabled   = {this.state.btnProps.btnSearch.disabled}
+										hidden     = {this.state.btnProps.btnSearch.hidden}
+										onClick    = {this.event.button.onClick}
+										mt         = {5}
+									/>
+								</FlexPanel>
+							</LFloatArea>	
+						</RelativeGroup>
+					</SearchPanel>
+					<ComponentPanel>
+						<Textfield
+							width       = {1400}
+							id          = {"result"}
+							name        = {"result"}
+							value       = {this.state.return}
+							placeholder = {"none"}
+							minLength   = {this.state.textFieldProps.iptInType.minLength}
+							maxLength   = {this.state.textFieldProps.iptInType.maxLength}
+							readOnly    = {true}
+							disabled    = {this.state.textFieldProps.iptInType.disabled}
+						/>
+					</ComponentPanel>
+				</FullPanel>
+            </React.Fragment>
+        );
+    }
+ }
+export default Index;

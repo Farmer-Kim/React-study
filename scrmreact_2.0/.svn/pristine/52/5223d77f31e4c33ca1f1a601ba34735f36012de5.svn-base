@@ -1,0 +1,833 @@
+import React from 'react';
+import {ComLib, TransManager, StrLib, DataLib} from 'common';
+import {Selectbox, Textfield, LFloatArea, RFloatArea, RelativeGroup, ComponentPanel, FlexPanel, SubFullPanel, BasicButton, Grid} from 'components';
+import { Howl } from 'howler';
+
+const playerConstants = {
+	itemBgColor :	{ default : "", selected : 'rgb(233, 233, 233)' },
+	listItemDivId :	{ container :'player_list_container_id', item : 'player_list_item_id' },
+	markColor :		{ default : '', marked : '' }
+}
+
+class Player extends React.Component {
+	constructor (props) {
+		super(props);
+		this.howler = null;
+		this.grdPlayerList = null;
+		this.grdPlayerListApi = null;
+		this.state = {
+			howler : null,
+			listOpen : false,
+			dsRcvSttData : [],
+			dsRcvSttJobData : [],
+			dsKeywordList : [],
+			src : '',
+			playing : false,
+			buffer : null,
+			playable : false,
+			volume: '0.5',
+			rate : 1,
+			seek : 0,
+			duration : 0,
+			srchText : '',
+			searchText : '',
+			searchedIndex : [],
+			currentIndex : 0,
+			selKewword : '',
+			openAnswerArea : false,
+			loadingBuffer : true,
+			dsRcvCallList : DataLib.datalist.getInstance()
+		};
+		this.event.player.onLoad = this.event.player.onLoad.bind(this);
+		this.event.player.onLoadError = this.event.player.onLoadError.bind(this);
+		this.event.player.onPlay = this.event.player.onPlay.bind(this);
+		this.event.player.onPause = this.event.player.onPause.bind(this);
+		this.event.player.onStop = this.event.player.onStop.bind(this);
+		this.event.player.onEnd = this.event.player.onEnd.bind(this);
+		this.event.player.onClickListItem = this.event.player.onClickListItem.bind(this);
+		this.event.input.onChange = this.event.input.onChange.bind(this);
+		this.event.input.onKeyPress = this.event.input.onKeyPress.bind(this);
+		this.event.select.onChange = this.event.select.onChange.bind(this);
+		this.event.button.onClick = this.event.button.onClick.bind(this);
+		this.event.switch.onChange = this.event.switch.onChange.bind(this);
+		this.event.waveform.onChange = this.event.waveform.onChange.bind(this);
+	}
+	static defaultProps = {
+		ctrNo : '_default',
+		callId : '_default',
+		bodyHeight : '405px'
+	}
+	componentDidMount () {
+		console.log(this.props);
+		this.handler.initialize();
+	}
+	componentDidUpdate (prevProps, prevState) {
+		if (prevState === this.state) {
+			if (this.props.optionalTime !== undefined && this.props.optionalTime !== null) {
+				if (prevProps.optionalTime !== this.props.optionalTime) {
+					this.optionalTime = this.props.optionalTime;
+					this.handler.setDs('PLAYER_R01', this.props.callId);
+				}
+			}
+		}
+	}
+	componentWillUnmount () {
+		if (this.howler) {
+			this.howler.stop();
+			this.howler = null;
+		}
+	}
+	validation = (serviceid) => {
+		switch (serviceid) {
+		case 'PLAYER_R00': 
+			if (StrLib.isNull(this.props.ctrNo)) {
+				ComLib.openDialog('A', 'SYSI0010', ['계약번호가 존재하지 않습니다.']);
+				return false;
+			}
+			return true;
+		case 'PLAYER_R01':
+			if (StrLib.isNull(this.state.dsRcvCallList.getValue(0, 'CALL_ID')) || this.state.dsRcvCallList.size() < 1) {
+				ComLib.openDialog('A', 'SYSI0010', ['계약번호에 대한 콜데이터가 존재하지 않습니다.']);
+				return false;
+			}
+			return true;
+		default : break;
+		}
+	}
+
+	transaction = (serviceid) => {
+		let transManager = new TransManager();
+		switch (serviceid) {
+		case 'PLAYER_R00': 
+			transManager.setTransId(serviceid);
+			transManager.setTransUrl(transManager.constants.url.common);
+			transManager.setCallBack(this.callback);
+			// 계약번호에 대한 Call list 가져오기
+			transManager.addConfig({
+				dao: transManager.constants.dao.base,
+				crudh: transManager.constants.crudh.read,
+				sqlmapid: "STT.R_Keyword",
+				datasetsend:"dsSrchData",
+				datasetrecv:"dsKeywordList",
+			});
+			// 키워드 리스트 가져오기
+			transManager.addConfig({
+				dao: transManager.constants.dao.base,
+				crudh: transManager.constants.crudh.read,
+				sqlmapid: "STT.R_CtrCallList",
+				datasetsend:"dsSrchData",
+				datasetrecv:"dsRcvCallList",
+			});
+			transManager.addDataset('dsSrchData', [{ CTR_NO : this.props.ctrNo }]);
+			transManager.agent();
+			break;
+		case 'PLAYER_R01':
+			transManager.setTransId(serviceid);
+			transManager.setTransUrl(transManager.constants.url.common);
+			transManager.setCallBack(this.callback);
+			// CallId에 대한 STT Job Data 가져오기
+			transManager.addConfig({
+				dao: transManager.constants.dao.base,
+				crudh: transManager.constants.crudh.read,
+				sqlmapid:  "STT.R_getSttJobData",
+				datasetsend:"dsSrchData",
+				datasetrecv:"dsRcvSttJobData",
+			});
+			console.log(this.grdPlayerListApi.getSelectedRows());
+			transManager.addDataset('dsSrchData', [{ CALL_ID : this.grdPlayerListApi.getSelectedRows()[0]['CALL_ID'] }]);
+			transManager.agent();
+			break;
+		default : break;
+		}
+		transManager = null;
+	}
+	callback = (res) => {
+		switch(res.id) {
+		case 'PLAYER_R00':
+			if (res.data.dsRcvCallList.length < 1) {
+				ComLib.openDialog('A', 'SYSI0010', ['계약번호에 대한 콜데이터가 존재하지 않습니다.']);
+				return false;
+			}
+			this.setState({ dsKeywordList : res.data.dsKeywordList });
+			ComLib.setStateRecords(this, "dsRcvCallList", res.data.dsRcvCallList, function (obj) {
+				if (obj.validation('PLAYER_R01')) {
+					obj.handler.setDs('PLAYER_R01', obj.props.callId); 
+				}
+			});
+			break;
+		case 'PLAYER_R01':
+			if (res.data.dsRcvSttJobData.length > 0) {
+				if (this.state.playing) {
+					this.howler.stop();
+					this.howler = null;
+				}
+				this.setState({
+						//howler : sound
+					// 	dsKeywordList : res.data.dsKeywordList
+					// ,	dsRcvSttData : res.data.dsRcvSttData
+					playable : false,
+					playing : false,
+					dsRcvSttJobData : res.data.dsRcvSttJobData
+				}, () => {
+					this.howler = new Howl({
+						src : [res.data.dsRcvSttJobData[0].PATH_NM],
+						format : ['mp3', 'wav', 'mp4'],
+						// html5: true,
+						// preload : true,
+						onplay : this.event.player.onPlay,
+						onload : this.event.player.onLoad,
+						onloaderror  : this.event.player.onLoadError,
+						onpause: this.event.player.onPause,
+						onend: this.event.player.onEnd,
+						onstop : this.event.player.onStop
+					});
+				});
+			}
+			// this.setWaveForm(res.data.dsRcvSttData[0].PATH_NM);
+			break;
+		default : break;
+		}
+	}
+	event = {
+		input : {
+			onChange : (e) => {
+				switch (e.target.id) {
+				case 'iptPlayerBar' :
+					if (!this.howler) return;
+					let time = (e.target.value * this.state.duration / 100);
+					if (!this.state.playing) {
+						this.setState({playing : true}, () => {
+							this.howler.seek(time);
+							this.howler.play();
+						});
+					} else {
+						this.howler.seek(time);
+					}
+					break;
+				case 'iptSrchText' :
+					if (this.state.dsKeywordList.filter(item => item['KEY_WORD'] === e.target.value).length === 0) {
+						this.setState({srchText : e.target.value , selKewword : ''});
+					} else {
+						this.setState({srchText : e.target.value , selKewword : e.target.value});
+					}
+					break;
+				case 'iptVolumBar' :
+					if (!this.howler) return;
+					this.setState({ volume: parseFloat(e.target.value) }, () => this.howler.volume(this.state.volume));
+					break;
+				default : break;
+				}
+			},
+			onKeyPress : (e) => {
+				switch (e.target.id) {
+				case 'iptSrchText' :
+					if (e.key === 'Enter') {
+						if (this.state.searchText === this.state.srchText) {
+							if (this.state.currentIndex < this.state.searchedIndex.length-1) {
+								this.handler.searchText(this.state.srchText, this.state.currentIndex+1);
+							} else {
+								if (this.state.currentIndex === this.state.searchedIndex.length-1) {
+									this.handler.searchText(this.state.srchText, 0);
+								}
+							}
+						} else {
+							this.handler.searchText(this.state.srchText, 0);
+						}
+					}
+					break;
+				default: break;
+				}
+			}
+		},
+		select : {
+			onChange : (e) => {
+				switch (e.target.id) {
+				case 'selVolume' :
+					if (!this.howler) return;
+					this.setState({rate : e.target.value}, () => this.howler.rate(this.state.rate));
+					break;
+				case 'selKewordList' :
+					if (this.state.playing) {
+						ComLib.openDialog('A', 'SYSI0010', ['정지 후 플레이어를 검색하기 바랍니다.']);
+						return false;
+					} else {
+						this.setState({ selKewword : e.target.value, srchText : e.target.value }, () => {
+							document.getElementById('iptSrchText').focus();
+							if (this.state.searchText === this.state.srchText) {
+								if (this.state.currentIndex < this.state.searchedIndex.length-1) {
+									this.handler.searchText(this.state.srchText, this.state.currentIndex+1);
+								} else {
+									if (this.state.currentIndex === this.state.searchedIndex.length-1) {
+										this.handler.searchText(this.state.srchText, 0);
+									}
+								}
+							} else {
+								this.handler.searchText(this.state.srchText, 0);
+							}
+						})
+					}
+					break;
+				default : break;
+				}
+			}
+		},
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {
+				case 'btnPlayerPrev' :
+					if (!this.howler) return;
+					if (this.state.playing) {
+						if (this.howler.seek() < 10) {
+							this.howler.seek(0);
+						} else {
+							this.howler.seek(this.howler.seek() - 10);
+						}
+					} else {
+						this.setState({playing : true}, () => {
+							if (this.howler.seek() < 10) {
+								this.howler.seek(this.howler.seek() - 10);
+								this.howler.play();
+							} else {
+								this.howler.seek(this.howler.seek() - 10);
+								this.howler.play();
+							}
+						});
+					}
+					break;
+				case 'btnPlayerPlay' : 
+					if (!this.howler) return;
+					this.setState({ playing : !this.state.playing }, () => (this.state.playing) ? this.howler.play() : this.howler.pause()); break;
+				case 'btnPlayerAfter' :
+					if (!this.howler) return;
+					if (this.state.playing) {
+						if (this.howler.seek() + 10 > this.state.duration) {
+							this.howler.seek(this.state.duration);
+						} else {
+							this.howler.seek(this.howler.seek() + 10);
+						}
+					} else {
+						this.setState({playing : true}, () => {
+							if (this.howler.seek()+ 10 > this.state.duration) {
+								this.howler.seek(this.state.duration);
+								this.howler.play();
+							} else {
+								this.howler.seek(this.howler.seek() + 10);
+								this.howler.play();
+							}
+						});
+					}
+					break;
+				case 'btnSrchTextUp' :
+					if (this.state.searchText === this.state.srchText) {
+						if (this.state.currentIndex > 0) {
+							this.handler.searchText(this.state.srchText, this.state.currentIndex-1);
+						} else {
+							if (this.state.currentIndex === 0) {
+								this.handler.searchText(this.state.srchText, this.state.searchedIndex.length-1);
+							}
+						}
+					} else {
+						this.handler.searchText(this.state.srchText, 0);
+					}
+					break;
+				case 'btnSrchTextDown' :
+					if (this.state.searchText === this.state.srchText) {
+						if (this.state.currentIndex < this.state.searchedIndex.length-1) {
+							this.handler.searchText(this.state.srchText, this.state.currentIndex+1);
+						} else {
+							if (this.state.currentIndex === this.state.searchedIndex.length-1) {
+								this.handler.searchText(this.state.srchText, 0);
+							}
+						}
+					} else {
+						this.handler.searchText(this.state.srchText, 0);
+					}
+					break;
+				case 'btnClearText' :
+					this.setState({srchText : '', searchText : null, searchedIndex : [], currentIndex: 0});
+					break;
+				case 'btnCopyAllText' :
+					if (this.state.dsRcvSttJobData.length === 0) {
+						ComLib.openDialog('A', 'SYSI0010', ['표시된 대화가 없습니다.']);
+						return false;
+					} else {
+						let txtArr = this.state.dsRcvSttJobData[0]['TEXT'];
+						if (txtArr === undefined || txtArr.length === 0) return false;
+						ComLib.copyText(JSON.parse(txtArr).map(item => item['VALUE']));
+					}
+					break;
+				case 'btnSaveAllText' :
+					if (this.state.dsRcvSttJobData.length === 0) {
+						ComLib.openDialog('A', 'SYSI0010', ['표시된 대화가 없습니다.']);
+						return false;
+					} else {
+						let txtArr = this.state.dsRcvSttJobData[0]['TEXT'];
+						if (txtArr === undefined || txtArr.length === 0) return false;
+						// 이한울
+						ComLib.writeTxtFile(JSON.parse(txtArr).map(item => item['VALUE']).join("\r\n"), this.props.ctrNo + ".txt");
+					}
+					break;
+				case 'btnOpenGrid' :
+					this.setState({ listOpen : !this.state.listOpen });
+					break;
+				default : break;
+				}
+			}
+		},
+		player : {
+			onLoad : () => {
+				this.setState({playable: true, duration : this.howler.duration()} , () => {
+					if (this.props.optionalTime !== undefined && this.props.optionalTime !== null && this.props.optionalTime !== -1) {
+						if (!this.state.playing) {
+							this.setState({ playing : true }, () => {
+								this.howler.seek(this.props.optionalTime/100);
+								this.howler.play();
+							})
+						} else {
+							this.howler.seek(this.props.optionalTime/100);
+						}
+					}
+				});
+			},
+			onLoadError : (e) => {
+				ComLib.openDialog('A', 'SYSI0010', ['녹취파일 다운로드에 실패하였습니다.']);
+				this.setState({playable: false, duration : this.howler.duration()});
+			},
+			onPlay : () => {
+				if (this.state.playable) {
+					this.setState({playing : true});
+					this.handler.renderSeekPos();
+				}
+			}, 
+			onPause : () => {
+				this.setState({playing : false});
+			},
+			onStop : () => {
+				//this.setState({ playing : false });
+			},
+			onEnd : () => {
+				this.setState({ playing: false, loadingFinish : true });
+			},
+			onClickListItem : (idx, pos, e) => {
+				e.stopPropagation();
+				if (!this.howler || !this.state.playable) return;
+		
+				if (!this.state.playing) {
+					this.setState({playing : true}, () => {
+						this.howler.seek(pos/100);
+						this.howler.play();
+					});
+				} else {
+					this.howler.seek(pos/100);
+				}
+			}
+		},
+		grid : {
+			onGridReady : (e) => {
+				switch (e.id) {
+					case "grdPlayerList":
+						this.grdPlayerList = e.grid;
+						this.grdPlayerListApi = e.gridApi;
+						break;
+					default: break;
+				}
+			},
+			onRowDoubleClicked: (e) => {
+				switch (e.id) {
+				case "grdPlayerList":
+					this.howler.stop();
+					this.handler.setDs('PLAYER_R01', e.data['CALL_ID']);
+					break;
+				default: break;
+				}
+			},
+		},
+		switch : {
+			onChange: (e) => {
+				switch (e.target.id) {
+				case 'swchAnswerArea' :
+					this.setState({ openAnswerArea : !this.state.openAnswerArea}, () => {
+						// 화면 조정
+						if (this.props.popupdivid) {
+							console.log(document.getElementById(this.props.popupdivid + "_inner_div"));
+							if (this.state.openAnswerArea) {
+								let numberWidth = Number(this.props.options.width.split('px')[0]);
+								numberWidth = numberWidth * 2;
+								document.getElementById(this.props.popupdivid + "_inner_div").style.width = numberWidth.toString() + 'px';
+							} else {
+								document.getElementById(this.props.popupdivid + "_inner_div").style.width = this.props.options.width;
+							}
+						}
+						
+					});
+					break;
+				default : break;
+				}
+			}
+		},
+		waveform : {
+			onChange: (pos) => {
+				if (!this.howler) return;
+				this.howler.seek(Math.round(pos * this.state.duration));
+				if (!this.state.playing) {
+					this.setState({ playing: true }, () => this.howler.play());
+				}
+			}
+		}
+	}
+	handler = {
+		// method zone
+		initialize : () => {
+			if (StrLib.isNull(this.props.ctrNo)) {
+				ComLib.openDialog('A', 'SYSI0010', ['계약번호가 존재하지 않습니다.']);
+				return false;
+			}
+			this.transaction('PLAYER_R00');
+		},
+		setDs : (serviceid, data) => {
+			switch (serviceid) {
+			case 'PLAYER_R01' :
+				this.grdPlayerListApi.forEachNode((node, index) => {
+					if (StrLib.isNull(data)) {
+						if (index === 0) {
+							node.setSelected(true);
+						}
+					} else {
+						if (node['data']['CALL_ID'] === data) {
+							node.setSelected(true);
+						}
+					}
+				})
+				this.transaction('PLAYER_R01');
+				break;
+			default : break;
+			}
+		},
+		renderSeekPos : () => {
+			if (this.howler === null ) {
+				cancelAnimationFrame(requestAnimationFrame(this.handler.renderSeekPos));
+			} else {
+				let index, item, location, matched;
+		
+				matched  = JSON.parse(this.state.dsRcvSttJobData[0]['TEXT']).filter(item => (item.POS_START/100) <= this.howler.seek() && (item.POS_END/100) > this.howler.seek());
+				if (matched.length === 0) {
+		
+				} else {
+					index = matched[0]['IDX'];
+					item = document.getElementById(playerConstants.listItemDivId.item + index.toString());
+		
+					if (item.style.backgroundColor === playerConstants.itemBgColor.default) {
+						// bgcolor 초기화
+						JSON.parse(this.state.dsRcvSttJobData[0]['TEXT']).forEach(item => {
+							if (document.getElementById(playerConstants.listItemDivId.item + item['IDX'].toString()).style.backgroundColor !== playerConstants.itemBgColor.default) {
+								document.getElementById(playerConstants.listItemDivId.item + item['IDX'].toString()).style.backgroundColor = playerConstants.itemBgColor.default;
+							}
+						});
+						// matching 된 list만 색변경
+						item.style.backgroundColor = playerConstants.itemBgColor.selected;
+		
+						// matched된 list의 scroll위치 조정
+						location = item.offsetTop - document.getElementById(playerConstants.listItemDivId.container + this.props.ctrNo).offsetTop - 200;
+						if (location < 0 ) location = 0;
+						
+						// scroll 이동
+						document.getElementById(playerConstants.listItemDivId.container + this.props.ctrNo).scrollTop = location;
+					}
+				}
+		
+				if (this.howler.seek() === this.state.duration || !this.state.playing) {
+					cancelAnimationFrame(requestAnimationFrame(this.handler.renderSeekPos));
+				} else {
+					this.setState({ seek: this.howler.seek() });
+					requestAnimationFrame(this.handler.renderSeekPos);
+				}
+			}
+		},
+		format : (seconds) => {
+			const date = new Date(seconds * 1000)
+			const hh = date.getUTCHours();
+			const mm = date.getUTCMinutes();
+			const ss = this.handler.pad(date.getUTCSeconds());
+			if (hh) {
+			  return `${hh}:${this.handler.pad(mm)}:${ss}`;
+			}
+			return `${mm}:${ss}`;
+		},
+		pad : (string) => { return ('0' + string).slice(-2); },
+		getContents : (data) => {
+			if (data.length === 0) return null;
+			return this.handler.getListItem(data[0].TEXT);
+		},
+		getListItem : (item) => {
+			return JSON.parse(item).map((ele, index) => {
+				return (
+					<div key={index} id={playerConstants.listItemDivId.item + (index+1).toString()} className="scrm-player-list-item-container">
+						<div className={(ele['SPK'] === 'N') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller'} onClick={(e)=> {this.event.player.onClickListItem(ele.IDX, ele.POS_START, e)}}>
+							<div className="scrm-player-list-item-img-div">
+								<span><i className="xi-message-o"></i></span>
+							</div>
+							<div className="scrm-player-list-item-contents">
+								<div className="scrm-player-list-item-time-div">
+									<span className='scrm-player-list-item-time'>{ this.handler.format(ele.POS_START/100) }</span>
+								</div>
+								<div className="scrm-player-list-item-text-div">
+									<span className='scrm-player-list-item-text'>
+										{ this.handler.getKewordMark(ele.VALUE) }
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				);
+			}) ;
+		},
+		getSrchMarker : (txt, srchTxt) => {
+			let txtArr;
+			if (StrLib.isNull(srchTxt)) {
+				return txt;
+			}
+			if (txt.includes(srchTxt)) {
+				txtArr = txt.replace(srchTxt, '$' + srchTxt + '$').split('$');
+				return ( 
+					<React.Fragment>
+						{txtArr.map((item, index) => { return ((item === srchTxt) ? <mark key={index} style={{color: 'white', backgroundColor: 'black'}}>{item}</mark> : item);})}
+					</React.Fragment>
+				);
+			} else {
+				return txt;
+			}
+		},
+		getKewordMark : (txt) => {
+			if (this.state.dsKeywordList.length === 0) return txt;
+			let txtArr, tmpText;
+	
+			tmpText = txt;
+			this.state.dsKeywordList.forEach( item => {
+				if (tmpText.includes(item['KEY_WORD'])) {
+					tmpText = tmpText.replace(item['KEY_WORD'], '$' + item['KEY_WORD'] + '$');
+				}
+			});
+			txtArr = tmpText.split('$');
+	
+			return txtArr.map(
+				text => {
+					if (this.state.dsKeywordList.filter(item => item['KEY_WORD'] === text).length > 0) {
+						return this.state.dsKeywordList.filter(item => item['KEY_WORD'] === text).map(
+							(ele, index) => {
+								if (ele['KEY_TYPE'] === 'P') {
+									return <font key={index} color="red"> { this.handler.getSrchMarker(text, this.state.searchText) } </font>;
+								} else if (ele['KEY_TYPE'] === 'I') {
+									return <font key={index} color="gray"> {this.handler.getSrchMarker(text, this.state.searchText)} </font>;
+								} else {
+									return <font key={index} color="green"> {this.handler.getSrchMarker(text, this.state.searchText)} </font>;
+								}
+							}
+						)
+					} else {
+						return this.handler.getSrchMarker(text, this.state.searchText);
+					}
+				}
+			)
+		},
+		getKeywords : () => {
+			if (this.state.dsRcvSttJobData.length === 0 )return null;
+			if (this.state.dsKeywordList.length === 0) return null;
+	
+			let kewordList = [];
+			JSON.parse(this.state.dsRcvSttJobData[0]['TEXT']).forEach(
+				(item) => {
+					return this.state.dsKeywordList.forEach(ele => {
+						if (item['VALUE'].includes(ele['KEY_WORD'])) {
+							kewordList.push({ keyword: ele['KEY_WORD'], type : ele['KEY_TYPE'] });
+						}
+					})
+				}
+			);
+			return (
+				<React.Fragment>{
+					kewordList.map(
+						(item, index) => {
+							switch (item['type']) {
+								case "P": return <span key={index} className="scrm-player-kewords-list-item warn"> {item['keyword']} </span>;
+								case "I": return <span key={index} className="scrm-player-kewords-list-item issue"> {item['keyword']} </span>;
+								default: return <span key={index} className="scrm-player-kewords-list-item default"> {item['keyword']} </span>;
+							}
+						}
+					)
+				}</React.Fragment>
+			);
+		},
+		searchText : (txt, idx) => {
+			// 플레이어가 재생중인 지 확인
+			if (this.state.playing) {
+				ComLib.openDialog('A', 'SYSI0010', ['정지 후 플레이어를 검색하기 바랍니다.']);
+				return false;
+			}
+			// 텍스트 초기화
+			if (StrLib.isNull(txt)) {
+				ComLib.openDialog('A', 'SYSI0010', ['텍스트가 없습니다.']);
+				return false;
+			}
+			// 선택된 텍스트만 마킹
+			let searched  = JSON.parse(this.state.dsRcvSttJobData[0]['TEXT']).filter(item => item['VALUE'].includes(txt));
+			if (searched.length === 0) {
+				this.setState({searchText: txt, searchedIndex : 0, currentIndex : 0});
+				ComLib.openDialog('A', 'SYSI0010', ['일치하는 텍스트가 없습니다.']);
+				return false;
+			} else {
+				this.setState({ searchText: txt, searchedIndex : searched, currentIndex : idx }, () => this.handler.moveListItem());
+			}
+		},
+		moveListItem : () => {
+			let location, item;
+			item = document.getElementById(playerConstants.listItemDivId.item + this.state.searchedIndex[this.state.currentIndex]['IDX'].toString());
+			location = item.offsetTop - document.getElementById(playerConstants.listItemDivId.container + this.props.ctrNo).offsetTop - 10;
+	
+			if (location < 0 ) location = 0;
+	
+			document.getElementById(playerConstants.listItemDivId.container + this.props.ctrNo).scrollTop = location;
+		}
+	}
+	
+	render () {
+		return (
+			<div>
+				<div style={{display: 'flex', width: '100%'}}>
+					<div className="scrm-player-wrap" style={{width : (this.state.openAnswerArea) ? '50%' : '100%'}}>
+						<ComponentPanel>
+							<RFloatArea>
+								<BasicButton id={"btnOpenGrid"} onClick={this.event.button.onClick} size="xs" innerImage={true} icon = {(this.state.listOpen) ? 'arrowUp' : 'arrowDn'} tooltip={(this.state.listOpen) ? "리스트 숨기기" : "리스트 펼치기"} />
+							</RFloatArea>
+							<div style = {{display : (this.state.listOpen) ? 'block' : 'none' }}>
+								<Grid
+									id={'grdPlayerList'} height= {"140px"}
+									noName = {true}
+									header = {[
+										{headerName: '고객명',			field: 'CUS_NM',			colId: 'CUS_NM', maxWidth : 100, textAlign : 'center'},
+										{headerName: '통화일시',		field: 'CALL_STRT_DTM',		colId: 'CALL_STRT_DTM', textAlign : 'center'},
+										{headerName: '통화시간',		field: 'CALL_TM',			colId: 'CALL_TM', textAlign : 'center', resizable : false},
+									]}
+									rowNum = {true}
+									addRowBtn = {false}
+									delRowBtn = {false}
+									data = {this.state.dsRcvCallList}
+									onGridReady = {this.event.grid.onGridReady}
+									onRowClicked = {this.event.grid.onRowClicked}
+									onCellFocused = {this.event.grid.onCellFocused}
+									onCellClicked = {this.event.grid.onCellClicked}
+									onCellDoubleClicked = {this.event.grid.onCellDoubleClicked}
+									onCellValueChanged = {this.event.grid.onCellValueChanged}
+									onRowDoubleClicked = {this.event.grid.onRowDoubleClicked}
+									onCellEditingStopped = {this.event.grid.onCellEditingStopped}
+									onSelectionChanged = {this.event.grid.onSelectionChanged}
+									onRowSelected = {this.event.grid.onRowSelected}
+									onDeleteRow = {this.event.grid.onDeleteRow}
+									onInsertRow = {this.event.grid.onInsertRow}
+									onScrollEnd = {this.event.grid.onScrollEnd}
+									onBeforeInsertRow = {this.event.grid.onBeforeInsertRow}
+									// paging = {true}
+									// infinite = {true}
+									
+									suppressRowClickSelection = {true}
+									// infoCheckBox = {{ use : true }}
+									rowSelection = 'single'
+								/>
+							</div>
+							<input	className='scrm-player-playbar' type='range' min={0} max={100} step='any'
+									id = "iptPlayerBar" value = {(this.state.duration) ? (this.state.seek / this.state.duration * 100) : 0}
+									onChange = {this.event.input.onChange}
+							/>
+							<SubFullPanel>
+								<RelativeGroup>
+									<LFloatArea>
+										<FlexPanel>
+											<BasicButton id={"btnPlayerPrev"} onClick={this.event.button.onClick} color={"blue"} size="xs" innerImage={true} icon = {'undo'} ml="5px" tooltip={"10초 이전"} disabled = {!this.state.playable}/>
+											<BasicButton id={"btnPlayerPlay"} onClick={this.event.button.onClick} color={"green"} size="xs" innerImage={true} icon = {(!this.state.playing) ? 'play': 'pause'} ml="5px" tooltip={(!this.state.playing) ? '재생': '정지'} disabled = {!this.state.playable}/>
+											<BasicButton id={"btnPlayerAfter"} onClick={this.event.button.onClick} color={"blue"} size="xs" innerImage={true} icon = {'redo'} ml="5px" tooltip={"10초 이후"} disabled = {!this.state.playable}/>
+										</FlexPanel>
+									</LFloatArea>
+									<RFloatArea>
+										<FlexPanel>
+											<Selectbox
+												id = {'selVolume'}
+												value = {this.state.rate}
+												dataset = {[
+													{value : 0.5, name : 'x0.5'},
+													{value : 1.0, name : 'x1'},
+													{value : 1.5, name : 'x1.5'},
+													{value : 2.0, name : 'x2.0'},
+												]}
+												width = {50}
+												disabled = {!this.state.playable}
+												selected = {1}
+												onChange= {this.event.select.onChange}
+											/>
+											<input id={'iptVolumBar'} className = "scrm-player-volumebar" type='range' min='0' max='1' step='.05' value={this.state.volume} onChange={this.event.input.onChange} disabled = {!this.state.playable}/>
+											<div>
+												<time dateTime={`P${Math.round(this.state.seek)}S`}>
+													{this.handler.format(this.state.seek)}
+												</time>
+													{' / '}
+												<time dateTime={`P${Math.round(this.state.duration)}S`}>
+													{this.handler.format(Math.round(this.state.duration))}
+												</time>
+											</div>
+										</FlexPanel>
+									</RFloatArea>
+								</RelativeGroup>
+							</SubFullPanel>
+							<SubFullPanel>
+								<RelativeGroup>
+									<LFloatArea>
+										<FlexPanel>
+											<Textfield width={140} id={"iptSrchText"} disabled = {!this.state.playable} value={this.state.srchText} onChange={this.event.input.onChange} onKeyPress={this.event.input.onKeyPress}/>
+											{ this.state.searchedIndex.length > 0  && ( 
+											<div style={{alignItems:"center", display:"flex"}}> {this.state.currentIndex+1} / {this.state.searchedIndex.length} </div> 
+											)}
+
+											<div style={{alignSelf : "center"}}>
+												<BasicButton id={"btnSrchTextUp"} onClick={this.event.button.onClick} color={"purple"} size="xs" innerImage={true} icon = {'arrowUp'} ml="5px" tooltip={"위로"} disabled = {!this.state.playable}/>
+												<BasicButton id={"btnSrchTextDown"} onClick={this.event.button.onClick} color={"purple"} size="xs" innerImage={true} icon = {'arrowDn'} ml="5px" tooltip={"아래로"} disabled = {!this.state.playable}/>
+												<BasicButton id={"btnClearText"} onClick={this.event.button.onClick} color={"red"} size="xs" innerImage={true} icon = {'close'} ml="5px" mr="5px" tooltip={"초기화"} disabled = {!this.state.playable}/>
+											</div>
+											<Selectbox
+												id = {'selKewordList'}
+												value = {this.state.selKewword}
+												dataset = {[{value : '', name : '전체'}].concat(this.state.dsKeywordList.map((item) => {
+													return { value : item['KEY_WORD'], name : item['KEY_WORD']}
+												}))}
+												width = {100}
+												disabled = {!this.state.playable}
+												selected = {0}
+												onChange= {this.event.select.onChange}
+											/>
+										</FlexPanel>
+									</LFloatArea>
+									<RFloatArea>
+										<BasicButton id={"btnCopyAllText"} onClick={this.event.button.onClick} size="xs" innerImage={true} icon = {'copy'} mt="5px" tooltip={"텍스트 복사"} disabled = {!this.state.playable}/>
+										<BasicButton id={"btnSaveAllText"} onClick={this.event.button.onClick} size="xs" innerImage={true} icon = {'save'} mt="5px" tooltip={"텍스트 저장"} disabled = {!this.state.playable}/>
+										{/* <Switch id={"swchAnswerArea"} onChange = {this.onAnswerArea} checked = {this.state.openAnswerArea}/> */}
+										{/* <button>{'정답지작성'}</button> */}
+									</RFloatArea>
+								</RelativeGroup>
+							</SubFullPanel>
+							<SubFullPanel>
+								<div className="scrm-player-body" id={playerConstants.listItemDivId.container + this.props.ctrNo} style={{height : parseInt(this.props.bodyHeight.split('px')[0]) + ((this.state.listOpen) ? 0 : 125) + 'px', marginTop : '10px'}}>
+									{this.handler.getContents(this.state.dsRcvSttJobData)}
+								</div>
+							</SubFullPanel>
+						</ComponentPanel>
+					</div>
+					{/* {
+						(!this.state.openAnswerArea)
+						?	null
+						:	<div style = {{width : this.props.options.width}}>
+								<AnswerArea data = {JSON.parse(this.state.dsRcvSttJobData[0]['TEXT'])}/>
+							</div>
+					} */}
+				</div>
+			</div>
+		)
+	}
+}
+export default Player;

@@ -1,0 +1,2309 @@
+// 표준스크립트관리
+import React from 'react';
+import { ComponentPanel
+	   , FlexPanel
+	   , FullPanel
+	   , SubFullPanel
+	   , SearchPanel
+	   , LFloatArea
+	   , RFloatArea
+	   , RelativeGroup
+	   , Label
+	   , Grid
+	   , Textfield
+	   , Checkbox
+	   , Selectbox           } from 'components';
+//버튼 컴포넌트
+import {BasicButton as Button} from 'components';
+import {DataLib, ComLib, DateLib, StrLib, newScrmObj, TransManager} from 'common';
+
+class View extends React.Component {
+	constructor(props) {
+		super(props);
+		
+		this.stnScrtGridApi = null;
+
+		this.stnScrtGrid = null;
+
+		this.currntStnScrt  = '';
+		this.lastEdtStnScrt = '';
+
+		this.brdInfoList = null;
+
+		this.applyDateTemp = '';
+
+		this.state = {
+			dsStnScrtList : DataLib.datalist.getInstance(),
+			scriptAppDate: null,
+			currentGrid: "",
+			btnProps : {
+				btnSearch : {
+					id       : 'btnSearch',
+					disabled : false,
+					value    : '조회',
+					hidden   : false
+				},
+				btnSave : {
+					id       : 'btnSave',
+					disabled : true,
+					value    : '임시저장',
+					hidden   : false
+				},
+				btnApply : {
+					id       : 'btnApply',
+					disabled : true,
+					value    : '적용',
+					hidden   : true
+
+				}
+			},			
+
+			grdProps : {
+				grdStnScrt : {
+					id : 'grdStnScrt',
+					areaName : '평가항목 스크립트 내용',
+					header: [
+						{headerName: '평가구분',	 field: 'VLA_ITM_NM',	  colId: 'VLA_ITM_NM', 		width: 110, rowSpan: true},
+						{headerName: '평가내용',	 field: 'VLA_CONT_NM',	  colId: 'VLA_CONT_NM', 	width: 180, rowSpan: true},
+						{headerName: '평가기준',	 field: 'VLA_STND_NM',	  colId: 'VLA_STND_NM', 	width: 280, rowSpan: true},
+						{headerName: '스크립트제목', field: 'VLA_TITLE',	   colId: 'VLA_TITLE', 		 width: 180, req: true},
+						{headerName: '스크립트내용', field: 'VLA_CONT_CN',	   colId: 'VLA_CONT_CN', 	 width: 620, req: true},
+						{headerName: '배점',		field: 'VLA_CONT_CN_SCO', colId: 'VLA_CONT_CN_SCO', width: 65 , textAlign: 'center'},
+						{headerName: '필수평가여부', field: 'VLA_NCES_YN',	   colId: 'VLA_NCES_YN', 	 width: 140, req: true, resizable: false, textAlign: 'center',
+							cellEditor: 'agSelectCellEditor',
+							cellEditorParams: { values : ComLib.getComCodeValue('VLA_NCES_YN')},
+							valueFormatter : (param) => ComLib.getComCodeName('VLA_NCES_YN', param.value)},			
+						{headerName: '스크립트1', field: 'VLA_CONT_CN_1',	colId: 'VLA_CONT_CN_1', 	 hide: true},
+						{headerName: '배점1', field: 'VLA_CONT_CN_1_SCO',colId: 'VLA_CONT_CN_1_SCO', 	 hide: true},	
+						{headerName: '스크립트2', field: 'VLA_CONT_CN_2',	colId: 'VLA_CONT_CN_2', 	 hide: true},
+						{headerName: '배점2', field: 'VLA_CONT_CN_2_SCO',colId: 'VLA_CONT_CN_2_SCO', 	 hide: true},	
+						{headerName: '스크립트3', field: 'VLA_CONT_CN_3',	colId: 'VLA_CONT_CN_3', 	 hide: true},
+						{headerName: '배점3', field: 'VLA_CONT_CN_3_SCO',colId: 'VLA_CONT_CN_3_SCO', 	 hide: true},
+					]
+				}
+			},
+			textFieldProps : {
+				iptVlaBrdNm : {
+					id          : 'iptVlaBrdNm',
+					name        : 'iptVlaBrdNm',
+					value       : '',
+					placeholder : '평가표명',
+					minLength   : 1,
+					maxLength   : 20,				
+					readOnly    : false,
+					disabled    : true,
+				},
+				iptVlaItem : {
+					id          : 'iptVlaItem',
+					name        : 'iptVlaItem',
+					value       : '',
+					placeholder : '평가 구분',
+					minLength   : 1,
+					maxLength   : 20,				
+					readOnly    : false,
+					disabled    : true,
+				},
+				iptVlaCont : {
+					id          : 'iptVlaCont',
+					name        : 'iptVlaCont',
+					value       : '',
+					placeholder : '평가 내용',
+					minLength   : 1,
+					maxLength   : 20,				
+					readOnly    : false,
+					disabled    : true,
+				},
+				iptVlaStnd : {
+					id          : 'iptVlaStnd',
+					name        : 'iptVlaStnd',
+					value       : '',
+					placeholder : '평가 기준',
+					minLength   : 1,
+					maxLength   : 20,				
+					readOnly    : false,
+					disabled    : true,
+				},
+				iptVlaTitle : {
+					id          : 'iptVlaTitle',
+					name        : 'iptVlaTitle',
+					value       : '',
+					placeholder : '스크립트 제목',
+					minLength   : 1,
+					maxLength   : 12,				
+					readOnly    : false,
+					disabled    : true,
+				},
+				iptContCn1 : {
+					id          : 'iptContCn1',
+					name        : 'iptContCn1',
+					value       : '',
+					placeholder : '스크립트 내용 (조건 1)',
+					minLength   : 1,
+					maxLength   : 500,					
+					readOnly    : false,
+					disabled    : true,
+					rows        : 3
+				},
+				iptContCn2 : {
+					id          : 'iptContCn2',
+					name        : 'iptContCn2',
+					value       : '',
+					placeholder : '조건 2',
+					minLength   : 1,
+					maxLength   : 25,
+					readOnly    : false,
+					disabled    : true
+				},
+				iptContCn3 : {
+					id          : 'iptContCn3',
+					name        : 'iptContCn3',
+					value       : '',
+					placeholder : '조건 3',
+					minLength   : 1,
+					maxLength   : 25,
+					readOnly    : false,
+					disabled    : true
+				},
+			},
+			selectboxProps : {
+				selVlaBrdNm : {
+					id : 'selVlaBrdNm',
+					dataset : [
+						{value : '', name : '선택'},
+					],
+					width : 350,
+					selected : 0,
+					disabled : false
+				},
+				selVlaBrdVer : {
+					id : 'selVlaBrdVer',
+					dataset : [
+						{value : '', name : '선택'},
+					],
+					width : 150,
+					selected : 0,
+					disabled : false
+				},
+				selVlaApplyDate : {
+					id : 'selVlaApplyDate',
+					dataset : [
+						{value : '', name : '-'},
+					],
+					width : 220,
+					selected : 0,
+					disabled : false
+				},
+				selSco1 : {
+					id : 'selSco1',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("VLA_SCO")),
+					selected : 0,
+					disabled : true
+				},
+				selSco2 : {
+					id : 'selSco2',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("VLA_SCO")),
+					selected : 0,
+					disabled : true
+				},
+				selSco3 : {
+					id : 'selSco3',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("VLA_SCO")),
+					selected : 0,
+					disabled : true
+				},
+				selVlaNcesYn : {
+					id : 'selVlaNcesYn',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList("VLA_NCES_YN")),
+					selected : 0,
+					disabled : true
+				}
+			},
+			calendarProps : {
+				calAppDate : {
+					id : 'calAppDate',
+					value : DateLib.getToday(),
+					closeCalendar : true,
+					disabled : true,
+					disableCalendar : false,
+					format : 'y-MM-dd',
+					isOpen : false,
+					maxDate : null,
+					minDate : null,
+					required : false,
+					returnValue : 'start'
+				},
+			}			
+		}
+		this.event.inputcalendar.onChange = this.event.inputcalendar.onChange.bind(this);
+		this.setAppyDate = this.setAppyDate.bind(this);
+	}
+	/*------------------------------------------------------------------------------------------------*
+		0) Custom Event Zone 
+		rowFinder = 조회후 가장 마지막에 선택되어져 있던 행으로 재 포커싱을 하기 위한 함수
+		setAppyDate = 적용일자 반환 record에 입력 함수
+	 ------------------------------------------------------------------------------------------------*/	
+	rowFinder = (targetRecords, targetColumn, currentRow) => {
+		let rowNum = 0;
+
+		if (targetRecords === undefined || targetRecords === null) {
+			return rowNum;
+
+		} 
+
+		if (!StrLib.isNull(currentRow)) {
+			for (let i = 0; i < targetRecords.length; i++) {
+				if (targetRecords[i][targetColumn] === currentRow) {
+					rowNum = i;
+	
+					break;
+				}
+			}
+		}
+
+		return rowNum
+		
+	}
+	
+	setAppyDate (date) {
+		this.transaction("QAM030000_H03", date);
+
+	}
+
+	/*------------------------------------------------------------------------------------------------*
+		1) componentDidMount () => init 함수 개념으로 이해하는게 빠름
+		=> 컴포넌트가 마운트된 직후, 호출 ->  해당 함수에서 this.setState를 수행할 시, 갱신이 두번 일어나 render()함수가 두번 발생 -> 성능 저하 가능성
+	------------------------------------------------------------------------------------------------*/
+	componentDidMount () {
+		if (this.validation("QAM030000_R00")) this.transaction("QAM030000_R00");
+	}
+	/*------------------------------------------------------------------------------------------------*
+		2) componentDidUpdate () => 갱신이 일어나 직후에 호춮 (최초 렌더링 시에는 호출되지 않음)
+		=> prevProps와 현재 props를 비교할 수 있음 -> 조건문으로 감싸지 않고 setState를 실행할 시, 무한 반복 가능성 -> 반드시 setState를 쓰려면 조건문으로 작성
+	------------------------------------------------------------------------------------------------*/
+	componentDidUpdate (prevProps, prevState, snapshot) {
+
+	}
+	/*------------------------------------------------------------------------------------------------*
+		3) componentWillUnmount () => 컴포넌트가 마운트 해제되어 제거되기 직전에 호출
+		=> 타이머 제거, 네트워크 요청 취소 등 수행 -> 마운트가 해제되기 때문에 setState를 호출하면 안됨
+	------------------------------------------------------------------------------------------------*/
+	componentWillUnmount () {
+
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [3. validation Event Zone]
+	//  - validation 관련 정의	
+	// QAM030000_R00 : 평가표 조회
+	// QAM030000_R01 : 평가표 버전 조회
+	// QAM030000_R02 : 평가 스크립트 조회
+	// QAM030000_R03 : 평가 스크립트 조회 (신규 버전이 조회됬을 경우 이전 버젼과 매칭하기 위해 재 조회)
+	// QAM030000_H01 : 평가 스크립트 저장 (이력 저장, 스크립트 저장, 삭제, 수정)
+	/*------------------------------------------------------------------------------------------------*/
+	validation = (...params) => {
+		let transId = params[0];
+		let record;
+
+		let chkCnt = 0;
+		let returnVal = -1;
+
+		switch (transId) {
+			case 'QAM030000_R00':
+				
+				break;
+
+			case 'QAM030000_R01':
+
+				break;	
+
+			case 'QAM030000_R02':
+				if (this.state.selectboxProps.selVlaBrdNm.selected === 0) {					
+					ComLib.openDialog('A', 'COME0008', ['평가표명']);
+					
+					return false;
+				}
+
+				if (this.state.selectboxProps.selVlaBrdVer.selected === 0 ) {									
+					ComLib.openDialog('A', 'COME0008', ['평가표 버젼']);
+					
+					return false;
+				}
+
+				break;
+
+			case 'QAM030000_H01': 
+				record = this.stnScrtGrid.gridDataset.records;
+
+				for ( let intA = 0; intA < record.length; intA ++ ) {
+					if (record[intA].rowtype !== newScrmObj.constants.crud.read) {
+						chkCnt ++;
+
+					}			
+				}			
+
+				if (record.length < 1 || chkCnt === 0) {
+					ComLib.openDialog('A', 'COME0005');
+
+					return false;
+				}
+								
+				break;
+
+			case 'QAM030000_H02': 
+				record = this.stnScrtGrid.gridDataset.records;
+				outer : for ( let intA = 0; intA < record.length; intA ++ ) {
+					let stnScrtHeader = this.state.grdProps.grdStnScrt.header;
+				
+					for (let i = 0; i < stnScrtHeader.length; i ++) {		
+						if (stnScrtHeader[i].req === true) {
+							if (StrLib.isNull(record[intA][stnScrtHeader[i].field])) {
+								ComLib.openDialog('A', 'COME0001', [Number(intA + 1) , stnScrtHeader[i].headerName.replace(/\*/g,'')]);
+			
+								returnVal = intA;
+
+								break outer;
+							}
+						}
+					}			
+				}		
+
+				if (returnVal > -1) {
+					this.stnScrtGrid.moveRow(returnVal, true);
+					
+					let stnScrtRow = this.stnScrtGridApi.rowModel.rowsToDisplay[returnVal];	
+
+					let records = this.stnScrtGrid.gridDataset.records;
+
+					stnScrtRow.setSelected(true);
+
+					this.stnScrtGridApi.ensureIndexVisible(returnVal, 'middle');
+
+					this.currntStnScrt = stnScrtRow.data.SEQ_NO;
+
+					let state = this.state;
+
+					state['textFieldProps']['iptVlaBrdNm'].value    = records[returnVal].VLA_BRD_NM;
+					state['textFieldProps']['iptVlaItem'].value     = records[returnVal].VLA_ITM_NM;
+					state['textFieldProps']['iptVlaCont'].value     = records[returnVal].VLA_CONT_NM;
+					state['textFieldProps']['iptVlaStnd'].value     = records[returnVal].VLA_STND_NM;
+					state['textFieldProps']['iptVlaTitle'].value    = records[returnVal].VLA_TITLE;
+					state['textFieldProps']['iptContCn1'].value     = records[returnVal].VLA_CONT_CN_1;
+					state['textFieldProps']['iptContCn2'].value     = records[returnVal].VLA_CONT_CN_2;
+					state['textFieldProps']['iptContCn3'].value     = records[returnVal].VLA_CONT_CN_3;
+
+					state['calendarProps']['calAppDate'].value    = records[returnVal].STT_TRSM_DTM;
+
+					state['selectboxProps']['selSco1'].selected = Number(records[returnVal].VLA_CONT_CN_1_SCO);
+					state['selectboxProps']['selSco2'].selected = Number(records[returnVal].VLA_CONT_CN_2_SCO);
+					state['selectboxProps']['selSco3'].selected = Number(records[returnVal].VLA_CONT_CN_3_SCO);
+					state['selectboxProps']['selSco1'].value    = Number(records[returnVal].VLA_CONT_CN_1_SCO);
+					state['selectboxProps']['selSco2'].value    = Number(records[returnVal].VLA_CONT_CN_2_SCO);
+					state['selectboxProps']['selSco3'].value    = Number(records[returnVal].VLA_CONT_CN_3_SCO);
+					
+					this.setState(state)
+					
+					return false;
+				}	
+								
+				break;
+
+			default :
+				break;
+		}
+
+		return true;
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [4. transaction Event Zone]
+	//  - transaction 관련 정의
+	// QAM030000_R00 : 평가표 조회
+	// QAM030000_R01 : 평가표 버전 조회
+	// QAM030000_R02 : 평가 스크립트 조회
+	// QAM030000_H01 : 평가 스크립트 저장 (이력 저장, 스크립트 저장, 삭제, 수정)
+	/*------------------------------------------------------------------------------------------------*/
+	transaction = (...params) => {
+		let transId = params[0];
+		let records;
+		let searchVlaBrdCd, searchVlaBrdVer, searchVlaDate; 
+
+		let transManager = new TransManager();
+
+		transManager.setTransId (transId);
+		transManager.setTransUrl(transManager.constants.url.common);
+		transManager.setCallBack(this.callback);
+
+		try  {
+			switch (transId) {
+				case 'QAM030000_R00':
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.read,
+						sqlmapid   : "QAM.R_getBrdList",
+						datasetsend: "dsSearchParam",
+						datasetrecv: "dsBrdListRecv",
+					});
+
+					transManager.addDataset('dsSearchParam', [{}]);
+					transManager.agent();
+					break;
+
+				case 'QAM030000_R01':
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.read,
+						sqlmapid   : "QAM.R_getBrdVerList",
+						datasetsend: "dsSearchParam",
+						datasetrecv: "dsBrdVerListRecv",
+					});
+
+					searchVlaBrdCd = params[1];
+
+					transManager.addDataset('dsSearchParam', [{"VLA_BRD_CD" : searchVlaBrdCd}]);
+					transManager.agent();
+
+					break;
+
+				case 'QAM030000_R02':
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.read,
+						sqlmapid   : "QAM.R_getBrdInfoList",
+						datasetsend: "dsSearchParam",
+						datasetrecv: "dsBrdInfoListRecv",
+					});
+
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.read,
+						sqlmapid   : "QAM.R_getStnScrtList",
+						datasetsend: "dsSearchParam",
+						datasetrecv: "dsStnScrtListRecv",
+					});
+					
+					searchVlaBrdCd  = this.state.selectboxProps.selVlaBrdNm.dataset[this.state.selectboxProps.selVlaBrdNm.selected].value;
+					searchVlaBrdVer = this.state.selectboxProps.selVlaBrdVer.dataset[this.state.selectboxProps.selVlaBrdVer.selected].value;
+					searchVlaDate   = this.state.selectboxProps.selVlaApplyDate.dataset[this.state.selectboxProps.selVlaApplyDate.selected].value;
+					
+					if (this.applyDateTemp !== '') {
+						searchVlaDate = this.applyDateTemp;
+
+						this.applyDateTemp = '';
+					}
+					
+					if (searchVlaDate === "") {
+						transManager.addDataset('dsSearchParam', [{"VLA_BRD_CD" : searchVlaBrdCd, "VLA_BRD_VERS": searchVlaBrdVer, "SEARCH_NEW": "Y"}]);
+					} else {
+						transManager.addDataset('dsSearchParam', [{"VLA_BRD_CD" : searchVlaBrdCd, "VLA_BRD_VERS": searchVlaBrdVer, "SEARCH_NEW": "N", "STT_TRSM_DTM": searchVlaDate}]);
+					}
+					
+					transManager.agent();
+
+					break;
+
+				case 'QAM030000_R04':
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.read,
+						sqlmapid   : "QAM.R_getIsScrtListApplyDate",
+						datasetsend: "chkParmam",
+						datasetrecv: "dsScrtListApplyDate",
+					});
+
+					searchVlaBrdCd  = this.state.selectboxProps.selVlaBrdNm.dataset[this.state.selectboxProps.selVlaBrdNm.selected].value;
+					searchVlaBrdVer = this.state.selectboxProps.selVlaBrdVer.dataset[this.state.selectboxProps.selVlaBrdVer.selected].value;
+
+					transManager.addDataset('chkParmam', [{"VLA_BRD_CD" : searchVlaBrdCd, "VLA_BRD_VERS" : searchVlaBrdVer}]);
+					transManager.agent();
+
+					break;
+				case 'QAM030000_H01':
+					records = JSON.parse(JSON.stringify(this.stnScrtGrid.gridDataset.records));
+					let deleteParams = [];
+					
+					records = records.filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy);
+
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.read,
+						sqlmapid   : "QAM.C_setStnScrtListSP",
+						datasetsend: "dsStnScrtListSP",
+					});
+
+					if (StrLib.isNull(records[0].STT_TRSM_DTM) || Number(records[0].STT_TRSM_DTM) <= Number(DateLib.getTodayTime())) {
+						transManager.addConfig  ({
+							dao        : transManager.constants.dao.base,
+							crudh      : transManager.constants.crudh.destroy,
+							sqlmapid   : "QAM.D_delStnScrtList",
+							datasetsend: "deleteParams",
+						});
+
+						transManager.addConfig  ({
+							dao        : transManager.constants.dao.base,
+							crudh      : transManager.constants.crudh.create,
+							sqlmapid   : "QAM.C_setStnScrtList",
+							datasetsend: "dsStnScrtList",
+						});
+
+						for (let i = 0; i < records.length; i ++) {
+							records[i].STT_TRSM_DTM = '99990101000000';
+	
+						}
+						
+						
+						deleteParams.push({ 
+							VLA_BRD_CD   : this.stnScrtGrid.gridDataset.records[0].VLA_BRD_CD, 
+							VLA_BRD_VERS : this.stnScrtGrid.gridDataset.records[0].VLA_BRD_VERS,
+							STT_TRSM_DTM : '99990101000000',	
+						});
+
+						transManager.addDataset('deleteParams'   , deleteParams);
+						transManager.addDataset('dsStnScrtList'  , records);
+						transManager.addDataset('dsStnScrtListSP', records);
+
+						this.applyDateTemp = '99990101000000';						
+
+					} else {
+						transManager.addConfig  ({
+							dao        : transManager.constants.dao.base,
+							crudh      : transManager.constants.crudh.destroy,
+							sqlmapid   : "QAM.D_delStnScrtList",
+							datasetsend: "deleteParams",
+						});
+
+						transManager.addConfig  ({
+							dao        : transManager.constants.dao.base,
+							crudh      : transManager.constants.crudh.create,
+							sqlmapid   : "QAM.C_setStnScrtList",
+							datasetsend: "dsStnScrtList",
+						});
+						
+						deleteParams.push({ 
+							VLA_BRD_CD   : this.stnScrtGrid.gridDataset.records[0].VLA_BRD_CD, 
+							VLA_BRD_VERS : this.stnScrtGrid.gridDataset.records[0].VLA_BRD_VERS,
+							STT_TRSM_DTM : this.stnScrtGrid.gridDataset.records[0].STT_TRSM_DTM,	
+						});
+
+						transManager.addDataset('deleteParams'   , deleteParams);
+						transManager.addDataset('dsStnScrtList'  , this.stnScrtGrid.gridDataset.records);						
+						transManager.addDataset('dsStnScrtListSP', this.stnScrtGrid.gridDataset.records);
+
+						this.applyDateTemp = this.stnScrtGrid.gridDataset.records[0].STT_TRSM_DTM;
+					}
+					
+					transManager.agent();
+
+					break;
+
+				case 'QAM030000_H03':
+					records = JSON.parse(JSON.stringify(this.stnScrtGrid.gridDataset.records));
+					let date = params[1];
+					let alreadyApplied = false;
+
+					if (Number(records[0].STT_TRSM_DTM) <= Number(DateLib.getTodayTime())) {
+						alreadyApplied = true;
+
+					}
+					
+					for(let i = 0; i < records.length; i ++) {
+						records[i].STT_TRSM_DTM = date;
+					}
+
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.create,
+						sqlmapid   : "QAM.C_setStnScrtListSP",
+						datasetsend: "dsStnScrtListSP",
+					});					
+
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.create,
+						sqlmapid   : "QAM.C_setStnScrtList",
+						datasetsend: "dsStnScrtList",
+					});
+						
+					transManager.addConfig  ({
+						dao        : transManager.constants.dao.base,
+						crudh      : transManager.constants.crudh.read,
+						sqlmapid   : "QAM.R_getStnScrtList",
+						datasetsend: "dsSearchParam",
+						datasetrecv: "dsStnScrtListRecv",
+					});
+					
+					if (!alreadyApplied) {
+						transManager.addConfig  ({
+							dao        : transManager.constants.dao.base,
+							crudh      : transManager.constants.crudh.destroy,
+							sqlmapid   : "QAM.D_delStnScrtList",
+							datasetsend: "deleteParams",
+						});
+
+						let deleteParams = [];
+
+						deleteParams.push({ 
+							VLA_BRD_CD   : this.stnScrtGrid.gridDataset.records[0].VLA_BRD_CD, 
+							VLA_BRD_VERS : this.stnScrtGrid.gridDataset.records[0].VLA_BRD_VERS,
+							STT_TRSM_DTM : this.stnScrtGrid.gridDataset.records[0].STT_TRSM_DTM,	
+						});
+	
+						transManager.addDataset('deleteParams', deleteParams);
+					}
+					
+					searchVlaBrdCd  = records[0].VLA_BRD_CD
+					searchVlaBrdVer = records[0].VLA_BRD_VERS
+					searchVlaDate   = records[0].STT_TRSM_DTM
+
+					let time  = records[0].STT_TRSM_DTM;
+					let year  = time.substring(0 , 4 );
+					let month = time.substring(4 , 6 );
+					let day   = time.substring(6 , 8 );
+					let hour  = time.substring(8 , 10);
+					let min   = time.substring(10, 12);
+					let sec   = time.substring(12, 14);
+					let dates  = year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec;
+					let state = this.state;
+					state['currentGrid'] = ", 적용일시 : " + dates;
+
+					this.setState(state);
+					
+					
+					transManager.addDataset('dsSearchParam', [{"VLA_BRD_CD" : searchVlaBrdCd, "VLA_BRD_VERS": searchVlaBrdVer, "SEARCH_NEW": "N", "STT_TRSM_DTM": searchVlaDate}]);
+					transManager.addDataset('dsStnScrtList'  , records);						
+					transManager.addDataset('dsStnScrtListSP', records);
+										
+					transManager.agent();
+
+					break;
+
+				default : break;
+			}
+		} catch (err) {
+
+		}
+	}
+	/*------------------------------------------------------------------------------------------------*/
+	// [5. Callback Event Zone]
+	//  - Callback 관련 정의
+	// QAM030000_R00 : 평가표 조회
+	// QAM030000_R01 : 평가표 버전 조회
+	// QAM030000_R02 : 평가 스크립트 조회
+	// QAM030000_H01 : 평가 스크립트 저장 (이력 저장, 스크립트 저장, 삭제, 수정)
+	/*------------------------------------------------------------------------------------------------*/
+	callback = (res) => {	
+		let index = 0;
+		let dateList;
+		let verData;
+		let nNmData;
+		let appData;
+		let verIndex;
+		let nNmIndx;
+		let appIndex;
+		let records;
+
+		switch (res.id) {
+		case 'QAM030000_R00':		
+			var state = this.state;
+
+			if (res.data.dsBrdListRecv.length > 0) {
+				state['selectboxProps']['selVlaBrdNm'].dataset = ComLib.convComboList(res.data.dsBrdListRecv, newScrmObj.constants.select.argument.select);
+
+			} else {
+				state['selectboxProps']['selVlaBrdNm'].dataset = [{value : '', name : '선택'}] ;
+
+			}
+
+			this.setState(state);
+
+			break;
+
+		case 'QAM030000_R01':		
+			state = this.state;
+
+			if (res.data.dsBrdVerListRecv.length > 0) {
+				state['selectboxProps']['selVlaBrdVer'].dataset = ComLib.convComboList(res.data.dsBrdVerListRecv, newScrmObj.constants.select.argument.select);
+				state['selectboxProps']['selVlaBrdVer'].selected = 0;
+				state['selectboxProps']['selVlaBrdVer'].value = '선택';
+				
+			} else {
+				state['selectboxProps']['selVlaBrdVer'].dataset = [{value : '', name : '선택'}] ;
+				state['selectboxProps']['selVlaBrdVer'].selected = 0;
+				state['selectboxProps']['selVlaBrdVer'].value = '선택';
+			}
+
+			this.setState(state);		
+
+			break;
+
+		case 'QAM030000_R02':		
+			this.brdInfoList = res.data.dsBrdInfoListRecv;
+			let searchVlaDate = this.state.selectboxProps.selVlaApplyDate.dataset[this.state.selectboxProps.selVlaApplyDate.selected].value;
+			if (this.brdInfoList.length > 0) {
+				if (searchVlaDate === "") {
+					let newStnScrtList = [];
+					if (res.data.dsStnScrtListRecv.length <= 0) {
+						for (let i = 0; i < this.brdInfoList.length; i ++) {
+							let arrTemp = {};
+
+							arrTemp.VLA_BRD_CD    = this.brdInfoList[i].VLA_BRD_CD  
+							arrTemp.VLA_BRD_NM    = this.brdInfoList[i].VLA_BRD_NM
+							arrTemp.VLA_BRD_VERS  = this.brdInfoList[i].VLA_BRD_VERS 
+							arrTemp.VLA_CONT_CD   = this.brdInfoList[i].VLA_CONT_CD
+							arrTemp.VLA_CONT_NM   = this.brdInfoList[i].VLA_CONT_NM;
+							arrTemp.VLA_ITM_CD    = this.brdInfoList[i].VLA_ITM_CD;
+							arrTemp.VLA_ITM_NM    = this.brdInfoList[i].VLA_ITM_NM;
+							arrTemp.VLA_STND_CD   = this.brdInfoList[i].VLA_STND_CD;
+							arrTemp.VLA_STND_NM   = this.brdInfoList[i].VLA_STND_NM;
+							arrTemp.SEQ_NO        = this.brdInfoList[i].VLA_STND_SEQNO;
+							arrTemp.VLA_STND_VERS = this.brdInfoList[i].VLA_STND_VERS;
+							arrTemp.SORT_ORD      = this.brdInfoList[i].VLA_STND_SEQNO;
+							
+							arrTemp.VLA_TITLE         = '';
+							arrTemp.VLA_CONT_CN_1     = '';
+							arrTemp.VLA_CONT_CN_2     = '';
+							arrTemp.VLA_CONT_CN_3     = '';
+							arrTemp.VLA_CONT_CN       = '';
+							arrTemp.VLA_CONT_CN_1_SCO = 0;						
+							arrTemp.VLA_CONT_CN_2_SCO = 0;						
+							arrTemp.VLA_CONT_CN_3_SCO = 0;
+							arrTemp.VLA_CONT_CN_SCO   = '0';					
+							arrTemp.STT_TRSM_DTM      = '';
+							arrTemp.VLA_NCES_YN       = 'Y';
+
+							arrTemp.recid         = this.brdInfoList[i].recid;
+							arrTemp.rowtype       = "c";
+
+							newStnScrtList.push(arrTemp);
+						}
+
+						ComLib.openDialog("A", "SYSI0010", ["평가표 기준으로 스크립트가 임시 구성 되엇습니다."]);
+
+					} else {
+						let data = res.data.dsStnScrtListRecv;				
+						let isLeastOne = false;
+
+						for (let i = 0; i < this.brdInfoList.length; i ++) {
+							for (let j = 0; j < data.length; j ++) {						
+								let arrTemp = {};
+
+								if (   data[j].VLA_ITM_CD    === this.brdInfoList[i].VLA_ITM_CD
+									&& data[j].VLA_CONT_CD   === this.brdInfoList[i].VLA_CONT_CD
+									&& data[j].VLA_STND_CD   === this.brdInfoList[i].VLA_STND_CD
+									&& data[j].VLA_STND_VERS === this.brdInfoList[i].VLA_STND_VERS) {
+
+									arrTemp.VLA_BRD_CD    = data[j].VLA_BRD_CD; 
+									arrTemp.VLA_BRD_NM    = data[j].VLA_BRD_NM;
+									arrTemp.VLA_BRD_VERS  = this.brdInfoList[i].VLA_BRD_VERS;
+									arrTemp.VLA_CONT_CD   = data[j].VLA_CONT_CD;
+									arrTemp.VLA_CONT_NM   = data[j].VLA_CONT_NM;
+									arrTemp.VLA_ITM_CD    = data[j].VLA_ITM_CD;
+									arrTemp.VLA_ITM_NM    = data[j].VLA_ITM_NM;
+									arrTemp.VLA_STND_CD   = data[j].VLA_STND_CD;
+									arrTemp.VLA_STND_NM   = data[j].VLA_STND_NM;
+									arrTemp.SEQ_NO        = 0;
+									arrTemp.VLA_STND_VERS = data[j].VLA_STND_VERS;
+									arrTemp.SORT_ORD      = 0;
+			
+									arrTemp.VLA_TITLE         = data[j].VLA_TITLE;
+									arrTemp.VLA_CONT_CN_1     = data[j].VLA_CONT_CN_1;
+									arrTemp.VLA_CONT_CN_2     = data[j].VLA_CONT_CN_2;
+									arrTemp.VLA_CONT_CN_3     = data[j].VLA_CONT_CN_3;
+									arrTemp.VLA_CONT_CN       = data[j].VLA_CONT_CN;
+									arrTemp.VLA_CONT_CN_1_SCO = Number(data[j].VLA_CONT_CN_1_SCO);						
+									arrTemp.VLA_CONT_CN_2_SCO = Number(data[j].VLA_CONT_CN_2_SCO);			
+									arrTemp.VLA_CONT_CN_3_SCO = Number(data[j].VLA_CONT_CN_3_SCO);	
+									arrTemp.VLA_CONT_CN_SCO   = data[j].VLA_CONT_CN_SCO;
+									arrTemp.VLA_NCES_YN       = data[j].VLA_NCES_YN;					
+									arrTemp.STT_TRSM_DTM      = '';
+			
+									arrTemp.recid         = this.brdInfoList[i].recid;
+									arrTemp.rowtype       = "c";	
+
+									newStnScrtList.push(arrTemp);
+																
+									isLeastOne = true;
+								}
+							}
+							if (!isLeastOne) {
+								let arrTemp = {};
+
+								arrTemp.VLA_BRD_CD    = this.brdInfoList[i].VLA_BRD_CD  
+								arrTemp.VLA_BRD_NM    = this.brdInfoList[i].VLA_BRD_NM
+								arrTemp.VLA_BRD_VERS  = this.brdInfoList[i].VLA_BRD_VERS 
+								arrTemp.VLA_CONT_CD   = this.brdInfoList[i].VLA_CONT_CD
+								arrTemp.VLA_CONT_NM   = this.brdInfoList[i].VLA_CONT_NM;
+								arrTemp.VLA_ITM_CD    = this.brdInfoList[i].VLA_ITM_CD;
+								arrTemp.VLA_ITM_NM    = this.brdInfoList[i].VLA_ITM_NM;
+								arrTemp.VLA_STND_CD   = this.brdInfoList[i].VLA_STND_CD;
+								arrTemp.VLA_STND_NM   = this.brdInfoList[i].VLA_STND_NM;
+								arrTemp.SEQ_NO        = 0;
+								arrTemp.VLA_STND_VERS = this.brdInfoList[i].VLA_STND_VERS;
+								arrTemp.SORT_ORD      = 0;
+
+								arrTemp.VLA_TITLE         = '';
+								arrTemp.VLA_CONT_CN_1     = '';
+								arrTemp.VLA_CONT_CN_2     = '';
+								arrTemp.VLA_CONT_CN_3     = '';
+								arrTemp.VLA_CONT_CN       = '';
+								arrTemp.VLA_CONT_CN_1_SCO = 0;						
+								arrTemp.VLA_CONT_CN_2_SCO = 0;						
+								arrTemp.VLA_CONT_CN_3_SCO = 0;
+								arrTemp.VLA_CONT_CN_SCO   = '0';		
+								arrTemp.VLA_NCES_YN       = 'Y';				
+								arrTemp.STT_TRSM_DTM      = '';
+
+								arrTemp.recid         = this.brdInfoList[i].recid;
+								arrTemp.rowtype       = "c";
+
+								newStnScrtList.push(arrTemp);
+							}
+
+							isLeastOne = false;
+						}
+						
+						let newSeqNo = 1;
+
+						for (let i = 0; i < newStnScrtList.length; i ++) {
+							newStnScrtList[i].SEQ_NO   = newSeqNo;
+							newStnScrtList[i].SORT_ORD = newSeqNo;
+
+							newSeqNo += 1;
+						}
+
+						ComLib.openDialog("A", "SYSI0010", ["이전 " + data[0].VLA_BRD_VERS + " 버젼의 평가 스크립트를 기준으로 임시 구성 되었습니다."]);
+
+					}
+
+				
+					let records    = newStnScrtList;
+					
+					var state = this.state;
+
+					state['textFieldProps']['iptVlaBrdNm'].value    = records[0].VLA_BRD_NM;
+					state['textFieldProps']['iptVlaItem'].value     = records[0].VLA_ITM_NM;
+					state['textFieldProps']['iptVlaCont'].value     = records[0].VLA_CONT_NM;
+					state['textFieldProps']['iptVlaStnd'].value     = records[0].VLA_STND_NM;
+					state['textFieldProps']['iptVlaTitle'].value    = records[0].VLA_TITLE;
+					state['textFieldProps']['iptVlaTitle'].disabled = false;
+					state['textFieldProps']['iptContCn1'].value     = records[0].VLA_CONT_CN_1;
+					state['textFieldProps']['iptContCn2'].value     = records[0].VLA_CONT_CN_2;
+					state['textFieldProps']['iptContCn3'].value     = records[0].VLA_CONT_CN_3;
+					state['textFieldProps']['iptContCn1'].disabled  = false;
+					state['textFieldProps']['iptContCn2'].disabled  = false;
+					state['textFieldProps']['iptContCn3'].disabled  = false;
+
+					state['calendarProps']['calAppDate'].value    = records[0].STT_TRSM_DTM === null ? records[0].STT_TRSM_DTM : null;
+					
+					state['calendarProps']['calAppDate'].disabled = false;
+					
+					state['btnProps']['btnSave'].disabled = false;
+					state['btnProps']['btnApply'].disabled = false;					
+					state['btnProps']['btnApply'].hidden = true;
+
+					state['selectboxProps']['selSco1'].selected = Number(records[0].VLA_CONT_CN_1_SCO);
+					state['selectboxProps']['selSco2'].selected = Number(records[0].VLA_CONT_CN_2_SCO);
+					state['selectboxProps']['selSco3'].selected = Number(records[0].VLA_CONT_CN_3_SCO);
+					state['selectboxProps']['selSco1'].value    = Number(records[0].VLA_CONT_CN_1_SCO);
+					state['selectboxProps']['selSco2'].value    = Number(records[0].VLA_CONT_CN_2_SCO);
+					state['selectboxProps']['selSco3'].value    = Number(records[0].VLA_CONT_CN_3_SCO);
+
+					if (records[0].VLA_NCES_YN === 'Y') {
+						state['selectboxProps']['selSco1'].disabled = false;
+						state['selectboxProps']['selSco2'].disabled = false;
+						state['selectboxProps']['selSco3'].disabled = false;
+						index = 0;
+					} else if (records[0].VLA_NCES_YN === 'N') {
+						state['selectboxProps']['selSco1'].disabled = true;
+						state['selectboxProps']['selSco2'].disabled = true;
+						state['selectboxProps']['selSco3'].disabled = true;
+						index = 1;
+					}					
+
+					state['selectboxProps']['selVlaNcesYn'].selected = index;
+					state['selectboxProps']['selVlaNcesYn'].value    = records[0].VLA_NCES_YN;
+					state['selectboxProps']['selVlaNcesYn'].disabled = false;
+					state['currentGrid'] = ", 적용일시 : 신규스크립트";
+
+					this.setState(state);	
+					
+					ComLib.setStateRecords(this, "dsStnScrtList", newStnScrtList);
+
+					let stnScrtRow = this.stnScrtGridApi.rowModel.rowsToDisplay[0];	
+					
+					stnScrtRow.setSelected(true);
+
+					this.stnScrtGridApi.ensureIndexVisible(0, 'middle');
+
+					this.currntStnScrt = stnScrtRow.data.SEQ_NO;
+
+				} else {
+					let records = res.data.dsStnScrtListRecv;	
+					let stnScrtRowNm = this.rowFinder(res.data.dsStnScrtListRecv, "SEQ_NO" , this.lastEdtStnScrt);
+
+					let state = this.state;
+
+					state['textFieldProps']['iptVlaBrdNm'].value    = records[stnScrtRowNm].VLA_BRD_NM;
+					state['textFieldProps']['iptVlaItem'].value     = records[stnScrtRowNm].VLA_ITM_NM;
+					state['textFieldProps']['iptVlaCont'].value     = records[stnScrtRowNm].VLA_CONT_NM;
+					state['textFieldProps']['iptVlaStnd'].value     = records[stnScrtRowNm].VLA_STND_NM;
+					state['textFieldProps']['iptVlaTitle'].value    = records[stnScrtRowNm].VLA_TITLE;
+					state['textFieldProps']['iptVlaTitle'].disabled = false;
+					state['textFieldProps']['iptContCn1'].value     = records[stnScrtRowNm].VLA_CONT_CN_1;
+					state['textFieldProps']['iptContCn2'].value     = records[stnScrtRowNm].VLA_CONT_CN_2;
+					state['textFieldProps']['iptContCn3'].value     = records[stnScrtRowNm].VLA_CONT_CN_3;
+					state['textFieldProps']['iptContCn1'].disabled  = false;
+					state['textFieldProps']['iptContCn2'].disabled  = false;
+					state['textFieldProps']['iptContCn3'].disabled  = false;
+
+					state['calendarProps']['calAppDate'].value    = records[stnScrtRowNm].STT_TRSM_DTM;
+					state['calendarProps']['calAppDate'].disabled = false;
+
+					state['btnProps']['btnSave'].disabled = false;
+					state['btnProps']['btnApply'].disabled = false;
+					state['btnProps']['btnApply'].hidden = false;
+
+					state['selectboxProps']['selSco1'].selected = Number(records[stnScrtRowNm].VLA_CONT_CN_1_SCO);
+					state['selectboxProps']['selSco2'].selected = Number(records[stnScrtRowNm].VLA_CONT_CN_2_SCO);
+					state['selectboxProps']['selSco3'].selected = Number(records[stnScrtRowNm].VLA_CONT_CN_3_SCO);
+					state['selectboxProps']['selSco1'].value    = Number(records[stnScrtRowNm].VLA_CONT_CN_1_SCO);
+					state['selectboxProps']['selSco2'].value    = Number(records[stnScrtRowNm].VLA_CONT_CN_2_SCO);
+					state['selectboxProps']['selSco3'].value    = Number(records[stnScrtRowNm].VLA_CONT_CN_3_SCO);
+
+					if (records[stnScrtRowNm].VLA_NCES_YN === 'Y') {
+						state['selectboxProps']['selSco1'].disabled = false;
+						state['selectboxProps']['selSco2'].disabled = false;
+						state['selectboxProps']['selSco3'].disabled = false;
+						index = 0;
+					} else if (records[stnScrtRowNm].VLA_NCES_YN === 'N') {
+						state['selectboxProps']['selSco1'].disabled = true;
+						state['selectboxProps']['selSco2'].disabled = true;
+						state['selectboxProps']['selSco3'].disabled = true;
+						index = 1;
+					}
+					
+					state['selectboxProps']['selVlaNcesYn'].selected = index;
+					state['selectboxProps']['selVlaNcesYn'].value    = records[stnScrtRowNm].VLA_NCES_YN;
+					state['selectboxProps']['selVlaNcesYn'].disabled = false;
+
+					let time  = records[0].STT_TRSM_DTM;
+					let year  = time.substring(0 , 4 );
+					let month = time.substring(4 , 6 );
+					let day   = time.substring(6 , 8 );
+					let hour  = time.substring(8 , 10);
+					let min   = time.substring(10, 12);
+					let sec   = time.substring(12, 14);
+					let date  = year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec;
+
+					if (Number(records[0].STT_TRSM_DTM) === 99990101000000) {
+						ComLib.openDialog('A', 'SYSI0010', ['임시 저장된 스크립트입니다. 작성 완료 후 적용 하여야 적용 됩니다. ']);
+						state['currentGrid'] = ", 적용일시 : 임시저장(작성중)";
+
+					} else if (Number(records[0].STT_TRSM_DTM) <= Number(DateLib.getTodayTime())){
+						ComLib.openDialog("A", "SYSI0010", ["현제 적용 중인 스크립트입니다. 임시저장 또는 적용일 변경시 신규로 스크립트가 생성됩니다."]);
+						state['currentGrid'] = ", 적용일시 : " + date;
+
+					} else if (Number(records[0].STT_TRSM_DTM) > Number(DateLib.getTodayTime())){
+						ComLib.openDialog("A", "SYSI0010", [date + "부터 적용될 스크립트입니다. 수정 또는 적용일 변경시 현제 스크립트가 업데이트됩니다."]);
+						state['currentGrid'] = ", 적용일시 : " + date;
+					}
+					
+					this.setState(state);
+
+					ComLib.setStateInitRecords(this, "dsStnScrtList", res.data.dsStnScrtListRecv);
+					let stnScrtRow = this.stnScrtGridApi.rowModel.rowsToDisplay[stnScrtRowNm];	
+					
+					stnScrtRow.setSelected(true);
+
+					this.stnScrtGridApi.ensureIndexVisible(stnScrtRowNm, 'middle');
+
+					this.currntStnScrt = stnScrtRow.data.SEQ_NO;					
+				}	
+			} else {
+				ComLib.openDialog("A", "COME0009", ["작성된 평가표가"]);
+			}
+			
+			break;
+
+		case 'QAM030000_R04':
+			dateList = res.data.dsScrtListApplyDate;
+			state = this.state;
+
+			if (dateList.length > 0) {
+				let applyed = -1;
+			
+				for (let i = 0; i < dateList.length; i ++) {
+					if (Number(dateList[i].value) === 99990101000000) {
+						dateList[i].name = '임시저장 (작성중)';
+
+					} else if (Number(dateList[i].value) <= Number(DateLib.getTodayTime())) {
+						dateList[i].name = dateList[i].name + '(적용중)';
+						applyed = i;
+						break;
+					}
+				}
+
+				if (this.applyDateTemp !== ''){
+					for (let i = 0; i < dateList.length; i ++) {
+						if (dateList[i].value === this.applyDateTemp) {
+							applyed = i;
+
+							break;
+						}
+					}
+					this.applyDateTemp = '';
+				} 
+
+				state['selectboxProps']['selVlaApplyDate'].dataset = dateList;
+				state['selectboxProps']['selVlaApplyDate'].selected = applyed > -1 ? applyed : 0;
+				state['selectboxProps']['selVlaApplyDate'].value = applyed > -1 ? dateList[applyed].value : dateList[0].value;
+				
+			} else if (state['selectboxProps']['selVlaBrdVer'].value !== '' && state['selectboxProps']['selVlaBrdNm'].value !== '') {
+				
+				state['selectboxProps']['selVlaApplyDate'].dataset = [{name: "신규 스크립트", value: ""}];
+				state['selectboxProps']['selVlaApplyDate'].selected = 0;
+			} else {
+				state['selectboxProps']['selVlaApplyDate'].dataset = [{name: "-", value: ""}];
+				state['selectboxProps']['selVlaApplyDate'].selected = 0;
+
+			}
+			this.setState(state);
+
+
+			break;
+
+		case 'QAM030000_H01':	
+			records = this.stnScrtGrid.gridDataset.records;
+			state = this.state;
+
+			verData = this.state.selectboxProps.selVlaBrdVer.dataset;
+			nNmData = this.state.selectboxProps.selVlaBrdNm.dataset;
+
+			verIndex = 0;
+			nNmIndx  = 0;
+
+			for(let i = 0; i < verData.length; i ++){
+				if (verData[i].name === records[0].VLA_BRD_VERS) {
+					verIndex = i;
+					break;
+				}
+			}
+
+			for(let i = 0; i < nNmData.length; i ++){
+				if (nNmData[i].name === records[0].VLA_BRD_NM) {
+					nNmIndx = i;
+					break;
+				}
+			}
+
+			state['selectboxProps']['selVlaBrdVer'].selected = verIndex;
+			state['selectboxProps']['selVlaBrdVer'].value    = verData[verIndex].value;
+			state['selectboxProps']['selVlaBrdNm'].selected  = nNmIndx;
+			state['selectboxProps']['selVlaBrdNm'].value     = nNmData[nNmIndx].value;
+
+			this.setState(state);
+			
+			//ComLib.openDialog('A', 'SYSI0010', ['스크립트를 임시저장 하였습니다. 작성 완료 후 적용 하여야 적용 됩니다.']);
+			
+			this.transaction("QAM030000_R02");
+			// 로직 위치 변경 필요
+			this.applyDateTemp = '99990101000000';
+			this.transaction('QAM030000_R04');
+			// 로직 위치 변경 필요
+			break;
+
+		case 'QAM030000_H03':				
+			ComLib.setStateInitRecords(this, "dsStnScrtList", res.data.dsStnScrtListRecv);
+
+			let stnScrtRowNm = this.rowFinder(res.data.dsStnScrtListRecv, "SEQ_NO" , this.lastEdtStnScrt);
+			let stnScrtRow = this.stnScrtGridApi.rowModel.rowsToDisplay[stnScrtRowNm];	
+
+			records = this.stnScrtGrid.gridDataset.records;
+			dateList = res.data.dsScrtListApplyDate;
+
+			stnScrtRow.setSelected(true);
+
+			this.stnScrtGridApi.ensureIndexVisible(stnScrtRowNm, 'middle');
+
+			this.currntStnScrt = stnScrtRow.data.SEQ_NO;
+
+			state = this.state;
+
+			state['textFieldProps']['iptVlaBrdNm'].value    = records[stnScrtRowNm].VLA_BRD_NM;
+			state['textFieldProps']['iptVlaItem'].value     = records[stnScrtRowNm].VLA_ITM_NM;
+			state['textFieldProps']['iptVlaCont'].value     = records[stnScrtRowNm].VLA_CONT_NM;
+			state['textFieldProps']['iptVlaStnd'].value     = records[stnScrtRowNm].VLA_STND_NM;
+			state['textFieldProps']['iptVlaTitle'].value    = records[stnScrtRowNm].VLA_TITLE;
+			state['textFieldProps']['iptVlaTitle'].disabled = false;
+			state['textFieldProps']['iptContCn1'].value     = records[stnScrtRowNm].VLA_CONT_CN_1;
+			state['textFieldProps']['iptContCn2'].value     = records[stnScrtRowNm].VLA_CONT_CN_2;
+			state['textFieldProps']['iptContCn3'].value     = records[stnScrtRowNm].VLA_CONT_CN_3;
+			state['textFieldProps']['iptContCn1'].disabled  = false;
+			state['textFieldProps']['iptContCn2'].disabled  = false;
+			state['textFieldProps']['iptContCn3'].disabled  = false;
+
+			state['calendarProps']['calAppDate'].value    = records[stnScrtRowNm].STT_TRSM_DTM;
+			state['calendarProps']['calAppDate'].disabled = false;
+
+			state['btnProps']['btnSave'].disabled = false;
+			state['btnProps']['btnApply'].disabled = false;
+			state['btnProps']['btnApply'].hidden = false;
+
+			state['selectboxProps']['selSco1'].selected = Number(records[stnScrtRowNm].VLA_CONT_CN_1_SCO);
+			state['selectboxProps']['selSco2'].selected = Number(records[stnScrtRowNm].VLA_CONT_CN_2_SCO);
+			state['selectboxProps']['selSco3'].selected = Number(records[stnScrtRowNm].VLA_CONT_CN_3_SCO);
+			state['selectboxProps']['selSco1'].value    = Number(records[stnScrtRowNm].VLA_CONT_CN_1_SCO);
+			state['selectboxProps']['selSco2'].value    = Number(records[stnScrtRowNm].VLA_CONT_CN_2_SCO);
+			state['selectboxProps']['selSco3'].value    = Number(records[stnScrtRowNm].VLA_CONT_CN_3_SCO);
+			
+			if (records[stnScrtRowNm].VLA_NCES_YN === 'Y') {
+				state['selectboxProps']['selSco1'].disabled = false;
+				state['selectboxProps']['selSco2'].disabled = false;
+				state['selectboxProps']['selSco3'].disabled = false;
+				index = 0;
+			} else if (records[stnScrtRowNm].VLA_NCES_YN === 'N') {
+				state['selectboxProps']['selSco1'].disabled = true;
+				state['selectboxProps']['selSco2'].disabled = true;
+				state['selectboxProps']['selSco3'].disabled = true;
+				index = 1;
+			}
+
+			state['selectboxProps']['selVlaNcesYn'].selected = index;
+			state['selectboxProps']['selVlaNcesYn'].value    = records[stnScrtRowNm].VLA_NCES_YN;
+			state['selectboxProps']['selVlaNcesYn'].disabled = false;
+
+			verData = this.state.selectboxProps.selVlaBrdVer.dataset;
+			nNmData = this.state.selectboxProps.selVlaBrdNm.dataset;
+
+			//verIndex = 0;
+			nNmIndx  = 0;
+
+			// for(let i = 0; i < verData.length; i ++){
+			// 	if (verData[i].name === records[0].VLA_BRD_VERS) {
+			// 		verIndex = i;
+			// 		break;
+			// 	}
+			// }
+
+			for(let i = 0; i < nNmData.length; i ++){
+				if (nNmData[i].name === records[0].VLA_BRD_NM) {
+					nNmIndx = i;
+					break;
+				}
+			}
+
+			this.applyDateTemp = records[0].STT_TRSM_DTM;			
+
+			// state['selectboxProps']['selVlaBrdVer'].selected = verIndex;
+			// state['selectboxProps']['selVlaBrdVer'].value    = verData[verIndex].value;
+			state['selectboxProps']['selVlaBrdNm'].selected  = nNmIndx;
+			state['selectboxProps']['selVlaBrdNm'].value     = nNmData[nNmIndx].value;
+			
+			this.setState(state);
+			
+			this.transaction('QAM030000_R04');
+
+			ComLib.openDialog('A', 'SYSI0010', ['스크립트가 입력하신 일자로 적용 되었습니다.']);
+
+			break;
+
+		default : break;
+		}
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [6. event Zone]
+	//  - 각 Component의 event 처리
+	/*------------------------------------------------------------------------------------------------*/
+	event = {
+		button : {
+			onClick : (e) => {
+				switch (e.target.id) {	
+				case 'btnSearch':
+					if (this.validation("QAM030000_R02")) this.transaction("QAM030000_R02");
+
+					break;
+
+				case 'btnSave':
+					if (this.validation("QAM030000_H01")) this.transaction("QAM030000_H01");
+					
+					break;
+				case 'btnApply':
+					
+					let records  = this.stnScrtGrid.gridDataset.records;
+
+					if (this.validation("QAM030000_H02")) {
+						let option1 = { width: '500px', height: '460px', modaless: false, callback: () => {return;}, dates: this.state.selectboxProps.selVlaApplyDate.dataset, date: records[0].STT_TRSM_DTM, name: this.brdInfoList[0].VLA_BRD_NM , version: this.brdInfoList[0].VLA_BRD_VERS}
+						ComLib.openPop('QAM030001', '스크립트 적용일자 변경', option1, this.setAppyDate);
+
+					};
+
+					
+					break;
+
+				default: break;
+				}
+			}
+
+		},
+
+		input : {
+			onChange : (e) => {
+				let records = this.stnScrtGrid.gridDataset.records;
+				
+				let isValueNull = StrLib.isNull(e.target.value);
+				let doSetRow    = false;
+
+				let stnScrtRowNm = this.rowFinder(records, "SEQ_NO" , this.currntStnScrt);
+				
+				let state = this.state;
+
+				let stnScrtRows = this.stnScrtGridApi.rowModel.rowsToDisplay;
+				let stnScrtRow;
+
+				for (let i = 0; i < stnScrtRows.length; i ++) {
+					if (stnScrtRows[i].data.SEQ_NO === records[stnScrtRowNm].SEQ_NO){
+						stnScrtRow = stnScrtRows[i];
+						this.stnScrtGridApi.ensureIndexVisible(i, 'middle');
+
+						break;
+					}
+				}
+
+				switch (e.target.id) {					
+				case 'iptVlaBrdNm':					
+					state['textFieldProps']['iptVlaBrdNm'].value = e.target.value;
+
+					this.setState(state);
+
+					break;
+
+				case 'iptVlaTitle':
+					state['textFieldProps']['iptVlaTitle'].value = e.target.value;
+
+					this.setState(state);
+
+					stnScrtRow.setDataValue('VLA_TITLE', e.target.value);
+
+					this.lastEdtStnScrt = this.currntStnScrt;
+
+					break;
+
+				case 'iptContCn1':
+					if (!StrLib.isNull(this.state.textFieldProps.iptContCn2.value) && isValueNull) {
+						ComLib.openDialog('A', 'COME0006', ['조건 2', '삭제']);
+
+					} else {
+						state['textFieldProps']['iptContCn1'].value = e.target.value;
+						state['selectboxProps']['selSco1'].selected = isValueNull ? 0 : Number(records[stnScrtRowNm].VLA_CONT_CN_1_SCO);
+						state['selectboxProps']['selSco1'].value    = isValueNull ? 0 : Number(records[stnScrtRowNm].VLA_CONT_CN_1_SCO);
+
+						this.setState(state);
+						
+						let sco1 = isValueNull ? 0 : Number(records[stnScrtRowNm].VLA_CONT_CN_1_SCO);
+						let sco2 = Number(this.state.selectboxProps.selSco2.dataset[this.state.selectboxProps.selSco2.selected].value);
+						let sco3 = Number(this.state.selectboxProps.selSco3.dataset[this.state.selectboxProps.selSco3.selected].value);
+						
+						// this.stnScrtGrid.gridDataset.setValue(stnScrtRowNm, "VLA_CONT_CN_1"    , e.target.value);
+						// this.stnScrtGrid.gridDataset.setValue(stnScrtRowNm, "VLA_CONT_CN_1_SCO", sco1);
+						stnScrtRow.setDataValue('VLA_CONT_CN_1', e.target.value);
+						stnScrtRow.setDataValue('VLA_CONT_CN_1_SCO', sco1);
+						stnScrtRow.setDataValue('VLA_CONT_CN', e.target.value + " " + records[stnScrtRowNm].VLA_CONT_CN_2 + " " +  records[stnScrtRowNm].VLA_CONT_CN_3);
+						stnScrtRow.setDataValue('VLA_CONT_CN_SCO', sco1 + sco2 + sco3);
+
+						this.lastEdtStnScrt = this.currntStnScrt;
+
+					}
+
+					break;
+
+				case 'iptContCn2':					
+					if (StrLib.isNull(this.state.textFieldProps.iptContCn1.value)) {						
+						ComLib.openDialog('A', 'COME0006', ['조건 1', '작성']);
+
+					} else if (!StrLib.isNull(this.state.textFieldProps.iptContCn3.value) && isValueNull) {
+						ComLib.openDialog('A', 'COME0006', ['조건 3', '삭제']);
+
+					} else {
+						state['textFieldProps']['iptContCn2'].value = e.target.value;
+						state['selectboxProps']['selSco2'].selected = isValueNull ? 0 : Number(records[stnScrtRowNm].VLA_CONT_CN_2_SCO);
+						state['selectboxProps']['selSco2'].value    = isValueNull ? 0 : Number(records[stnScrtRowNm].VLA_CONT_CN_2_SCO);
+
+						this.setState(state);
+
+						let sco1 = Number(this.state.selectboxProps.selSco1.dataset[this.state.selectboxProps.selSco1.selected].value);
+						let sco2 = isValueNull ? 0 : Number(records[stnScrtRowNm].VLA_CONT_CN_2_SCO);
+						let sco3 = Number(this.state.selectboxProps.selSco3.dataset[this.state.selectboxProps.selSco3.selected].value);
+						
+						// this.stnScrtGrid.gridDataset.setValue(stnScrtRowNm, "VLA_CONT_CN_2"    , e.target.value);
+						// this.stnScrtGrid.gridDataset.setValue(stnScrtRowNm, "VLA_CONT_CN_2_SCO", sco2);
+
+						stnScrtRow.setDataValue('VLA_CONT_CN_2', e.target.value);
+						stnScrtRow.setDataValue('VLA_CONT_CN_2_SCO', sco2);
+						stnScrtRow.setDataValue('VLA_CONT_CN', records[stnScrtRowNm].VLA_CONT_CN_1 + " " + e.target.value + " " +  records[stnScrtRowNm].VLA_CONT_CN_3);
+						stnScrtRow.setDataValue('VLA_CONT_CN_SCO', sco1 + sco2 + sco3);
+
+						this.lastEdtStnScrt = this.currntStnScrt;
+					}
+
+					break;
+
+				case 'iptContCn3':
+					if (StrLib.isNull(this.state.textFieldProps.iptContCn2.value)) {
+						ComLib.openDialog('A', 'COME0006', ['조건 2', '작성']);
+
+					} else {
+						state['textFieldProps']['iptContCn3'].value = e.target.value;
+						state['selectboxProps']['selSco3'].selected = isValueNull ? 0 : Number(records[stnScrtRowNm].VLA_CONT_CN_3_SCO);
+						state['selectboxProps']['selSco3'].value    = isValueNull ? 0 : Number(records[stnScrtRowNm].VLA_CONT_CN_3_SCO);
+
+						this.setState(state);
+							
+						let sco1 = Number(this.state.selectboxProps.selSco1.dataset[this.state.selectboxProps.selSco1.selected].value);
+						let sco2 = Number(this.state.selectboxProps.selSco2.dataset[this.state.selectboxProps.selSco2.selected].value);
+						let sco3 = isValueNull ? 0 : Number(records[stnScrtRowNm].VLA_CONT_CN_3_SCO);
+						
+						// this.stnScrtGrid.gridDataset.setValue(stnScrtRowNm, "VLA_CONT_CN_3"    , e.target.value);
+						// this.stnScrtGrid.gridDataset.setValue(stnScrtRowNm, "VLA_CONT_CN_3_SCO", sco3);
+						
+						stnScrtRow.setDataValue('VLA_CONT_CN_3', e.target.value);
+						stnScrtRow.setDataValue('VLA_CONT_CN_3_SCO', sco2);
+						stnScrtRow.setDataValue('VLA_CONT_CN', records[stnScrtRowNm].VLA_CONT_CN_1 + " " +  records[stnScrtRowNm].VLA_CONT_CN_2 + " " + e.target.value);
+						stnScrtRow.setDataValue('VLA_CONT_CN_SCO', sco1 + sco2 + sco3);
+
+						this.lastEdtStnScrt = this.currntStnScrt;	
+					}
+
+					break;
+					
+				default: break;
+				}			
+			}
+		},				
+		selectbox: {
+			onChange: (e) => {
+				let records       = this.stnScrtGrid.gridDataset.records;
+				let stnScrtRowNm  = 0;
+				let deletedRowCnt = 0;
+
+				if (!StrLib.isNull(this.currntStnScrt)) {
+					for (let i = 0; i < records.length; i++) {
+						if (records[i].rowtype === newScrmObj.constants.crud.destroy) {
+
+							deletedRowCnt += 1;
+						} else if (records[i]["SEQ_NO"] === this.currntStnScrt) {
+							stnScrtRowNm = i;
+
+							break;
+						}
+					}
+				}
+				
+				let state = this.state;
+				
+				let stnScrtRows = this.stnScrtGridApi.rowModel.rowsToDisplay;
+				let stnScrtRow;
+
+				for (let i = 0; i < stnScrtRows.length; i ++) {
+					if (stnScrtRows[i].data.SEQ_NO === records[stnScrtRowNm].SEQ_NO){
+						stnScrtRow = stnScrtRows[i];
+						this.stnScrtGridApi.ensureIndexVisible(i, 'middle');
+
+						break;
+					}
+				}
+
+				switch (e.id) {
+				case 'selVlaBrdNm':
+					state['selectboxProps']['selVlaBrdNm'].selected = e.target.selectedIndex;
+					state['selectboxProps']['selVlaBrdNm'].value    = e.target.value;
+					state['selectboxProps']['selVlaApplyDate'].dataset = [{name: "-", value: ""}];
+					state['selectboxProps']['selVlaApplyDate'].selected = 0;
+
+					this.setState(state);
+
+					if (this.validation("QAM030000_R01")) this.transaction("QAM030000_R01", e.target.value);
+
+					break;
+
+				case 'selVlaBrdVer':
+					state['selectboxProps']['selVlaBrdVer'].selected = e.target.selectedIndex;
+					state['selectboxProps']['selVlaBrdVer'].value    = e.target.value;
+
+					this.setState(state);
+
+					this.transaction("QAM030000_R04");
+
+					break;
+
+				case 'selVlaApplyDate':
+					state['selectboxProps']['selVlaApplyDate'].selected = e.target.selectedIndex;
+					state['selectboxProps']['selVlaApplyDate'].value    = e.target.value;
+					
+					this.setState(state);
+
+					break;
+				
+				case 'selSco1':
+					if (!StrLib.isNull(records[stnScrtRowNm].VLA_CONT_CN_1)) {
+						state['selectboxProps']['selSco1'].selected = e.target.selectedIndex;
+						state['selectboxProps']['selSco1'].value    = e.target.value;
+
+						this.setState(state);						
+
+						// this.stnScrtGrid.gridDataset.setValue(stnScrtRowNm, "VLA_CONT_CN_1_SCO", Number(e.target.value));
+									
+						stnScrtRow.setDataValue('VLA_CONT_CN_1_SCO', Number(e.target.value));			
+						stnScrtRow.setDataValue('VLA_CONT_CN_SCO', Number(e.target.value) + Number(records[stnScrtRowNm].VLA_CONT_CN_2_SCO) + Number(records[stnScrtRowNm].VLA_CONT_CN_3_SCO));
+
+						this.lastEdtStnScrt = this.currntStnScrt;
+
+					} else {
+						ComLib.openDialog('A', 'SYSI0010', ['조건 1을 먼저 작성 후 배점 채택 가능합니다.']);
+
+					}
+
+					break;
+
+				case 'selSco2':
+					if (!StrLib.isNull(records[stnScrtRowNm].VLA_CONT_CN_2)) {
+						state['selectboxProps']['selSco2'].selected = e.target.selectedIndex;
+						state['selectboxProps']['selSco2'].value    = e.target.value;
+
+						this.setState(state);
+
+						// this.stnScrtGrid.gridDataset.setValue(stnScrtRowNm, "VLA_CONT_CN_1_SCO", Number(e.target.value));
+												
+						
+						stnScrtRow.setDataValue('VLA_CONT_CN_2_SCO', Number(e.target.value));	
+						stnScrtRow.setDataValue('VLA_CONT_CN_SCO', Number(e.target.value) + Number(records[stnScrtRowNm].VLA_CONT_CN_1_SCO) + Number(records[stnScrtRowNm].VLA_CONT_CN_3_SCO));
+
+						this.lastEdtStnScrt = this.currntStnScrt;
+	
+					} else {
+						ComLib.openDialog('A', 'SYSI0010', ['조건 2을 먼저 작성 후 배점 채택 가능합니다.']);
+
+					}
+					
+					break;
+
+				case 'selSco3':
+					if (!StrLib.isNull(records[stnScrtRowNm].VLA_CONT_CN_3)) {
+						state['selectboxProps']['selSco3'].selected = e.target.selectedIndex;
+						state['selectboxProps']['selSco3'].value    = e.target.value;
+
+						this.setState(state);
+								
+						// this.stnScrtGrid.gridDataset.setValue(stnScrtRowNm, "VLA_CONT_CN_3_SCO", Number(e.target.value));
+												
+						stnScrtRow.setDataValue('VLA_CONT_CN_3_SCO', Number(e.target.value));	
+						stnScrtRow.setDataValue('VLA_CONT_CN_SCO', Number(e.target.value) + Number(records[stnScrtRowNm].VLA_CONT_CN_1_SCO) + Number(records[stnScrtRowNm].VLA_CONT_CN_2_SCO));
+
+						this.lastEdtStnScrt = this.currntStnScrt;	
+					
+					} else {
+						ComLib.openDialog('A', 'SYSI0010', ['조건 3을 먼저 작성 후 배점 채택 가능합니다.']);
+
+					}		
+				
+					break;
+
+				case 'selVlaNcesYn':		
+					state['selectboxProps']['selVlaNcesYn'].selected = e.target.selectedIndex;
+					state['selectboxProps']['selVlaNcesYn'].value    = e.target.value;
+					
+					if (e.target.value === 'Y') {
+						state['selectboxProps']['selSco1'].disabled = false;
+						state['selectboxProps']['selSco2'].disabled = false;
+						state['selectboxProps']['selSco3'].disabled = false;
+					} else {
+						state['selectboxProps']['selSco1'].disabled = true;
+						state['selectboxProps']['selSco2'].disabled = true;
+						state['selectboxProps']['selSco3'].disabled = true;
+
+					}
+					state['selectboxProps']['selSco1'].selected = 0;
+					state['selectboxProps']['selSco1'].value    = 0;
+					state['selectboxProps']['selSco2'].selected = 0;
+					state['selectboxProps']['selSco2'].value    = 0;
+					state['selectboxProps']['selSco3'].selected = 0;
+					state['selectboxProps']['selSco3'].value    = 0;
+					this.setState(state);
+						
+					stnScrtRow.setDataValue('VLA_CONT_CN_1_SCO', 0);
+					stnScrtRow.setDataValue('VLA_CONT_CN_2_SCO', 0);
+					stnScrtRow.setDataValue('VLA_CONT_CN_3_SCO', 0);
+					stnScrtRow.setDataValue('VLA_CONT_CN_SCO'  , 0);
+					stnScrtRow.setDataValue('VLA_NCES_YN'      , e.target.value);
+
+					this.lastEdtStnScrt = this.currntStnScrt;	
+					
+					break;
+
+				default : break;
+				}
+			}
+		},
+		
+		grid: {
+			onGridReady : (e) => {
+				switch (e.id) {
+				case "grdStnScrt":
+					this.stnScrtGridApi = e.gridApi;
+					this.stnScrtGrid    = e.grid;
+					break;
+
+				default: break
+				}
+				
+			},
+			onRowClicked: (e) => {	
+				switch (e.id) {
+					case 'grdStnScrt':
+						if (this.currntStnScrt !== e.data.SEQ_NO) {
+							this.currntStnScrt = e.data.SEQ_NO;
+
+							let state = this.state;
+							let ncesIndex = 0;
+		
+							state['textFieldProps']['iptVlaBrdNm'].value = e.data.VLA_BRD_NM;
+							state['textFieldProps']['iptVlaItem'].value  = e.data.VLA_ITM_NM;
+							state['textFieldProps']['iptVlaCont'].value  = e.data.VLA_CONT_NM;
+							state['textFieldProps']['iptVlaStnd'].value  = e.data.VLA_STND_NM;
+							state['textFieldProps']['iptVlaTitle'].value = e.data.VLA_TITLE;
+							state['textFieldProps']['iptContCn1'].value  = e.data.VLA_CONT_CN_1;
+							state['textFieldProps']['iptContCn2'].value  = e.data.VLA_CONT_CN_2;
+							state['textFieldProps']['iptContCn3'].value  = e.data.VLA_CONT_CN_3;
+	
+							state['calendarProps']['calAppDate'].value = e.data.STT_TRSM_DTM === null ? e.data.STT_TRSM_DTM : null;
+							
+							state['selectboxProps']['selSco1'].selected = StrLib.isNull(e.data.VLA_CONT_CN_1) ? 0 : Number(e.data.VLA_CONT_CN_1_SCO);
+							state['selectboxProps']['selSco2'].selected = StrLib.isNull(e.data.VLA_CONT_CN_2) ? 0 : Number(e.data.VLA_CONT_CN_2_SCO);
+							state['selectboxProps']['selSco3'].selected = StrLib.isNull(e.data.VLA_CONT_CN_3) ? 0 : Number(e.data.VLA_CONT_CN_3_SCO);
+							state['selectboxProps']['selSco1'].value    = StrLib.isNull(e.data.VLA_CONT_CN_1) ? 0 : Number(e.data.VLA_CONT_CN_1_SCO);
+							state['selectboxProps']['selSco2'].value    = StrLib.isNull(e.data.VLA_CONT_CN_2) ? 0 : Number(e.data.VLA_CONT_CN_2_SCO);
+							state['selectboxProps']['selSco3'].value    = StrLib.isNull(e.data.VLA_CONT_CN_3) ? 0 : Number(e.data.VLA_CONT_CN_3_SCO);
+							
+							if (e.data.VLA_NCES_YN === 'Y') {
+								state['selectboxProps']['selSco1'].disabled = false;
+								state['selectboxProps']['selSco2'].disabled = false;
+								state['selectboxProps']['selSco3'].disabled = false;
+								ncesIndex = 0;
+							} else if (e.data.VLA_NCES_YN === 'N') {
+								state['selectboxProps']['selSco1'].disabled = true;
+								state['selectboxProps']['selSco2'].disabled = true;
+								state['selectboxProps']['selSco3'].disabled = true;
+								ncesIndex = 1;
+							}
+
+							state['selectboxProps']['selVlaNcesYn'].selected = ncesIndex;
+							state['selectboxProps']['selVlaNcesYn'].value    = e.data.VLA_NCES_YN;
+	
+							this.setState(state);
+						}						
+
+						let stnScrtRows = this.stnScrtGridApi.rowModel.rowsToDisplay;
+						let stnScrtRow;
+
+						for (let i = 0; i < stnScrtRows.length; i ++) {
+							if (stnScrtRows[i].data.SEQ_NO === e.data.SEQ_NO){
+								stnScrtRow = this.stnScrtGridApi.rowModel.rowsToDisplay[i];
+								break;
+							}
+						}
+
+						if (stnScrtRow.selected !== true) {
+							stnScrtRow.setSelected(true);
+						}
+
+					
+
+						break;	
+
+					default : break;
+				}
+			},
+			onInsertRow: (e) => {
+				let stnScrtRowNm = - 1;
+				let records      = this.stnScrtGrid.gridDataset.records;
+				let stnScrtRow ;
+				
+				let rowData = this.stnScrtGrid.gridDataset.getRecords();
+
+				if (!StrLib.isNull(this.currntStnScrt)) {
+					let index = 0;
+
+					for (let i = 0; i < records.length; i++) {
+						if (records[i]["SEQ_NO"] === this.currntStnScrt) {
+							index = i;
+
+							break;
+						}
+					}
+					stnScrtRowNm = index;
+				}
+				
+				let sortOrd = 1;
+
+				for (let i = 0; i < records.length; i ++) {
+					if (records[i].rowtype === newScrmObj.constants.crud.destroy) {
+
+					} else {
+						records[i].SORT_ORD = sortOrd;
+
+						sortOrd += 1;
+					}
+
+					if (e.index === i) {						
+						records[i].VLA_BRD_CD    = records[stnScrtRowNm]["VLA_BRD_CD"];
+						records[i].VLA_BRD_NM    = records[stnScrtRowNm]["VLA_BRD_NM"];
+						records[i].VLA_BRD_VERS  = records[stnScrtRowNm]["VLA_BRD_VERS"];
+						records[i].VLA_ITM_CD    = records[stnScrtRowNm]["VLA_ITM_CD"];
+						records[i].VLA_ITM_NM    = records[stnScrtRowNm]["VLA_ITM_NM"];
+						records[i].VLA_CONT_CD   = records[stnScrtRowNm]["VLA_CONT_CD"];
+						records[i].VLA_CONT_NM   = records[stnScrtRowNm]["VLA_CONT_NM"];
+						records[i].VLA_STND_CD   = records[stnScrtRowNm]["VLA_STND_CD"];
+						records[i].VLA_STND_NM   = records[stnScrtRowNm]["VLA_STND_NM"];
+						records[i].VLA_STND_VERS = records[stnScrtRowNm]["VLA_STND_VERS"];
+						records[i].STT_TRSM_DTM  = records[stnScrtRowNm]["STT_TRSM_DTM"];						
+						
+						records[i].SEQ_NO = records.length;
+
+						records[i].VLA_CONT_CN_1_SCO = 0;
+						records[i].VLA_CONT_CN_2_SCO = 0;
+						records[i].VLA_CONT_CN_3_SCO = 0;
+
+						records[i].VLA_NCES_YN = 'Y';
+						
+					} 
+
+					let data = JSON.parse(JSON.stringify(records[i]));
+					Object.assign(rowData[i], data);
+				}
+								
+				this.stnScrtGrid.gridDataset.setRecords(rowData);
+
+				this.stnScrtGridApi.setRowData(this.stnScrtGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+
+				let stnScrtRows = this.stnScrtGridApi.rowModel.rowsToDisplay;
+
+				for (let i = 0; i < stnScrtRows.length; i ++) {
+					if (stnScrtRows[i].data.SEQ_NO === records[stnScrtRowNm].SEQ_NO){
+						stnScrtRow = this.stnScrtGridApi.rowModel.rowsToDisplay[i];
+						this.stnScrtGridApi.ensureIndexVisible(i, 'middle');	
+						break;
+					}
+				}
+
+				if (stnScrtRow.selected !== true) {
+					stnScrtRow.setSelected(true);
+				}	
+			
+				this.currntStnScrt = stnScrtRow.data.SEQ_NO;
+
+				let data = stnScrtRow.data;				
+				let state = this.state;
+				
+				state['textFieldProps']['iptVlaBrdNm'].value = data.VLA_BRD_NM;
+				state['textFieldProps']['iptVlaItem'].value  = data.VLA_ITM_NM;
+				state['textFieldProps']['iptVlaCont'].value  = data.VLA_CONT_NM;
+				state['textFieldProps']['iptVlaStnd'].value  = data.VLA_STND_NM;
+				state['textFieldProps']['iptVlaTitle'].value = '';
+				state['textFieldProps']['iptContCn1'].value  = '';
+				state['textFieldProps']['iptContCn2'].value  = '';
+				state['textFieldProps']['iptContCn3'].value  = '';
+				
+				state['calendarProps']['calAppDate'].value = data.STT_TRSM_DTM === null ? data.STT_TRSM_DTM : null;
+
+				state['selectboxProps']['selSco1'].selected = 0;
+				state['selectboxProps']['selSco2'].selected = 0;
+				state['selectboxProps']['selSco3'].selected = 0;
+				state['selectboxProps']['selSco1'].value    = 0;
+				state['selectboxProps']['selSco2'].value    = 0;
+				state['selectboxProps']['selSco3'].value    = 0;
+
+				state['selectboxProps']['selSco1'].disabled = false;
+				state['selectboxProps']['selSco2'].disabled = false;
+				state['selectboxProps']['selSco3'].disabled = false;				
+
+				state['selectboxProps']['selVlaNcesYn'].selected = 0;
+				state['selectboxProps']['selVlaNcesYn'].value    = "";
+
+				this.setState(state);
+
+			},
+			onDeleteRow: (e) => {
+				let records      = this.stnScrtGrid.gridDataset.records;
+				let stnScrtRow ;
+				
+				let rowData = this.stnScrtGrid.gridDataset.getRecords();
+
+				let sortOrd = 1;
+
+				for (let i = 0; i < records.length; i ++) {
+					if (records[i].rowtype === newScrmObj.constants.crud.destroy) {
+
+					} else {
+						records[i].SORT_ORD = sortOrd;
+
+						sortOrd += 1;
+					}
+
+					let data = JSON.parse(JSON.stringify(records[i]));
+
+					Object.assign(rowData[i], data);
+				}
+								
+				this.stnScrtGrid.gridDataset.setRecords(rowData);
+
+				this.stnScrtGridApi.setRowData(this.stnScrtGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+	
+				stnScrtRow = this.stnScrtGridApi.rowModel.rowsToDisplay[e.index];
+
+				stnScrtRow.setSelected(true);
+
+				this.stnScrtGridApi.ensureIndexVisible(e.index, 'middle');	
+
+				this.currntStnScrt = stnScrtRow.data.SEQ_NO;
+
+				let data = stnScrtRow.data;
+				let state = this.state;
+				let ncesIndex = 0;
+
+				state['textFieldProps']['iptVlaBrdNm'].value = data.VLA_BRD_NM;
+				state['textFieldProps']['iptVlaItem'].value  = data.VLA_ITM_NM;
+				state['textFieldProps']['iptVlaCont'].value  = data.VLA_CONT_NM;
+				state['textFieldProps']['iptVlaStnd'].value  = data.VLA_STND_NM;
+				state['textFieldProps']['iptVlaTitle'].value = data.VLA_TITLE;
+				state['textFieldProps']['iptContCn1'].value  = data.VLA_CONT_CN_1;
+				state['textFieldProps']['iptContCn2'].value  = data.VLA_CONT_CN_2;
+				state['textFieldProps']['iptContCn3'].value  = data.VLA_CONT_CN_3;
+
+				state['calendarProps']['calAppDate'].value = data.STT_TRSM_DTM === null ? data.STT_TRSM_DTM : null;
+
+				state['selectboxProps']['selSco1'].selected = StrLib.isNull(data.VLA_CONT_CN_1) ? 0 : Number(data.VLA_CONT_CN_1_SCO);
+				state['selectboxProps']['selSco2'].selected = StrLib.isNull(data.VLA_CONT_CN_2) ? 0 : Number(data.VLA_CONT_CN_2_SCO);
+				state['selectboxProps']['selSco3'].selected = StrLib.isNull(data.VLA_CONT_CN_3) ? 0 : Number(data.VLA_CONT_CN_3_SCO);
+				state['selectboxProps']['selSco1'].value    = StrLib.isNull(data.VLA_CONT_CN_1) ? 0 : Number(data.VLA_CONT_CN_1_SCO);
+				state['selectboxProps']['selSco2'].value    = StrLib.isNull(data.VLA_CONT_CN_2) ? 0 : Number(data.VLA_CONT_CN_2_SCO);
+				state['selectboxProps']['selSco3'].value    = StrLib.isNull(data.VLA_CONT_CN_3) ? 0 : Number(data.VLA_CONT_CN_3_SCO);
+
+				if (data.VLA_NCES_YN === 'Y') {
+					state['selectboxProps']['selSco1'].disabled = false;
+					state['selectboxProps']['selSco2'].disabled = false;
+					state['selectboxProps']['selSco3'].disabled = false;
+					ncesIndex = 0;
+				} else if (data.VLA_NCES_YN === 'N') {
+					state['selectboxProps']['selSco1'].disabled = true;
+					state['selectboxProps']['selSco2'].disabled = true;
+					state['selectboxProps']['selSco3'].disabled = true;
+					ncesIndex = 1;
+				}
+
+				state['selectboxProps']['selVlaNcesYn'].selected = ncesIndex;
+				state['selectboxProps']['selVlaNcesYn'].value    = data.VLA_NCES_YN;
+
+				this.setState(state);
+				
+			},
+			onBeforeInsertRow: () => {
+				if (this.stnScrtGrid.gridDataset.getRecords().length < 1) {
+					ComLib.openDialog('A', 'COME0006', ['평가표', '조회']);
+
+					return {rtn: false};
+
+				} else if (this.stnScrtGrid.getSelectedRows().length === 0) {					
+					ComLib.openDialog('A', 'COME0006', ['추가할 항목', '선택']);
+
+					return {rtn: false};
+
+				}
+
+				let index = 0;
+				let records = this.stnScrtGrid.gridDataset.records;
+
+				for (let i = 0; i < records.length; i ++) {
+					if (records[i]["SEQ_NO"] === this.currntStnScrt) {
+						index = i;
+
+						break;
+					}
+				}
+
+				return {rtn: true, index: index + 1};
+			},
+			onBeforeDeleteRow: () => {
+				let stndCd  = this.stnScrtGrid.getSelectedRows()[0].VLA_STND_CD;
+				let seqNo   = this.currntStnScrt;
+				let records = this.stnScrtGrid.gridDataset.records;
+				
+				let stnScrtRowNm  = 0;
+				let deletedRowCnt = 0;
+
+				for (let i = 0; i < records.length; i++) {
+					if (records[i].rowtype === newScrmObj.constants.crud.destroy) {
+
+						deletedRowCnt += 1;
+
+					} else if (records[i]["SEQ_NO"] === this.currntStnScrt) {
+						stnScrtRowNm = i;
+
+						break;
+					}
+				}
+				
+				if (records[stnScrtRowNm].rowtype === newScrmObj.constants.crud.create) {
+					for (let i = 0; i < records.length; i ++) {
+						if (stndCd === records[i].VLA_STND_CD && seqNo !== records[i].SEQ_NO && records[i].rowtype !== newScrmObj.constants.crud.destroy) {
+							
+							return true;
+						}
+					}
+					ComLib.openDialog('A', 'COME0011', ['해당 평가항목', '최소 1개 이상']);
+	
+					return false;
+
+				} else {
+					let isLeastOne = false;
+
+					for (let i = 0; i < records.length; i ++) {
+						if (stndCd === records[i].VLA_STND_CD && seqNo !== records[i].SEQ_NO && records[i].rowtype !== newScrmObj.constants.crud.destroy) {
+							isLeastOne = true;
+
+							break;
+						}
+					}
+
+					if (!isLeastOne) {
+						ComLib.openDialog('A', 'COME0011', ['해당 평가항목', '최소 1개 이상']);
+	
+						return false;
+					}
+					
+					records[stnScrtRowNm].rowtype = newScrmObj.constants.crud.destroy;
+
+					let rowData = this.stnScrtGrid.gridDataset.getRecords();
+					let srotOrd = 1;
+
+					for (let i = 0; i < records.length; i ++) {
+						if (records[i].rowtype === newScrmObj.constants.crud.destroy) {
+
+						} else {
+							records[i].SORT_ORD  = srotOrd;
+	
+							srotOrd += 1;
+
+							let data = JSON.parse(JSON.stringify(records[i]));	
+
+							Object.assign(rowData[i], data);
+						}
+					}
+
+					this.stnScrtGridApi.setRowData(this.stnScrtGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+					
+					let stnScrtRow = this.stnScrtGridApi.rowModel.rowsToDisplay[stnScrtRowNm - deletedRowCnt];
+
+					stnScrtRow.setSelected(true);
+	
+					this.stnScrtGridApi.ensureIndexVisible(stnScrtRowNm - deletedRowCnt, 'middle');	
+	
+					this.currntStnScrt = stnScrtRow.data.SEQ_NO;
+
+					let data = stnScrtRow.data;
+
+					let state = this.state;
+					let ncesIndex = 0;
+
+					state['textFieldProps']['iptVlaBrdNm'].value = data.VLA_BRD_NM;
+					state['textFieldProps']['iptVlaItem'].value  = data.VLA_ITM_NM;
+					state['textFieldProps']['iptVlaCont'].value  = data.VLA_CONT_NM;
+					state['textFieldProps']['iptVlaStnd'].value  = data.VLA_STND_NM;
+					state['textFieldProps']['iptVlaTitle'].value = data.VLA_TITLE;
+					state['textFieldProps']['iptContCn1'].value  = data.VLA_CONT_CN_1;
+					state['textFieldProps']['iptContCn2'].value  = data.VLA_CONT_CN_2;
+					state['textFieldProps']['iptContCn3'].value  = data.VLA_CONT_CN_3;
+	
+					state['calendarProps']['calAppDate'].value = data.STT_TRSM_DTM === null ? data.STT_TRSM_DTM : null;
+	
+					state['selectboxProps']['selSco1'].selected = StrLib.isNull(data.VLA_CONT_CN_1) ? 0 : Number(data.VLA_CONT_CN_1_SCO);
+					state['selectboxProps']['selSco2'].selected = StrLib.isNull(data.VLA_CONT_CN_2) ? 0 : Number(data.VLA_CONT_CN_2_SCO);
+					state['selectboxProps']['selSco3'].selected = StrLib.isNull(data.VLA_CONT_CN_3) ? 0 : Number(data.VLA_CONT_CN_3_SCO);
+					state['selectboxProps']['selSco1'].value    = StrLib.isNull(data.VLA_CONT_CN_1) ? 0 : Number(data.VLA_CONT_CN_1_SCO);
+					state['selectboxProps']['selSco2'].value    = StrLib.isNull(data.VLA_CONT_CN_2) ? 0 : Number(data.VLA_CONT_CN_2_SCO);
+					state['selectboxProps']['selSco3'].value    = StrLib.isNull(data.VLA_CONT_CN_3) ? 0 : Number(data.VLA_CONT_CN_3_SCO);
+					
+					if (data.VLA_NCES_YN === 'Y') {
+						state['selectboxProps']['selSco1'].disabled = false;
+						state['selectboxProps']['selSco2'].disabled = false;
+						state['selectboxProps']['selSco3'].disabled = false;
+						ncesIndex = 0;
+					} else if (data.VLA_NCES_YN === 'N') {
+						state['selectboxProps']['selSco1'].disabled = true;
+						state['selectboxProps']['selSco2'].disabled = true;
+						state['selectboxProps']['selSco3'].disabled = true;
+						ncesIndex = 1;
+					}
+
+					state['selectboxProps']['selVlaNcesYn'].selected = ncesIndex;
+					state['selectboxProps']['selVlaNcesYn'].value    = data.VLA_NCES_YN;
+
+					this.setState(state);
+
+					return false;
+				}			
+			},
+			
+		},
+		inputcalendar : {
+			onChange: (e) => {
+				switch (e.target.id) {
+				case 'calAppDate':
+					let state = this.state;
+
+					let stnScrtRow, stnScrtRowNm;
+
+					let records       = this.stnScrtGrid.gridDataset.records;
+					var index         = 0;	
+					let deletedRowCnt = 0;
+
+					state['calendarProps']['calAppDate'].value =  e.target.value;
+
+					this.setState(state);
+					
+					for (let i = 0; i < records.length; i ++) {
+						this.stnScrtGrid.gridDataset.setValue(i, "STT_TRSM_DTM", e.target.value);
+						
+						if (records[i].rowtype === newScrmObj.constants.crud.destroy) {
+
+							deletedRowCnt += 1;
+						}
+
+						if (records[i].SEQ_NO === this.currntStnScrt) {
+							index = i;
+						}
+					}
+
+					stnScrtRowNm = index;
+
+					this.stnScrtGrid.gridDataset.setRecords(records);
+
+					this.stnScrtGridApi.setRowData(this.stnScrtGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+						
+					stnScrtRow = this.stnScrtGridApi.rowModel.rowsToDisplay[stnScrtRowNm - deletedRowCnt];
+
+					stnScrtRow.setSelected(true);
+
+					this.stnScrtGridApi.ensureIndexVisible(stnScrtRowNm - deletedRowCnt, 'middle');	
+
+					break;
+
+				default : break;
+				}
+			},			
+		}
+	}
+
+	/*------------------------------------------------------------------------------------------------*/
+	// [7. render Zone]
+	//  - 화면 관련 내용 작성
+	/*------------------------------------------------------------------------------------------------*/
+	render () {
+		return (
+			<React.Fragment>
+				<FullPanel>
+					<SearchPanel>
+						<RelativeGroup>
+							<LFloatArea>
+								<FlexPanel>
+									<div style={{width: '70px'}}>    
+										<Label value="평가표명"/>
+									</div>  
+									<Selectbox
+										id       = {this.state.selectboxProps.selVlaBrdNm.id}
+										value    = {this.state.selectboxProps.selVlaBrdNm.value}
+										dataset  = {this.state.selectboxProps.selVlaBrdNm.dataset}
+										width    = {this.state.selectboxProps.selVlaBrdNm.width}
+										disabled = {this.state.selectboxProps.selVlaBrdNm.disabled}
+										selected = {this.state.selectboxProps.selVlaBrdNm.selected}
+										onChange = {this.event.selectbox.onChange}
+									/>	
+									<div style={{width: '70px', marginLeft: "10px"}}>    
+										<Label value="버전"/>
+									</div>
+									<Selectbox
+										id       = {this.state.selectboxProps.selVlaBrdVer.id}
+										value    = {this.state.selectboxProps.selVlaBrdVer.value}
+										dataset  = {this.state.selectboxProps.selVlaBrdVer.dataset}
+										width    = {this.state.selectboxProps.selVlaBrdVer.width}
+										disabled = {this.state.selectboxProps.selVlaBrdVer.disabled}
+										selected = {this.state.selectboxProps.selVlaBrdVer.selected}
+										onChange = {this.event.selectbox.onChange}
+									/>	
+									<div style={{width: '150px', marginLeft: "10px"}}>    
+										<Label value="스크립트 적용 일자"/>
+									</div>
+									<Selectbox
+										id       = {this.state.selectboxProps.selVlaApplyDate.id}
+										value    = {this.state.selectboxProps.selVlaApplyDate.value}
+										dataset  = {this.state.selectboxProps.selVlaApplyDate.dataset}
+										width    = {this.state.selectboxProps.selVlaApplyDate.width}
+										disabled = {this.state.selectboxProps.selVlaApplyDate.disabled}
+										selected = {this.state.selectboxProps.selVlaApplyDate.selected}
+										onChange = {this.event.selectbox.onChange}
+									/>										
+								</FlexPanel>
+							</LFloatArea>
+							<RFloatArea>
+								<Button
+									color    = 'blue' 
+									fiiled   = "o"
+									innerImage ={true} 
+									icon	 = {'srch'} 
+									id       = {this.state.btnProps.btnSearch.id}
+									value    = {this.state.btnProps.btnSearch.value}
+									disabled = {this.state.btnProps.btnSearch.disabled}
+									hidden   = {this.state.btnProps.btnSearch.hidden}
+									onClick  = {this.event.button.onClick}
+									mt       = {5}
+								/>
+							</RFloatArea>
+						</RelativeGroup>
+					</SearchPanel>
+					<SubFullPanel>
+						<ComponentPanel>
+							<Grid
+								id        = {this.state.grdProps.grdStnScrt.id} 
+								areaName  = {this.state.grdProps.grdStnScrt.areaName + this.state.currentGrid} 
+								header    = {this.state.grdProps.grdStnScrt.header}
+								data      = {this.state.dsStnScrtList}
+								height    = "450px"
+								rowNum    = {true}
+
+								onGridReady            = {this.event.grid.onGridReady}
+								onRowClicked           = {this.event.grid.onRowClicked}
+								onDeleteRow            = {this.event.grid.onDeleteRow}
+								onInsertRow            = {this.event.grid.onInsertRow}
+								onBeforeInsertRow      = {this.event.grid.onBeforeInsertRow}									
+								onBeforeDeleteRow      = {this.event.grid.onBeforeDeleteRow}	
+								suppressRowDeselection = {true}		
+								sort                   = {false}						
+							/>
+						</ComponentPanel>
+					</SubFullPanel>
+					<SubFullPanel>
+						<ComponentPanel>	
+							<FlexPanel>	
+								<SubFullPanel>														
+									<SubFullPanel>  										
+										<div style={{width: '8%', display: 'block', float: 'left', marginBottom:  '4px'}}>    
+											<Label value="평가표"/>
+										</div> 
+										<div style={{width: '25%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Textfield
+												id          = {this.state.textFieldProps.iptVlaBrdNm.id}
+												name        = {this.state.textFieldProps.iptVlaBrdNm.name}
+												value       = {this.state.textFieldProps.iptVlaBrdNm.value}
+												placeholder = {this.state.textFieldProps.iptVlaBrdNm.placeholder}
+												minLength   = {this.state.textFieldProps.iptVlaBrdNm.minLength}
+												maxLength   = {this.state.textFieldProps.iptVlaBrdNm.maxLength}
+												readOnly    = {this.state.textFieldProps.iptVlaBrdNm.readOnly}
+												disabled    = {this.state.textFieldProps.iptVlaBrdNm.disabled}
+												onChange    = {this.event.input.onChange}
+											/>
+										</div>	
+										<div style={{width: '7%', display: 'block', float: 'left', marginBottom:  '4px', marginLeft: '1%'}}>    
+											<Label value="평가구분"/>
+										</div>  
+										<div style={{width: '25%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Textfield
+												id          = {this.state.textFieldProps.iptVlaItem.id}
+												name        = {this.state.textFieldProps.iptVlaItem.name}
+												value       = {this.state.textFieldProps.iptVlaItem.value}
+												placeholder = {this.state.textFieldProps.iptVlaItem.placeholder}
+												minLength   = {this.state.textFieldProps.iptVlaItem.minLength}
+												maxLength   = {this.state.textFieldProps.iptVlaItem.maxLength}
+												readOnly    = {this.state.textFieldProps.iptVlaItem.readOnly}
+												disabled    = {this.state.textFieldProps.iptVlaItem.disabled}
+												onChange    = {this.event.input.onChange}
+											/>
+										</div>
+										<div style={{width: '7%', display: 'block', float: 'left', marginBottom: '4px', marginLeft: '1%'}}>    
+											<Label value="평가내용"/>
+										</div>
+										<div style={{width: '26%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Textfield
+												id          = {this.state.textFieldProps.iptVlaCont.id}
+												name        = {this.state.textFieldProps.iptVlaCont.name}
+												value       = {this.state.textFieldProps.iptVlaCont.value}
+												placeholder = {this.state.textFieldProps.iptVlaCont.placeholder}
+												minLength   = {this.state.textFieldProps.iptVlaCont.minLength}
+												maxLength   = {this.state.textFieldProps.iptVlaCont.maxLength}
+												readOnly    = {this.state.textFieldProps.iptVlaCont.readOnly}
+												disabled    = {this.state.textFieldProps.iptVlaCont.disabled}
+												onChange    = {this.event.input.onChange}
+											/>
+										</div>																		
+									</SubFullPanel>
+									<SubFullPanel> 
+										<div style={{width: '8%', display: 'block', float: 'left', marginBottom: '4px'}}>    
+											<Label value="평가기준"/>
+										</div>  
+										<div style={{width: '25%',  display: 'block', float: 'left', marginBottom: '4px'}}>
+											<Textfield
+												id          = {this.state.textFieldProps.iptVlaStnd.id}
+												name        = {this.state.textFieldProps.iptVlaStnd.name}
+												value       = {this.state.textFieldProps.iptVlaStnd.value}
+												placeholder = {this.state.textFieldProps.iptVlaStnd.placeholder}
+												minLength   = {this.state.textFieldProps.iptVlaStnd.minLength}
+												maxLength   = {this.state.textFieldProps.iptVlaStnd.maxLength}
+												readOnly    = {this.state.textFieldProps.iptVlaStnd.readOnly}
+												disabled    = {this.state.textFieldProps.iptVlaStnd.disabled}
+												onChange    = {this.event.input.onChange}
+											/>
+										</div> 	
+										<div style={{width: '7%', display: 'block', float: 'left', marginBottom: '4px', marginLeft: '1%'}}>    
+											<Label value="스크립트제목" req={true}/>
+										</div> 
+										<div style={{width: '59%',  display: 'block', float: 'left', marginBottom: '4px'}}>
+											<Textfield
+												id          = {this.state.textFieldProps.iptVlaTitle.id}
+												name        = {this.state.textFieldProps.iptVlaTitle.name}
+												value       = {this.state.textFieldProps.iptVlaTitle.value}
+												placeholder = {this.state.textFieldProps.iptVlaTitle.placeholder}
+												minLength   = {this.state.textFieldProps.iptVlaTitle.minLength}
+												maxLength   = {this.state.textFieldProps.iptVlaTitle.maxLength}
+												readOnly    = {this.state.textFieldProps.iptVlaTitle.readOnly}
+												disabled    = {this.state.textFieldProps.iptVlaTitle.disabled}
+												onChange    = {this.event.input.onChange}
+											/>
+										</div>										
+									</SubFullPanel>
+									<SubFullPanel>  										
+										<div style={{width: '8%', display: 'block', float: 'left', marginBottom:  '4px'}}>    
+											<Label value="스크립트 (조건1)" req={true}/>
+										</div>  
+										<div style={{width: '89%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Textfield
+												id          = {this.state.textFieldProps.iptContCn1.id}
+												name        = {this.state.textFieldProps.iptContCn1.name}
+												value       = {this.state.textFieldProps.iptContCn1.value}
+												placeholder = {this.state.textFieldProps.iptContCn1.placeholder}
+												minLength   = {this.state.textFieldProps.iptContCn1.minLength}
+												maxLength   = {this.state.textFieldProps.iptContCn1.maxLength}
+												readOnly    = {this.state.textFieldProps.iptContCn1.readOnly}
+												disabled    = {this.state.textFieldProps.iptContCn1.disabled}
+												onChange    = {this.event.input.onChange}
+											/>
+										</div>
+										<div style={{width: '3%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Selectbox
+												id       = {this.state.selectboxProps.selSco1.id}
+												value    = {this.state.selectboxProps.selSco1.value}
+												dataset  = {this.state.selectboxProps.selSco1.dataset}
+												disabled = {this.state.selectboxProps.selSco1.disabled}
+												selected = {this.state.selectboxProps.selSco1.selected}
+												onChange = {this.event.selectbox.onChange}
+												width    = {'100%'}
+											/>
+										</div> 						
+									</SubFullPanel>	
+									<SubFullPanel>	
+										<div style={{width: '8%', display: 'block', float: 'left', marginBottom:  '4px'}}>    
+											<Label value="조건2"/>
+										</div>
+										<div style={{width: '22%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Textfield
+												id          = {this.state.textFieldProps.iptContCn2.id}
+												name        = {this.state.textFieldProps.iptContCn2.name}
+												value       = {this.state.textFieldProps.iptContCn2.value}
+												placeholder = {this.state.textFieldProps.iptContCn2.placeholder}
+												minLength   = {this.state.textFieldProps.iptContCn2.minLength}
+												maxLength   = {this.state.textFieldProps.iptContCn2.maxLength}
+												readOnly    = {this.state.textFieldProps.iptContCn2.readOnly}
+												disabled    = {this.state.textFieldProps.iptContCn2.disabled}
+												onChange    = {this.event.input.onChange}
+											/>
+										</div>
+										<div style={{width: '3%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Selectbox
+												id       = {this.state.selectboxProps.selSco2.id}
+												value    = {this.state.selectboxProps.selSco2.value}
+												dataset  = {this.state.selectboxProps.selSco2.dataset}
+												disabled = {this.state.selectboxProps.selSco2.disabled}
+												selected = {this.state.selectboxProps.selSco2.selected}
+												onChange = {this.event.selectbox.onChange}
+												width    = {'100%'}
+											/>
+										</div>
+										<div style={{width: '7%', display: 'block', float: 'left', marginBottom:  '4px', marginLeft: '1%'}}>    
+											<Label value="조건3"/>
+										</div>	
+										<div style={{width: '22%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Textfield
+												id          = {this.state.textFieldProps.iptContCn3.id}
+												name        = {this.state.textFieldProps.iptContCn3.name}
+												value       = {this.state.textFieldProps.iptContCn3.value}
+												placeholder = {this.state.textFieldProps.iptContCn3.placeholder}
+												minLength   = {this.state.textFieldProps.iptContCn3.minLength}
+												maxLength   = {this.state.textFieldProps.iptContCn3.maxLength}
+												readOnly    = {this.state.textFieldProps.iptContCn3.readOnly}
+												disabled    = {this.state.textFieldProps.iptContCn3.disabled}
+												onChange    = {this.event.input.onChange}
+											/>
+										</div>							
+										<div style={{width: '3%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Selectbox
+												id       = {this.state.selectboxProps.selSco3.id}
+												value    = {this.state.selectboxProps.selSco3.value}
+												dataset  = {this.state.selectboxProps.selSco3.dataset}
+												disabled = {this.state.selectboxProps.selSco3.disabled}
+												selected = {this.state.selectboxProps.selSco3.selected}
+												onChange = {this.event.selectbox.onChange}
+												width    = {'100%'}
+											/>
+										</div>	
+										<div style={{width: '7%', display: 'block', float: 'left', marginBottom:  '4px', marginLeft: '1%'}}>    
+											<Label value="필수평가여부" req={true}/>
+										</div>	
+										<div style={{width: '4%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<Selectbox
+												id       = {this.state.selectboxProps.selVlaNcesYn.id}
+												value    = {this.state.selectboxProps.selVlaNcesYn.value}
+												dataset  = {this.state.selectboxProps.selVlaNcesYn.dataset}
+												disabled = {this.state.selectboxProps.selVlaNcesYn.disabled}
+												selected = {this.state.selectboxProps.selVlaNcesYn.selected}
+												onChange = {this.event.selectbox.onChange}
+												width    = {'100%'}
+											/>
+										</div>
+										<div style={{width: '22%',  display: 'block', float: 'left', marginBottom:  '4px'}}>
+											<RFloatArea>
+												<Button
+													color    = 'purple' 
+													fiiled   = "o" 
+													id       = {this.state.btnProps.btnApply.id}
+													value    = {this.state.btnProps.btnApply.value}
+													disabled = {this.state.btnProps.btnApply.disabled}
+													hidden   = {this.state.btnProps.btnApply.hidden}
+													onClick  = {this.event.button.onClick}
+												/>
+												<Button
+													color    = 'purple' 
+													fiiled   = "o" 
+													id       = {this.state.btnProps.btnSave.id}
+													value    = {this.state.btnProps.btnSave.value}
+													disabled = {this.state.btnProps.btnSave.disabled}
+													hidden   = {this.state.btnProps.btnSave.hidden}
+													onClick  = {this.event.button.onClick}
+												/>
+											</RFloatArea>
+										</div>
+									</SubFullPanel>									
+								</SubFullPanel>	
+							</FlexPanel>							
+						</ComponentPanel>
+					</SubFullPanel>
+				</FullPanel>
+			</React.Fragment>
+		)
+	}
+}
+export default View;

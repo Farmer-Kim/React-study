@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, target-densitydpi=medium-dpi" />
+	<meta name="theme-color" content="#000000" />
+	<meta name="description" content="Web site created using create-react-app"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Smart VA</title>
+	<link rel="shortcut icon" href="favicon.ico">
+	<script type="text/javascript" src="infos.js"></script>
+	<script type="text/javascript">
+		function fnOpen() {
+			var serverInfos = getInfos();
+			localStorage.setItem("infos", JSON.stringify(serverInfos));
+
+			if (window.name != null && window.name == "mainframe") {
+				if (!document.getElementById("root").hasChildNodes()) window.location.reload();
+				return;
+			}
+
+			var status		= "";
+			status			+= "location=no,";
+			status			+= "resizable=no,";
+			status			+= "scrollbars=no,";
+			status			+= "toolbar=no,";
+			status			+= "left=0,";
+			status			+= "top=0,";
+			status			+= "width=1600,";
+			status			+= "height=975";
+
+			var appUrl = window.location.protocol + "//";
+			if (serverInfos.prod.host == window.location.hostname || serverInfos.prod.domain == window.location.hostname) {
+				if (serverInfos.prod.domain === window.location.hostname) {
+					appUrl += serverInfos.prod.domain;
+					appUrl += ":";
+					appUrl += serverInfos.prod.domainPort;
+				} else {
+					appUrl += serverInfos.prod.host;
+					appUrl += ":";
+					appUrl += serverInfos.prod.port;
+				}
+			} else if (serverInfos.dev.host == window.location.hostname || serverInfos.dev.domain == window.location.hostname) {
+				document.title = document.title + "  ::::: [DEV] :::::";
+				if (serverInfos.prod.domain === window.location.hostname) {
+					appUrl += serverInfos.dev.domain;
+					appUrl += ":";
+					appUrl += serverInfos.dev.domainPort;
+				} else {
+					appUrl += serverInfos.dev.host;
+					appUrl += ":";
+					appUrl += serverInfos.dev.port;
+				}
+			} else if (serverInfos.localbuild.host == window.location.hostname || serverInfos.localbuild.domain == window.location.hostname) {
+				document.title = document.title + "  ::::: [LOCAL] :::::";
+				appUrl += serverInfos.localbuild.host;
+				appUrl += ":";
+				appUrl += serverInfos.localbuild.port;
+			} else {
+				document.title = document.title + "  ::::: [LOCAL] :::::";
+				appUrl += serverInfos.local.host;
+				appUrl += ":";
+				appUrl += "3000";
+			}
+
+			window.open(appUrl, "mainframe", status);
+		};
+	</script>
+
+</head>
+<body onload="fnOpen();">
+	<script>
+		document.body.onkeydown = function(e) {
+			if (e.keyCode == 116) return false;
+			if (e.keyCode != 13) {
+				if (document.getElementById('dialog') != null && document.getElementById('dialog') != undefined) {
+					return false;
+				} else if (document.getElementById('_loaddiv') != null && document.getElementById('_loaddiv') != undefined) {
+					if (document.getElementById('_loaddiv').hasChildNodes()) {
+						return false;
+					}
+				}
+			}
+		};
+		document.body.oncontextmenu = function(e) {
+			return false;
+		};
+	</script>
+	<noscript>You need to enable JavaScript to run this app.</noscript>
+	<div id="root"></div>
+	<div id="pop"></div>
+</body>
+</html>
