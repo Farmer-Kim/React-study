@@ -69,7 +69,7 @@ class View extends React.Component {
 	}
 
 	componentDidMount () {
-		this.transaction("SYS080100_R00")
+		// this.transaction("SYS080100_R00")
 	}
 	/*------------------------------------------------------------------------------------------------*/
 	// [3. validation Event Zone]

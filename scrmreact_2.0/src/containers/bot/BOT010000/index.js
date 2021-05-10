@@ -5,23 +5,26 @@ import { ComponentPanel
 	   , FullPanel
 	   , SubFullPanel
 	   , RelativeGroup
-	   , TabPanel
-	   , Tabs
-	   , Grid             } from 'components';
+	   , SearchPanel
+	   , LFloatArea
+	   , Grid 
+	   , Diagram            } from 'components';
+import {BasicButton as Button} from 'components';
 import { ComLib
 	   , DataLib
 	   , StrLib
 	   , TransManager
 	   , newScrmObj            } from 'common';
 import BOT010100 from '../BOT010100';
-import BOT080200 from '../BOT010200';
-import BOT080300 from '../BOT010300';
 
 class View extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			dsSnroInitProcessList : DataLib.datalist.getInstance(),
+			dsSnroInitTTSList: DataLib.datalist.getInstance(),
+			dsSnroNodeList   : DataLib.datalist.getInstance(),
+			dsSnroLinkList   : DataLib.datalist.getInstance(),
+			dsSnroList       : [],
 			actionData : [],
 			btnProps : {
 				btnSearch : {
@@ -84,53 +87,18 @@ class View extends React.Component {
 				}
 			},
 		}
-
-		this.event.button.onClick   = this.event.button.onClick.bind(this);
-		this.event.input.onChange   = this.event.input.onChange.bind(this);
-		
 	}
 	/*------------------------------------------------------------------------------------------------*
 		0) Custom Event Zone 
-		rowFinder = 조회후 가장 마지막에 선택되어져 있던 행으로 재 포커싱을 하기 위한 함수
+
 	 ------------------------------------------------------------------------------------------------*/
-	rowFinder = (targetRecords, targetColumn, currentRow, secondColumn, secondRow) => {
-		let rowNum = 0;
 
-		if (targetRecords === undefined || targetRecords === null) {
-			return rowNum;
-		}
-
-		if (StrLib.isNull(secondColumn)) {
-			if (!StrLib.isNull(currentRow)) {
-				for (let i = 0; i < targetRecords.length; i++) {
-					if (targetRecords[i][targetColumn] === currentRow) {
-						rowNum = i;
-
-						break;
-					}
-				}
-			}
-			return rowNum;
-
-		} else {
-			if (!StrLib.isNull(secondRow)) {
-				for (let i = 0; i < targetRecords.length; i++) {
-					if (targetRecords[i][targetColumn] === currentRow && targetRecords[i][secondColumn] === secondRow) {
-						rowNum = i;
-
-						break;
-					}
-				}
-			}
-			return rowNum;
-		}
-	}
 	/*------------------------------------------------------------------------------------------------*
 		1) componentDidMount () => init 함수 개념으로 이해하는게 빠름
 		=> 컴포넌트가 마운트된 직후, 호출 ->  해당 함수에서 this.setState를 수행할 시, 갱신이 두번 일어나 render()함수가 두번 발생 -> 성능 저하 가능성
 	 ------------------------------------------------------------------------------------------------*/
 	componentDidMount () {
-		this.transaction("SYS080000_R00")
+		this.transaction("BOT010000_R00")
 	}
 	/*------------------------------------------------------------------------------------------------*
 		2) componentDidUpdate () => 갱신이 일어나 직후에 호춮 (최초 렌더링 시에는 호출되지 않음)
@@ -151,19 +119,18 @@ class View extends React.Component {
 	/*------------------------------------------------------------------------------------------------*/
 	// [3. validation Event Zone]
 	//  - validation 관련 정의
-	// SYS010000_R01 : 대분류 코드 조회
-	// SYS010000_R02 : 소분류 코드 조회
-	// SYS010000_H01 : 대분류 코드 저장
-	// SYS010000_H02 : 소분류 코드 저장
 	/*------------------------------------------------------------------------------------------------*/
 	validation = (...params) => {
 		let transId = params[0];
-		let chkCnt  = 0;
-		let returnVal = -1;
-
 		switch (transId) {
-		case 'SYS010000_R01':
+		case 'BOT010000_R01':
 
+			break;
+		case 'BOT010000_H01':
+			// console.log(this.state.transLink)
+			// console.log(this.state.dsSnroLinkList.records)
+			// console.log(this.state.transNode)
+			// console.log(this.state.dsSnroNodeList.records)
 			break;
 		default: break;
 		}
@@ -173,10 +140,6 @@ class View extends React.Component {
 	/*------------------------------------------------------------------------------------------------*/
 	// [4. transaction Event Zone]
 	//  - transaction 관련 정의
-	// SYS010000_R01 : 대분류 코드 조회
-	// SYS010000_R02 : 소분류 코드 조회
-	// SYS010000_H01 : 대분류 코드 저장
-	// SYS010000_H02 : 소분류 코드 저장
 	/*------------------------------------------------------------------------------------------------*/
 	transaction = (...params) => {
 		let transId = params[0];
@@ -189,42 +152,48 @@ class View extends React.Component {
 
 		try  {
 			switch (transId) {
-			case 'SYS080000_R00':
+			case 'BOT010000_R00':
+		
 				transManager.addConfig  ({
 					dao        : transManager.constants.dao.base,
 					crudh      : transManager.constants.crudh.read,
-					sqlmapid   : "SYS.R_getSnroInitProcess",
+					sqlmapid   : "BOT.R_getSnroTTS",
 					datasetsend: "dsEmpty",
-					datasetrecv: "dsSnroInitProcessListRecv"
+					datasetrecv: "dsSnroInitTTSListRecv"
 				});
 
 				transManager.addDataset('dsEmpty', [{}]);
 				transManager.agent();
 
 				break;			
-			case 'SYS080000_R01':
+			case 'BOT010000_R01':
+
+				// transManager.setTransId("test");
+				// transManager.setTransUrl(transManager.constants.url.sftp);
+				// transManager.setCallBack(this.callback);
+				// transManager.addConfig({
+				// 	dao: transManager.constants.dao.base,
+				// 	crudh: transManager.constants.crudh.sttSearch,
+				// 	datasetsend: "test",
+				// });
+					
+				// transManager.addDataset('test', [{path:"test/eere/eer", svrIp: "1.1.1.1"}]);
+				// transManager.agent();
+
 				transManager.addConfig  ({
 					dao        : transManager.constants.dao.base,
 					crudh      : transManager.constants.crudh.read,
-					sqlmapid   : "SYS.R_getSnroList",
+					sqlmapid   : "BOT.R_getSnroNode",
 					datasetsend: "dsEmpty",
-					datasetrecv: "dsSnroListRecv"
+					datasetrecv: "dsSnroNodeListRecv"
 				});
 
 				transManager.addConfig  ({
 					dao        : transManager.constants.dao.base,
 					crudh      : transManager.constants.crudh.read,
-					sqlmapid   : "SYS.R_getSnroTtsList",
+					sqlmapid   : "BOT.R_getSnroLink",
 					datasetsend: "dsEmpty",
-					datasetrecv: "dsSnroTtsListRecv"
-				});
-				
-				transManager.addConfig  ({
-					dao        : transManager.constants.dao.base,
-					crudh      : transManager.constants.crudh.read,
-					sqlmapid   : "SYS.R_getInterList",
-					datasetsend: "dsEmpty",
-					datasetrecv: "dsInterListRecv"
+					datasetrecv: "dsSnroLinkListRecv"
 				});
 
 				transManager.addDataset('dsEmpty', [{}]);
@@ -240,31 +209,55 @@ class View extends React.Component {
 	/*------------------------------------------------------------------------------------------------*/
 	// [5. Callback Event Zone]
 	//  - Callback 관련 정의
-	// SYS010000_R01 : 대분류 코드 조회
-	// SYS010000_R02 : 소분류 코드 조회
-	// SYS010000_H01 : 대분류 코드 저장
-	// SYS010000_H02 : 소분류 코드 저장
+	// BOT010000_R01 : 대분류 코드 조회
+	// BOT010000_R02 : 소분류 코드 조회
+	// BOT010000_H01 : 대분류 코드 저장
+	// BOT010000_H02 : 소분류 코드 저장
 	/*------------------------------------------------------------------------------------------------*/
 	callback = (res) => {	
 
 		switch (res.id) {
-		case 'SYS080000_R00':
-			if (res.data.dsSnroInitProcessListRecv.length > 0) {
-				let dsSnroInitProcessListRecv = res.data.dsSnroInitProcessListRecv;
+		case 'BOT010000_R00':
+			if (res.data.dsSnroInitTTSListRecv.length > 0) {
+				let dsSnroInitTTSListRecv = res.data.dsSnroInitTTSListRecv;
 
-				ComLib.setStateInitRecords(this, "dsSnroInitProcessList", dsSnroInitProcessListRecv);
+				let addSelect = [];
 
+				addSelect.push({CODE: "0", CD_VAL: "TTS를 선택해 주세요", CODE_NM: "선택", recid: 0, rowtype: "r"});
+				for (let i = 0; i < dsSnroInitTTSListRecv.length; i ++) {
+					addSelect.push(dsSnroInitTTSListRecv[i]);
+
+				}
+
+				ComLib.setStateInitRecords(this, "dsSnroInitTTSList", addSelect);
+				
 			} else {
-				ComLib.setStateInitRecords(this, "dsSnroInitProcessList", []);
+				ComLib.setStateInitRecords(this, "dsSnroInitTTSList", []);
 
 			}
 			break;
 			
-		case 'SYS080000_R01':	
-			let params = this.state.actionData;
-			let option1 = { width: '1200px', height: '830px', modaless: false, params, dsSnroTts: res.data.dsSnroTtsListRecv, dsSnro:res.data.dsSnroListRecv, dsInter: res.data.dsInterListRecv}
-			ComLib.openPop('SYS080001', '시나리오 프로세스 관리', option1);
+		case 'BOT010000_R01':	
+			if (res.data.dsSnroNodeListRecv.length > 0) {
+				let { dsSnroNodeListRecv, dsSnroLinkListRecv } = res.data;
+				ComLib.setStateInitRecords(this, "dsSnroNodeList", dsSnroNodeListRecv);
+				ComLib.setStateInitRecords(this, "dsSnroLinkList", dsSnroLinkListRecv);
+				let dsSnroList = {node: null, link: null};
+				dsSnroList.node = this.state.dsSnroNodeList.records;
+				dsSnroList.link = this.state.dsSnroLinkList.records;
+				
 
+				// react diagram npm 자체 오류로 2번 로딩 해줘야함 
+				// 한번만 로딩시 링크 생성 안됨 추후 수정 요망
+				// 노드와 링크를 따로 props 로 던져 줘서 componet 내부에서 2번 랜더링을 하는 방법을 시도 해 봐야 겟음
+				this.setState({...this.state, dsSnroList: dsSnroList})
+				this.setState({...this.state, dsSnroList: dsSnroList})
+
+			} else {
+				ComLib.setStateInitRecords(this, "dsSnroNodeList", []);
+				ComLib.setStateInitRecords(this, "dsSnroLinkList", []);
+
+			}
 			break;
 
 		default : break;
@@ -279,18 +272,17 @@ class View extends React.Component {
 		button : {
 			onClick : (e) => {
 				switch (e.target.id) {
-				case "btnSearch":
-					if (this.validation("SYS010000_R01")) this.transaction("SYS010000_R01");
+				case "btnDiagramSrch":
+					if (this.validation("BOT010000_R01")) this.transaction("BOT010000_R01");
 				
 					break;
 
-				case "btnBigSave":
-					if (this.validation("SYS010000_H01")) this.transaction("SYS010000_H01");
-
+				case "btnDiagramSave":
+					this.refs.refDiagram.serializationSave();
 					break;
 
 				case "btnSmlSave":
-					if (this.validation("SYS010000_H02")) this.transaction("SYS010000_H02");
+					if (this.validation("BOT010000_H02")) this.transaction("BOT010000_H02");
 					
 					break;	
 						
@@ -298,80 +290,16 @@ class View extends React.Component {
 				}
 			}
 		},
-		grid: {
-			onGridReady: (e) => {
-				switch (e.id) {
-				case "grdSnroInitProcess":
-					this.snroInitProcessGridApi = e.gridApi;
-					this.snroInitProcessGrid    = e.grid;
-					
-					break;
-
-				default: break
-				}
-			},
-			onActionCellClicked : (e) => {				
-				switch (e.id) {
-				case "grdSnroInitProcess":	
-					switch (e.col) {
-					case "PROCESS":
-						this.setState({...this.state, actionData: e.data}, this.transaction('SYS080000_R01'))
-						break;
-
-					default: break;
-					}
-
-					break;
-
-				default: break;
-				}
+		diagram : {
+			onSave : (e) => {
+				let transNode = e.node;
+				let transLink = e.link;
+				console.log(transNode)
+				console.log(transLink)
+				if (this.validation("BOT010000_H01", transNode, transLink)) this.transaction("BOT010000_H01", transNode, transLink);
+				
 			}
-		},
-		input : {
-			onChange: (e) => {
-				switch (e.target.id) {
-				case 'iptBigCdNm':
-					let state = this.state;
-
-					state['textFieldProps']['iptBigCdNm'].value = e.target.value;
-	
-					this.setState(state);
-					
-					break;
-
-				default: break;
-				}
-			},
-			onKeyPress: (e) => {
-				switch (e.target.id) {
-				case 'iptBigCdNm':
-					if (e.key === 'Enter') {
-						if (this.validation("SYS010000_R01")) this.transaction("SYS010000_R01");
-					}
-					
-					break;
-
-				default: break;
-				}
-
-			}
-		},
-		selectbox: {
-			onChange: (e) => {
-				let state = this.state;
-
-				state['selectboxProps'][e.target.id].selected = e.target.selectedIndex;
-				state['selectboxProps'][e.target.id].value    = e.target.value;
-
-				this.setState(state);
-
-			}
-		},
-		tab : {
-			onClick : (e) => {
-				console.log('onClick');
-			}
-		},
+		}
 	}
 	/*------------------------------------------------------------------------------------------------*/
 	// [7. render Zone]
@@ -379,45 +307,47 @@ class View extends React.Component {
 	/*------------------------------------------------------------------------------------------------*/
 	render () {
 		return (
-			<React.Fragment>
+			<React.Fragment>								
 				<FullPanel>		
-				<SubFullPanel>	
-					<FlexPanel>
-						<ComponentPanel>
-							<RelativeGroup>									
-								<Tabs tabWidth='100px' onClick = {this.event.tab.onClick}>
-									<TabPanel id = {'BOT010100'} index={0} label={'시나리오 관리'}>
-										{/* <BOT010100 cmpWordList={this.state.cmpWordList}/> */}
-										
-										<BOT010100/>
-									</TabPanel>
-									<TabPanel id = {'BOT080200'} index={1} label={'TTS 관리'}>
-										<BOT080200/>
-									</TabPanel>
-									<TabPanel id = {'BOT080300'} index={2} label={'인터페이스 관리'}>
-										<BOT080300/>
-									</TabPanel>									
-								</Tabs>		
-							</RelativeGroup>
-						</ComponentPanel>		
-						<ComponentPanel>
-							<Grid
-								id        = {this.state.grdProps.grdSnroInitProcess.id} 
-								areaName  = {this.state.grdProps.grdSnroInitProcess.areaName}
-								header    = {this.state.grdProps.grdSnroInitProcess.header}
-								data      = {this.state.dsSnroInitProcessList}
-								height    = {this.state.grdProps.grdSnroInitProcess.height}
-								rowNum    = {true}
-								addRowBtn = {false}
-								delRowBtn = {false}
-
-								onGridReady        = {this.event.grid.onGridReady}
-								onActionCellClicked= {this.event.grid.onActionCellClicked}
-												
-							/>
-						</ComponentPanel>
-					</FlexPanel>
-					</SubFullPanel>	
+					<SearchPanel>
+						<RelativeGroup>
+							<LFloatArea>
+								<FlexPanel>
+									<Button
+										color='purple' 
+										size ='md'
+										fiiled= {true}
+										id = {"btnDiagramSrch"}
+										value = {"조회"}
+										disabled = {false}
+										hidden = {false}
+										onClick = {this.event.button.onClick}
+										ml = {5}
+									/>
+									<Button
+										color='purple' 
+										size ='md'
+										fiiled= {true}
+										id = {"btnDiagramSave"}
+										value = {"저장 테스트"}
+										disabled = {false}
+										hidden = {false}
+										onClick = {this.event.button.onClick}
+										ml = {5}
+									/>
+								</FlexPanel>
+							</LFloatArea>
+						</RelativeGroup>
+					</SearchPanel>											
+					<SubFullPanel>				
+						<Diagram
+							height     = "650px"
+							tts        = {this.state.dsSnroInitTTSList.records}
+							onSave     = {this.event.diagram.onSave}
+							dsSnroList = {this.state.dsSnroList}
+							ref = "refDiagram"							
+						/>		
+					</SubFullPanel>
 				</FullPanel>
 			</React.Fragment>
 		)

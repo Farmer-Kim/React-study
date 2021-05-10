@@ -54,7 +54,7 @@ module.exports = {
   appPath: resolveApp('.'),
   appBuild: resolveApp('build'),
   appPublic: resolveApp('public'),
-  appWas: resolveApp('../scrmreact-server/src/main/webapp'),
+  appWas: resolveApp('../../scrmreact_2.0_backend/scrmreact_2.0-server/src/main/webapp'),
   appHtml: resolveApp('public/index.html'),
   appIndexJs: resolveModule(resolveApp, 'src/index'),
   appPackageJson: resolveApp('package.json'),

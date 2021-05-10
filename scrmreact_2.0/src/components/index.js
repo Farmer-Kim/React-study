@@ -23,6 +23,7 @@ import Table from './Table';
 import Textarea from './Textarea';
 import {TrayDiv} from './Tray';
 import CsState from './CsState';
+import Diagram from './Diagram';
 
 export {
 	BasicButton, IconButton,
@@ -46,5 +47,6 @@ export {
 	TrayDiv,
 	CsState,
 	RealTimeViewer,
-	CsButton
+	CsButton,
+	Diagram
 };

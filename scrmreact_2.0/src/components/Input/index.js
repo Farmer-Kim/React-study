@@ -142,7 +142,8 @@ class Textfield extends React.Component {
 	static defaultProps = {
 		onKeyPress : () => {return;},
 		onChange : () => {return;},
-		onBlur : () => {return;}
+		onBlur : () => {return;},
+		tooltip : false
 	}
 	rtnVal = (value) => {
 		switch (this.props.type) {
@@ -165,23 +166,24 @@ class Textfield extends React.Component {
 	}
 	render () {
 		return (
-			<div className='scrm-input-div' style={{width: this.props.width}}>
-				<input	className = "scrm-input-text"
-						type="text"
-						id = {this.props.id}
-						name = {this.props.name}
-						value = {this.rtnVal(this.props.value)}
-						placeholder = {this.props.placeholder}
-						minLength =  {this.props.minLength}
-						maxLength = {this.props.maxLength}
-						readOnly = {this.props.readOnly}
-						disabled = {this.props.disabled}
-						onChange = {(e) => this.props.onChange(e)}
-						onKeyPress= {(e) => this.props.onKeyPress(e)}
-						onBlur = {(e) => {this.props.onBlur(e)}}
-						autocomplete  = 'off'
-				/>
-			</div>
+				<div className='scrm-input-div' style={{width: this.props.width}}>
+					<input	className = "scrm-input-text"
+							type="text"
+							id = {this.props.id}
+							name = {this.props.name}
+							value = {this.rtnVal(this.props.value)}
+							placeholder = {this.props.placeholder}
+							minLength =  {this.props.minLength}
+							maxLength = {this.props.maxLength}
+							readOnly = {this.props.readOnly}
+							disabled = {this.props.disabled}
+							onChange = {(e) => this.props.onChange(e)}
+							onKeyPress= {(e) => this.props.onKeyPress(e)}
+							onBlur = {(e) => {this.props.onBlur(e)}}
+							autoComplete  = 'off'
+							tooltip="ss"
+					/>
+				</div>
 		);
 	}
 }
@@ -201,7 +203,7 @@ class TextPasswdfield extends React.Component {
 					readOnly = {this.props.readOnly}
 					onChange = {(e) => this.props.onChange(e)}
 					onKeyPress= {(e) => this.props.onKeyPress(e)}
-					autocomplete  = 'off'
+					autoComplete  = 'off'
 				/>
 			</div>
 		);

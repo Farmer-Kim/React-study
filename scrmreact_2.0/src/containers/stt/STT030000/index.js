@@ -2,10 +2,10 @@
 import React from 'react';
 
 import {
-	ComponentPanel, FullPanel,  RFloatArea, Table, SearchPanel} from 'components';
+	ComponentPanel, FullPanel,  RFloatArea, RelativeGroup, LFloatArea, FlexPanel, SearchPanel} from 'components';
 //버튼 컴포넌트
 import {BasicButton as Button, Label} from 'components';
-import {RangeInputCalendar, Selectbox} from 'components';
+import {RangeInputCalendar, Selectbox, Textfield} from 'components';
 import {Grid} from 'components';
 import {StrLib, TransManager, ComLib, DataLib, newScrmObj, DateLib} from 'common';
 
@@ -36,14 +36,17 @@ class View extends React.Component {
 				[
 					
 					 {headerName: '콜 아이디',	field: 'CALL_ID',		colId: 'CALL_ID',		editable: true, width : '300' }
-					,{headerName: '콜 종류',	field: 'CALL_TP',		colId: 'CALL_TP',		editable: false, width : '130', textAlign: 'center', 
+					,{headerName: '콜구분',	field: 'CALL_TP',		colId: 'CALL_TP',		editable: false, width : '130', textAlign: 'center', 
 						valueFormatter : (params) => { return ComLib.getComCodeName('CMN', params.value,'CALL_TP')}
 					}
-					,{headerName: '등록시간',	field: 'REG_DTM',	    colId: 'REG_DTM',	editable: false, width : '200'}	
+					,{headerName: '작업구분',	field: 'JOB_TP',	    colId: 'JOB_TP',	editable: false, width : '120', textAlign: 'center', 
+						valueFormatter : (params) => { return ComLib.getComCodeName('CMN', params.value,'JOB_TP')}
+					}				
+					,{headerName: '등록일시',	field: 'REG_DTM',	    colId: 'REG_DTM',	editable: false, width : '200'}	
 					,{headerName: '센터',		field: 'CENT_NM',		colId: 'CENT_NM',	editable: false, width : '120'}
 					,{headerName: '팀',			field: 'TEAM_NM',	    colId: 'TEAM_NM',	editable: false, width : '120'}					
 					,{headerName: '상담원',	    field: 'CONST_NM',		colId: 'CONST_NM',  editable: false, width : '100', textAlign: 'center'}										
-					,{headerName: 'STT 상태',   field: 'JOB_STATE',    colId: 'JOB_STATE',  editable: false, width : '100', textAlign: 'center', 
+					,{headerName: '작업상태',   field: 'JOB_STATE',    colId: 'JOB_STATE',  editable: false, width : '100', textAlign: 'center', 
 						valueFormatter : (params) => { return ComLib.getComCodeName('STT_JOB_INFO', params.value, 'JOB_STATE') }
 					}
 					,{headerName: '에러코드',	field: 'ERR_CD',		colId: 'ERR_CD',	editable: false, width : '130',
@@ -62,7 +65,7 @@ class View extends React.Component {
 			},
 			rangeCalendarProps : {
 				rgcSearchJob : {
-					label : '작업기간',
+					label : '등록일시',
 					id : 'searchJobDateCalender',
 					strtId : 'searchJobDateCalenderStart',
 					endId : 'searchJobDateCalenderEnd',
@@ -74,7 +77,7 @@ class View extends React.Component {
 				selJobStateSearch : {
 					id : 'selJobStateSearch',
 					dataset : ComLib.convComboList(ComLib.getCommCodeList('STT_JOB_INFO', 'JOB_STATE'), newScrmObj.constants.select.argument.all),
-					width : '100%',
+					width : 120,
 					selected : 0,
 					disabled : false,
 					label : "작업상태"
@@ -82,14 +85,14 @@ class View extends React.Component {
 				selCenterList : {
 					id : 'selCenterList',
 					dataset : ComLib.convComboList(ComLib.getCentList(), newScrmObj.constants.select.argument.all),
-					width : '100%',
+					width : 120,
 					selected : 0,
 					disabled : false,
 					label : "센터"
 				},
 				selTeamList : {
 					id : 'selTeamList',
-					width : '100%',
+					width : 120,
 					selected : 0,
 					disabled : false,
 					label : "팀",
@@ -98,7 +101,7 @@ class View extends React.Component {
 				},
 				selUserList : {
 					id : 'selUserList',
-					width : '100%',
+					width : 120,
 					selected : 0,
 					disabled : false,
 					label : "상담원명",
@@ -106,7 +109,7 @@ class View extends React.Component {
 				},
 				selReqUserList : {
 					id : 'selReqUserList',
-					width : '100%',
+					width : 120,
 					selected : 0,
 					disabled : false,
 					label : "요청자명",
@@ -114,17 +117,16 @@ class View extends React.Component {
 				}
 			},
 			textFieldProps : {
-				txtSearchCusNm : {
-					id : 'txtSearchCusNm',
-					name : 'txtSearchCusNm',
+				iptSearch : {
+					id : 'iptSearch',
+					name : 'iptSearch',
 					value : '',
 					placeholder : '',
 					minLength : 1,
-					maxLength : 10,
+					maxLength : 255,
 					readOnly : false,
 					disabled : false,
-					label : '고객성명',
-					width : '100%'
+					label : '콜아이디',
 					
 				}
 			},
@@ -230,6 +232,7 @@ class View extends React.Component {
 
 				transManager.addDataset('dsSrchParamInfo', [{ JOB_START_DATE: state.rangeCalendarProps.rgcSearchJob.startDate
 					                                       ,  JOB_END_DATE  : state.rangeCalendarProps.rgcSearchJob.endDate  
+														   ,  CALL_ID       : state.textFieldProps.iptSearch.value
 					                                       ,  JOB_STATE     : state.selectboxProps.selJobStateSearch.value
 					                                       ,  CENT_CD       : state.selectboxProps.selCenterList.value
 					                                       ,  TEAM_CD       : state.selectboxProps.selTeamList.value
@@ -239,6 +242,7 @@ class View extends React.Component {
 				}]);
 				state.lastStartDate = state.rangeCalendarProps.rgcSearchJob.startDate;
 			    state.lastEndDate   = state.rangeCalendarProps.rgcSearchJob.endDate;
+			    state.lastCallid   = state.textFieldProps.iptSearch.value;
 			    state.lastJobState  = state.selectboxProps.selJobStateSearch.value;
 			    state.lastCenter    = state.selectboxProps.selCenterList.value;
 			    state.lastYeam      = state.selectboxProps.selTeamList.value;
@@ -261,6 +265,7 @@ class View extends React.Component {
 
 				transManager.addDataset('dsSrchParamInfo', [{ JOB_START_DATE: state.lastStartDate
 														   ,  JOB_END_DATE  : state.lastEndDate  
+														   ,  CALL_ID       : state.lastCallid  
 														   ,  JOB_STATE     : state.lastJobState
 														   ,  CENT_CD       : state.lastCenter
 														   ,  TEAM_CD       : state.lastYeam
@@ -401,6 +406,7 @@ class View extends React.Component {
 		},
 		grid: {
 			onActionCellClicked : (e) => {
+				console.log("action cell clicked STT030000")
 				console.log(e)
 				let option = { width: '600px', height: '740px', modaless: true, UUID: e.data.STT_UNQ, callId : e.data.CALL_ID, useUuid: true}
 				ComLib.openPlayer(option);
@@ -433,10 +439,10 @@ class View extends React.Component {
 		input : {
 			onChange : (e) => {
 				switch (e.target.id) {
-					case 'txtSearchCusNm' :
+					case 'iptSearch' :
 						this.setState({...this.state
 							, textFieldProps : { ...this.state.textFieldProps
-								,txtSearchCusNm : { ...this.state.textFieldProps.txtSearchCusNm, value : e.target.value }
+								,iptSearch : { ...this.state.textFieldProps.iptSearch, value : e.target.value }
 							}});
 					break;
 					default : break;
@@ -444,7 +450,7 @@ class View extends React.Component {
 			},
 			onKeyPress: (e) => {
 				switch (e.target.id) {
-				case 'txtSearchCusNm' :
+				case 'iptSearch' :
 					if (e.key === 'Enter') {
 						if(this.validation("STT030000_R01")) {
 							this.handler.setDs('STT030000_R01');	
@@ -468,24 +474,35 @@ class View extends React.Component {
 	render () {
 		return (
 			<React.Fragment>
-				<FullPanel>
+				<FullPanel>					
 					<SearchPanel>
-					<Table  
-							id="tblSrchUsrMenuInfo" 
-							colGrp = {[{width: '5%'}, {width: '16%'}, {width: '5%'}, {width: '11%'},{width: '5%'}, {width: '11%'},{width: '5%'}, {width: '11%'},{width: '5%'}, {width: '11%'}, {width: '8%'}]}
-							tbData = {[
-								[  	{type : 'D', value : <div style={{marginTop:'-9px'}}><Label value={this.state.rangeCalendarProps.rgcSearchJob.label} req={true}/></div>},
-									{type : 'D', value :
+						<RelativeGroup>
+							<LFloatArea>
+								<FlexPanel>
+									<Label value={this.state.rangeCalendarProps.rgcSearchJob.label} req={true}/>
 									<RangeInputCalendar
-										id = {this.state.rangeCalendarProps.rgcSearchJob.id}
-										strtId  = {this.state.rangeCalendarProps.rgcSearchJob.strtId}
-										endId  = {this.state.rangeCalendarProps.rgcSearchJob.endId}	
+										id        = {this.state.rangeCalendarProps.rgcSearchJob.id}
+										strtId    = {this.state.rangeCalendarProps.rgcSearchJob.strtId}
+										endId     = {this.state.rangeCalendarProps.rgcSearchJob.endId}	
 										startDate = {this.state.rangeCalendarProps.rgcSearchJob.startDate}
-										endDate = {this.state.rangeCalendarProps.rgcSearchJob.endDate}
-										onChange = {this.event.inputcalendar.onChange}
-									/>},
-									{type : 'D', value :<div style={{marginTop:'-9px', marginLeft: '5px'}}><Label value={this.state.selectboxProps.selCenterList.label}/></div> },
-									{type : 'D', value :
+										endDate   = {this.state.rangeCalendarProps.rgcSearchJob.endDate}
+										onChange  = {this.event.inputcalendar.onChange}
+									/>
+									<Label value="콜아이디"/>
+									<Textfield
+										width       = {300}
+										id          = {this.state.textFieldProps.iptSearch.id}
+										name        = {this.state.textFieldProps.iptSearch.name}
+										value       = {this.state.textFieldProps.iptSearch.value}
+										placeholder = {this.state.textFieldProps.iptSearch.placeholder}
+										minLength   = {this.state.textFieldProps.iptSearch.minLength}
+										maxLength   = {this.state.textFieldProps.iptSearch.maxLength}
+										readOnly    = {this.state.textFieldProps.iptSearch.readOnly}
+										disabled    = {this.state.textFieldProps.iptSearch.disabled}
+										onChange    = {this.event.input.onChange}
+										onKeyPress  = {this.event.input.onKeyPress}
+									/>
+									<Label value={this.state.selectboxProps.selCenterList.label}/>
 									<Selectbox
 										id = {this.state.selectboxProps.selCenterList.id}
 										dataset = {this.state.selectboxProps.selCenterList.dataset}
@@ -493,9 +510,8 @@ class View extends React.Component {
 										width = {this.state.selectboxProps.selCenterList.width}
 										disabled = {this.state.selectboxProps.selCenterList.disabled}
 										onChange = {this.event.selectbox.onChange}
-									/>},
-									{type : 'D', value : <div style={{marginTop:'-9px', marginLeft: '5px'}}><Label value={this.state.selectboxProps.selTeamList.label}/></div>},
-									{type : 'D', value :
+									/>
+									<Label value={this.state.selectboxProps.selTeamList.label}/>
 									<Selectbox
 									 	id = {this.state.selectboxProps.selTeamList.id}
 									 	dataset = {ComLib.convComboList(ComLib.getTeamList(this.state.dsSrch), newScrmObj.constants.select.argument.all)}
@@ -503,19 +519,17 @@ class View extends React.Component {
 									 	width = {this.state.selectboxProps.selTeamList.width}
 										disabled = {this.state.selectboxProps.selTeamList.disabled}
 									 	onChange = {this.event.selectbox.onChange}
-									 />},
-									{type : 'D', value :<div style={{marginTop:'-9px', marginLeft: '5px'}}><Label value={this.state.selectboxProps.selUserList.label}/></div> },
-									{type : 'D', value :
-									 <Selectbox
+									/>
+									<Label value={this.state.selectboxProps.selUserList.label}/>
+									<Selectbox
 										id = {this.state.selectboxProps.selUserList.id}
 										dataset = {ComLib.convComboList(ComLib.getConstList(this.state.dsSrch), newScrmObj.constants.select.argument.all)}
 										value = {this.state.dsSrch.records[0]["CONST_CD"]}
 										width = {this.state.selectboxProps.selUserList.width}
 										disabled = {this.state.selectboxProps.selUserList.disabled}
 										onChange= {this.event.selectbox.onChange}
-									 />,},
-									{type : 'D', value :<div style={{marginTop:'-9px', marginLeft: '5px'}}><Label value={this.state.selectboxProps.selJobStateSearch.label}/></div>},
-									{type : 'D', value :
+									/>
+									<Label value={this.state.selectboxProps.selJobStateSearch.label}/>
 									<Selectbox
 										id       = {this.state.selectboxProps.selJobStateSearch.id}
 										dataset  = {this.state.selectboxProps.selJobStateSearch.dataset}
@@ -523,24 +537,24 @@ class View extends React.Component {
 										disabled = {this.state.selectboxProps.selJobStateSearch.disabled}
 										selected = {this.state.selectboxProps.selJobStateSearch.selected}
 										onChange = {this.event.selectbox.onChange}
-									/>},		
-									{type : 'D', value : 
-									<RFloatArea>
-										<Button 
-											id = {this.state.buttonProps.btnSearchProps.id}
-											color = 'blue' 
-											value = {this.state.buttonProps.btnSearchProps.value}
-											disabled = {this.state.buttonProps.btnSearchProps.disabled}
-											hidden = {this.state.buttonProps.btnSearchProps.hidden}
-											onClick = {this.event.button.onClick}
-											icon = {'srch'}
-											innerImage={true}
-											fiiled = "o"
-										/>
-									</RFloatArea>},
-									],
-							]}
-						/>
+									/>
+								</FlexPanel>
+							</LFloatArea>
+							<RFloatArea>
+								<Button 
+									id = {this.state.buttonProps.btnSearchProps.id}
+									color = 'blue' 
+									value = {this.state.buttonProps.btnSearchProps.value}
+									disabled = {this.state.buttonProps.btnSearchProps.disabled}
+									hidden = {this.state.buttonProps.btnSearchProps.hidden}
+									onClick = {this.event.button.onClick}
+									icon = {'srch'}
+									innerImage={true}
+									fiiled = "o"
+									mt = {5}
+								/>
+							</RFloatArea>
+						</RelativeGroup>
 					</SearchPanel>
 					<ComponentPanel>
 						<Grid

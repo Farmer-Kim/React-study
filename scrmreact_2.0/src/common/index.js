@@ -1737,6 +1737,7 @@ class TransManager {
 				common: '/json.service.do',
 				upload: '/upload.service.do',
 				sttSearch: '/sttSearch.service.do',
+				sftp: '/sftp.service.do',
 			},
 			errorcode: {
 				SUCCESS: '0',

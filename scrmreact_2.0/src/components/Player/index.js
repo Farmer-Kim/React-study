@@ -360,6 +360,7 @@ class Player extends React.Component {
 				});				
 			} 
 			
+			console.log(this.howler)
 			// this.setWaveForm(res.data.dsRcvSttData[0].FILE_PATH);
 			break;
 			
@@ -615,7 +616,7 @@ class Player extends React.Component {
 						if (txtArr === undefined || txtArr.length === 0) return false;						
 						ComLib.copyText(JSON.parse(txtArr).map((item, key) => {
 							let text = "";
-							text += (item["SPK"] === "R" ? "[상담사]" : "[고객]");
+							text += (item["SPK"] === "A" ? "[상담사]" : "[고객]");
 							text += "[" + this.handler.format(item["POS_START"]/100) + "]";
 							text += item['VALUE'];
 							return text;
@@ -635,7 +636,7 @@ class Player extends React.Component {
 						if (!this.props.options.useUuid) {
 							ComLib.writeTxtFile(JSON.parse(txtArr).map((item, key) => {
 								let text = "";
-								text += (item["SPK"] === "R" ? "[상담사]" : "[고객]");
+								text += (item["SPK"] === "A" ? "[상담사]" : "[고객]");
 								text += "[" + this.handler.format(item["POS_START"]/100) + "]";
 								text += item['VALUE'];
 								return text;
@@ -644,7 +645,7 @@ class Player extends React.Component {
 						} else {
 							ComLib.writeTxtFile(JSON.parse(txtArr).map((item, key) => {
 								let text = "";
-								text += (item["SPK"] === "R" ? "[상담사]" : "[고객]");
+								text += (item["SPK"] === "A" ? "[상담사]" : "[고객]");
 								text += "[" + this.handler.format(item["POS_START"]/100) + "]";
 								text += item['VALUE'];
 								return text;
@@ -1230,7 +1231,7 @@ class Player extends React.Component {
 									{this.state.dsRcvSttAnsData.filter(item => item['ACT_TP'] !== 'e').map((ele, index) => {
 										return (
 											<div key={index} id={playerConstants.listItemDivId.item + (index+1).toString() + this.props.ctrNo} className="scrm-player-list-item-container">
-												<div className={StrLib.isNull(ele['NEW_SPK']) ? (ele['SPK'] !== 'R') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller' : (ele['NEW_SPK'] !== 'R') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller'}>
+												<div className={StrLib.isNull(ele['NEW_SPK']) ? (ele['SPK'] !== 'A') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller' : (ele['NEW_SPK'] !== 'A') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller'}>
 													<div className="scrm-player-list-item-img-div">
 														<span><i className="xi-message-o"></i></span>
 													</div>

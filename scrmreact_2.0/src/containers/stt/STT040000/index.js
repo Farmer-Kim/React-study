@@ -323,17 +323,16 @@ class View extends React.Component {
 					e.files.forEach((item, index) => {
 									
 						let row = item.file
-						
-						row.JOB_ID				= jobId
-						row.JOB_DV_CD			= ComLib.getComCodeValue('STT_TBL_JOB_INFO', 'DV_CD')[0]
-						row.CALL_ID				= row.name + "_" + jobId
+						row.JOB_ID				= jobId;
+						row.JOB_DV_CD			= ComLib.getComCodeValue('STT_TBL_JOB_INFO', 'DV_CD')[0];
+						row.CALL_ID				= row.name;
 
 						//현재는 코드에 반영되어 있는 서버리스트 서버패스의 코드값의 0번째를 셋팅함 PATH 연구소와 대화 필요
 						// row.SERVER_NM			= ComLib.getComCodeValue('SERVER_LIST')[0]
-						row.SERVER_NM			= 'vrm'
+						row.SERVER_NM			= 'rndvrm';
 						//파일 PATH 이지만 연구소에서는 실질적으로 PATH + FILE_NAME 구로조 시스템이 되어 있기 때문에 
 						// row.FILE_PATH 			= ComLib.getComCodeValue('SERVER_PATH')[0] + "/" + item.file.name
-						row.FILE_PATH 			= "/home/vrm/work/" + item.file.name
+						row.FILE_PATH 			= "/home/vrm/work/" + item.file.name;
 						row.FILE_NM   			= item.file.name;
 						row.FILE_SIZE			= item.file.size;
 

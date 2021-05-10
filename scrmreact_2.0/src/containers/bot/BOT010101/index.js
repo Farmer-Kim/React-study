@@ -10,7 +10,7 @@ import {Textfield} from 'components';
 import {Grid} from 'components';
 import {ComLib, DataLib, TransManager, newScrmObj} from 'common';
 
-class SYS080101 extends React.Component {
+class BOT010101 extends React.Component {
 	constructor(props) {
 		super();
 		this.state = {
@@ -29,8 +29,8 @@ class SYS080101 extends React.Component {
 					areaName : '추출 키워드',
 					height   : '580px',
 					header   : [
-									{headerName: '키워드',	 field: 'KEYWORD',	colId: 'KEYWORD', width: 200},
-									{headerName: '가중치',   field: 'SCO',	colId: 'SCO', width: 100},
+									{headerName: '키워드',	 field: 'KWD',	colId: 'KWD', width: 200},
+									{headerName: '가중치',   field: 'KWD_SCO',	colId: 'KWD_SCO', width: 100},
 									{headerName: '사용여부', field: 'USE_FLAG',	colId: 'USE_FLAG',	editable: true, defaultValue : 'Y', width: 150, req: true, resizable: false, textAlign: 'center', singleClickEdit: true,
 										cellEditor: 'agSelectCellEditor',
 										cellEditorParams: { values : ComLib.getComCodeValue('CMN', 'USE_FLAG')},
@@ -61,42 +61,42 @@ class SYS080101 extends React.Component {
 		}
 	}
 	componentDidMount () {
-		console.log(this.props.options.params)
-		let props = this.props.options.params;
+		let props = this.props.options.param;     
 		let state = this.state;
-		state['textFieldProps']['iptSnroNm'].value = props.SNRO_EXPL;
-		state['textFieldProps']['iptSnroSco'].value = props.REQ_SCO;
-		state['textFieldProps']['iptSnroType'].value = ComLib.getComCodeName('CALLBOT_SNRO', props.TYPE_FLAG, 'SNRO_TYPE');
-
+		state['textFieldProps']['iptSnroNm'].value = props.name;
+		state['textFieldProps']['iptSnroSco'].value = props.kwdSco;
+		console.log(props)
 		this.setState(state);
-		this.transaction("SYS080101_R00")
+		this.transaction("BOT010101_R00")	
 	}
 	/*------------------------------------------------------------------------------------------------*/
 	// [4. transaction Event Zone]
 	//  - transaction 관련 정의
 	/*------------------------------------------------------------------------------------------------*/
 	transaction = (...params) => {		
+		console.log("transaction")
 		let serviceid = params[0];
 		let transManager = new TransManager();
 		
+		console.log(serviceid)
 		transManager.setTransId(serviceid);
 		transManager.setTransUrl(transManager.constants.url.common);
 		transManager.setCallBack(this.callback);
 
 		try {
 			switch (serviceid) {
-			case 'SYS080101_R00':
+			case 'BOT010101_R00':
 				transManager.addConfig({
 					dao: transManager.constants.dao.base,
 					crudh: transManager.constants.crudh.read,
-					sqlmapid:"SYS.R_getSnroKeyword",
+					sqlmapid:"BOT.R_getSnroKeyword",
 					datasetsend:"dsSearch",
 					datasetrecv:"dsSnroKeywordListRecv",
 				});
 				
-				let props = this.props.options.params;
+				let props = this.props.options.param;
 
-				transManager.addDataset('dsSearch', [{SNRO_CD: props.SNRO_CD}]);
+				transManager.addDataset('dsSearch', [{ND_UUID: props.id}]);
 				transManager.agent();
 
 				break;
@@ -112,13 +112,13 @@ class SYS080101 extends React.Component {
 	//  - Callback 관련 정의
 	/*------------------------------------------------------------------------------------------------*/
 	callback = (res) => {		
+		console.log(res)
 		switch (res.id) {		
-		case 'SYS080101_R00':
+		case 'BOT010101_R00':
 			if (res.data.dsSnroKeywordListRecv.length > 0) {
 				let dsSnroKeywordListRecv = res.data.dsSnroKeywordListRecv;
 
 				ComLib.setStateInitRecords(this, "dsSnroKeywordList", dsSnroKeywordListRecv);
-
 			}	
 
 			break;
@@ -272,13 +272,13 @@ class SYS080101 extends React.Component {
 			onInsertRow : (e) => {
 				switch (e.id) {
 				case "grdSnroKeyword":
-					let bigCdRecords = this.snroKeywordGrid.gridDataset.records;
+					let snroKwdRecords = this.snroKeywordGrid.gridDataset.records;
 
-					bigCdRecords[e.index].TEMP_CD = this.maxTempBigCd + 1;
+					snroKwdRecords[e.index].TEMP_CD = this.maxTempBigCd + 1;
 
 					this.maxTempBigCd ++;
 
-					this.snroKeywordGrid.gridDataset.setRecords(bigCdRecords);
+					this.snroKeywordGrid.gridDataset.setRecords(snroKwdRecords);
 
 					this.snroKeywordGridApi.setRowData(this.snroKeywordGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
 				
@@ -371,19 +371,10 @@ class SYS080101 extends React.Component {
 										<FlexPanel>
 											<Label value="시나리오"/>
 											<Textfield
-												width       = {200}
+												width       = {250}
 												id          = {this.state.textFieldProps.iptSnroNm.id}
 												name        = {this.state.textFieldProps.iptSnroNm.name}
 												value       = {this.state.textFieldProps.iptSnroNm.value}
-												readOnly    = {true}
-												disabled    = {false}
-											/>
-											<Label value="시나리오 타입"/>
-											<Textfield
-												width       = {150}
-												id          = {this.state.textFieldProps.iptSnroType.id}
-												name        = {this.state.textFieldProps.iptSnroType.name}
-												value       = {this.state.textFieldProps.iptSnroType.value}
 												readOnly    = {true}
 												disabled    = {false}
 											/>
@@ -396,7 +387,7 @@ class SYS080101 extends React.Component {
 												placeholder = {this.state.textFieldProps.iptSnroSco.placeholder}
 												minLength   = {1}
 												maxLength   = {3}
-												readOnly    = {false}
+												readOnly    = {true}
 												disabled    = {false}
 												onChange    = {this.event.input.onChange}
 												onKeyPress  = {this.event.input.onKeyPress}
@@ -412,6 +403,10 @@ class SYS080101 extends React.Component {
 									header      = {this.state.grdProps.grdSnroKeyword.header}
 									data        = {this.state.dsSnroKeywordList}
 									height      = {this.state.grdProps.grdSnroKeyword.height}
+									onGridReady        = {this.event.grid.onGridReady}
+									onDeleteRow        = {this.event.grid.onDeleteRow}
+									onInsertRow        = {this.event.grid.onInsertRow}
+
 									rowNum      = {true}
 									addRowBtn   = {true}
 									delRowBtn   = {true}
@@ -438,4 +433,4 @@ class SYS080101 extends React.Component {
 	}
 }
 
-export default SYS080101;
+export default BOT010101;

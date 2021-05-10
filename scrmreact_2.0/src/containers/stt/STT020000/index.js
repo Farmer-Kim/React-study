@@ -28,7 +28,7 @@ class View extends React.Component {
 				},
 			},
 			gridSttResultList : {
-				areaName : 'STT결과조회',
+				areaName : 'STT결과검색',
 				id : 'gridSttResultList',
 				header : 				
 				[					
@@ -215,46 +215,47 @@ class View extends React.Component {
 
 		let must = [];
 		let searchTxt = this.state.textFieldProps.iptSearch.value; 
-	
+		let startDate = "";
+		let endDate   = "";
+		let callTp    = "";
+		let user      = "";
+		let searchTp  = "";
+		
+		if (New) {
+			startDate = this.state.rangeCalendarProps.rgcSearchJob.startDate;
+			endDate   = this.state.rangeCalendarProps.rgcSearchJob.endDate;
+			callTp    = this.state.selectboxProps.selCallTP.value;
+			user      = this.state.selectboxProps.selUserList.value;
+			searchTp  = this.state.selectboxProps.selSearchType.value;
+			this.setState({...this.state, lastSearchTxt: searchTxt, lastStartDate: startDate, lastEndDate: endDate, lastCallTp: callTp, lastUser : user, lastSearchType: searchTp})
+
+		} else {
+			searchTxt = this.state.lastSearchTxt;
+			startDate = this.state.lastStartDate;
+			endDate   = this.state.lastEndDate;
+			callTp    = this.state.lastCallTp;
+			user      = this.state.lastUser;
+			
+		}	
+		
 		if (searchTP !== 'WORD') {
 			if (searchTP !== 'UUID') {
 				if (New) {
 					must.push({"match":{"call_id": searchTxt}});
+					
 				} else {
 					must.push({"match":{"call_id": this.state.lastSearchTxt}});
 				}
+								
 			} else {
 				if (New) {
 					must.push({"match":{"_id": searchTxt}});
 				} else {
 					must.push({"match":{"_id": this.state.lastSearchTxt}});
 				}
+
 			}
-		} else {				
-			let startDate = "";
-			let endDate   = "";
-			let callTp    = "";
-			let user      = "";
-			let searchTp  = "";
-			
-			if (New) {
-				startDate = this.state.rangeCalendarProps.rgcSearchJob.startDate;
-				endDate   = this.state.rangeCalendarProps.rgcSearchJob.endDate;
-				callTp    = this.state.selectboxProps.selCallTP.value;
-				user      = this.state.selectboxProps.selUserList.value;
-				searchTp  = this.state.selectboxProps.selSearchType.value;
-
-				this.setState({...this.state, lastSearchTxt: searchTxt, lastStartDate: startDate, lastEndDate: endDate, lastCallTp: callTp, lastUser : user, lastSearchType: searchTp})
-
-			} else {
-				searchTxt = this.state.lastSearchTxt;
-				startDate = this.state.lastStartDate;
-				endDate   = this.state.lastEndDate;
-				callTp    = this.state.lastCallTp;
-				user      = this.state.lastUser;
-				
-			}		
-
+		} else {	
 			if (!StrLib.isNull(searchTxt)) {
 				if (searchTxt.search(/\s/) !== -1) { 
 					must.push({"match":{"stt_rslt.mlf": {"query": searchTxt, "operator":"and"}}});
@@ -409,7 +410,6 @@ class View extends React.Component {
 			searchChar = this.state.lastSearchTxt;
 		}
 		
-
 		console.log(resData)
 		for (let i = 0; i < orgData.length; i ++) {
 			gridData.push({});
@@ -578,7 +578,6 @@ class View extends React.Component {
 												, selCallTP : 
 													{...this.state.selectboxProps.selCallTP, selected : e.target.selectedIndex, value : e.target.value}
 										}});
-					ComLib.setStateValue(this, "dsSrch", 0, "CENT_CD", e.target.value, "TEAM_CD", "");
 					
 				break;
 				case 'selCenterList':
@@ -615,7 +614,7 @@ class View extends React.Component {
 
 			},
 			onActionCellClicked : (e) => {
-				let option = { width: '600px', height: '740px', modaless: true, UUID : e.data.uuid, useUuid: true, srchText: e.data.searchTxt}
+				let option = { width: '600px', height: '740px', modaless: true, UUID : e.data.uuid, useUuid: true, srchText: this.state.lastSearchType === "WORD" ? e.data.searchTxt : null}
 				ComLib.openPlayer(option);
 				
 			},
