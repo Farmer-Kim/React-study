@@ -1,7 +1,7 @@
 function getInfos() {
 	var infos = {
 		prod: {
-			host: '192.168.0.27',
+			host: '172.16.0.30',
 			domain: 'itfact.iptime.org',
 			port: '8080',
 			domainPort: '12388'
