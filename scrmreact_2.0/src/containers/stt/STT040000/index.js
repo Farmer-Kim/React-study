@@ -363,7 +363,7 @@ class View extends React.Component {
 		grid: {
 			onActionCellClicked : (e) => {
 				console.log(e.data)
-				let option = { width: '600px', height: '740px', modaless: true, UUID: e.data.STT_UNQ, callId : e.data.CALL_ID, useUuid: true}
+				let option = { width: '600px', height: '740px', modaless: true, UUID: e.data.STT_UNQ, JOB_TP: e.data.JOB_TP, callId : e.data.CALL_ID, useUuid: true}
 				ComLib.openPlayer(option);
 
 				

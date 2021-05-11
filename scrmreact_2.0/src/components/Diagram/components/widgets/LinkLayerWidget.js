@@ -43,7 +43,7 @@ export class LinkLayerWidget extends React.Component {
       };
 
       return (
-        <LinkWidget {...props}>
+        <LinkWidget {...props}>          
           {React.cloneElement(generatedLink, { pointAdded: this.props.pointAdded })}
         </LinkWidget>
       );
@@ -62,7 +62,7 @@ export class LinkLayerWidget extends React.Component {
     };
 
     return (
-      <svg style={svgStyle}>
+      <svg style={svgStyle}>        
         {this.generateLinks()}
       </svg>
     );

@@ -20,11 +20,19 @@ import BOT010100 from '../BOT010100';
 class View extends React.Component {
 	constructor(props) {
 		super(props);
+		
+		this.saveNode = null;
+		this.saveLink = null;
+
 		this.state = {
 			dsSnroInitTTSList: DataLib.datalist.getInstance(),
 			dsSnroNodeList   : DataLib.datalist.getInstance(),
 			dsSnroLinkList   : DataLib.datalist.getInstance(),
-			dsSnroList       : [],
+			
+			dsSnroNode: [],
+			dsSnroLink: [],
+
+			dsSnroList : [],
 			actionData : [],
 			btnProps : {
 				btnSearch : {
@@ -127,10 +135,84 @@ class View extends React.Component {
 
 			break;
 		case 'BOT010000_H01':
-			// console.log(this.state.transLink)
-			// console.log(this.state.dsSnroLinkList.records)
-			// console.log(this.state.transNode)
-			// console.log(this.state.dsSnroNodeList.records)
+
+			let orgNode = this.state.dsSnroNodeList.records;
+			let saveNode = [];
+
+			for (let i = 0; i < orgNode.length; i ++) {
+				let isExist = false;
+				for (let j = 0; j < params[1].length; j ++) {
+					if (params[1][j].ND_UUID === orgNode[i].ND_UUID) {
+						isExist = true;
+						break;
+					}
+				}
+				if (!isExist) {
+					saveNode.push({EXTRAS    : {}
+								 , ND_COLOR  : orgNode[i].ND_COLOR
+								 , ND_KWD_SCO: orgNode[i].ND_KWD_SCO
+								 , ND_NM     : orgNode[i].ND_NM
+								 , ND_PORTS  : orgNode[i].ND_PORTS
+								 , ND_PROC_TP: orgNode[i].ND_PROC_TP
+								 , ND_TP     : orgNode[i].ND_TP
+								 , ND_TTS_ID : orgNode[i].ND_TTS_ID
+								 , ND_UUID   : orgNode[i].ND_UUID
+								 , ND_X      : orgNode[i].ND_X
+								 , ND_Y      : orgNode[i].ND_Y
+								 , rowtype   : "d"})
+				}
+			}
+			for (let j = 0; j < params[1].length; j ++) {
+				saveNode.push(params[1][j])
+			}
+			
+			let orgLink = this.state.dsSnroLinkList.records;
+			let saveLink = [];
+
+			for (let i = 0; i < orgLink.length; i ++) {
+				let isExist = false;
+				for (let j = 0; j < params[2].length; j ++) {
+					if (params[2][j].LK_UUID === orgLink[i].LK_UUID) {
+						isExist = true;
+						break;
+					}
+				}
+  
+
+				if (!isExist) {
+					saveLink.push({LK_EN_ND     : orgLink[i].LK_EN_ND
+						         , LK_EN_ND_PORT: orgLink[i].LK_EN_ND_PORT
+						         , LK_POINT     : orgLink[i].LK_POINT
+						         , LK_ST_ND     : orgLink[i].LK_ST_ND
+						         , LK_ST_ND_PORT: orgLink[i].LK_ST_ND_PORT
+						         , LK_TP        : orgLink[i].LK_TP
+						         , LK_UUID      : orgLink[i].LK_UUID
+								 , rowtype      : "d"})
+				}
+			}
+			for (let j = 0; j < params[2].length; j ++) {
+				if (params[2][j].rowtype !== "r") {
+					saveLink.push(params[2][j])
+				} else {					
+					for (let i = 0; i < orgLink.length; i ++) {
+						if (orgLink[i].LK_UUID === params[2][j].LK_UUID) {
+							saveLink.push({LK_EN_ND     : params[2][j].LK_EN_ND
+										 , LK_EN_ND_PORT: params[2][j].LK_EN_ND_PORT
+										 , LK_POINT     : params[2][j].LK_POINT
+										 , LK_ST_ND     : params[2][j].LK_ST_ND
+										 , LK_ST_ND_PORT: params[2][j].LK_ST_ND_PORT
+										 , LK_TP        : params[2][j].LK_TP
+										 , LK_UUID      : params[2][j].LK_UUID
+										 , rowtype      : params[2][j].LK_POINT === orgLink[i].LK_POINT ? 'r' : 'u'})
+										
+							break;
+						}
+					}
+				}				
+			}
+
+			this.saveNode = saveNode;
+			this.saveLink = saveLink;
 			break;
 		default: break;
 		}
@@ -200,6 +282,27 @@ class View extends React.Component {
 				transManager.agent();
 
 				break
+			case 'BOT010000_H01':
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.handle,
+					sqlmapid   : "BOT.H_handleSnroLink",
+					datasetsend: "dsLinkList",
+				});
+
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.handle,
+					sqlmapid   : "BOT.H_handleSnroNode",
+					datasetsend: "dsNodeList"
+				});
+
+				transManager.addDataset('dsLinkList', this.saveLink);
+				transManager.addDataset('dsNodeList', this.saveNode);
+
+				transManager.agent();
+
+				break;
 			default: break;
 			}
 		} catch (err) {
@@ -242,16 +345,14 @@ class View extends React.Component {
 				let { dsSnroNodeListRecv, dsSnroLinkListRecv } = res.data;
 				ComLib.setStateInitRecords(this, "dsSnroNodeList", dsSnroNodeListRecv);
 				ComLib.setStateInitRecords(this, "dsSnroLinkList", dsSnroLinkListRecv);
-				let dsSnroList = {node: null, link: null};
-				dsSnroList.node = this.state.dsSnroNodeList.records;
-				dsSnroList.link = this.state.dsSnroLinkList.records;
 				
 
 				// react diagram npm 자체 오류로 2번 로딩 해줘야함 
 				// 한번만 로딩시 링크 생성 안됨 추후 수정 요망
 				// 노드와 링크를 따로 props 로 던져 줘서 componet 내부에서 2번 랜더링을 하는 방법을 시도 해 봐야 겟음
-				this.setState({...this.state, dsSnroList: dsSnroList})
-				this.setState({...this.state, dsSnroList: dsSnroList})
+				this.setState({...this.state, dsSnroNode: dsSnroNodeListRecv});
+				this.setState({...this.state, dsSnroLink: dsSnroLinkListRecv});
+		
 
 			} else {
 				ComLib.setStateInitRecords(this, "dsSnroNodeList", []);
@@ -260,6 +361,9 @@ class View extends React.Component {
 			}
 			break;
 
+		case 'BOT010000_H01':
+
+			break;
 		default : break;
 		}
 	}
@@ -294,9 +398,7 @@ class View extends React.Component {
 			onSave : (e) => {
 				let transNode = e.node;
 				let transLink = e.link;
-				console.log(transNode)
-				console.log(transLink)
-				if (this.validation("BOT010000_H01", transNode, transLink)) this.transaction("BOT010000_H01", transNode, transLink);
+				if (this.validation("BOT010000_H01", transNode, transLink)) this.transaction("BOT010000_H01");
 				
 			}
 		}
@@ -344,7 +446,8 @@ class View extends React.Component {
 							height     = "650px"
 							tts        = {this.state.dsSnroInitTTSList.records}
 							onSave     = {this.event.diagram.onSave}
-							dsSnroList = {this.state.dsSnroList}
+							dsSnroNode = {this.state.dsSnroNode}
+							dsSnroLink = {this.state.dsSnroLink}
 							ref = "refDiagram"							
 						/>		
 					</SubFullPanel>

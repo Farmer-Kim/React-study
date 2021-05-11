@@ -49,21 +49,21 @@ export class DiagramModel extends BaseEntity {
       this.addLink(linkOb);
     });
     // 링크 랜더링 안되는 버스 수정 
-    setTimeout(() => {
-			_.forEach(object.links,(link) => {
-				let linkOb = diagramEngine.getInstanceFactory(link._class).getInstance();
-				linkOb.deSerialize(link);
+    // setTimeout(() => {
+		// 	_.forEach(object.links,(link) => {
+		// 		let linkOb = diagramEngine.getInstanceFactory(link._class).getInstance();
+		// 		linkOb.deSerialize(link);
 
-        if (link.target) {
-          linkOb.setTargetPort(this.getNode(link.target).getPortFromID(link.targetPort));
-        }
-        if (link.source) {
-          linkOb.setSourcePort(this.getNode(link.source).getPortFromID(link.sourcePort));
-        }
+    //     if (link.target) {
+    //       linkOb.setTargetPort(this.getNode(link.target).getPortFromID(link.targetPort));
+    //     }
+    //     if (link.source) {
+    //       linkOb.setSourcePort(this.getNode(link.source).getPortFromID(link.sourcePort));
+    //     }
 
-        this.addLink(linkOb);
-      });
-    }, 100)
+    //     this.addLink(linkOb);
+    //   });
+    // }, 100)
   }
 
   serializeDiagram() {
@@ -95,7 +95,6 @@ export class DiagramModel extends BaseEntity {
       
       return;
     }
-    console.log(" not supressListener")
 
     this.itterateListeners(listener => {
       if (listener.selectionCleared) {
@@ -105,8 +104,8 @@ export class DiagramModel extends BaseEntity {
   }
 
   getSelectedItems() {
-    console.log("getSelectedItems")
-    console.log(_.flatMap(this.links, node => node.points))
+    // console.log("getSelectedItems")
+    // console.log(_.flatMap(this.links, node => node.points))
     return [
       // Nodes
       ..._.filter(this.nodes, node => node.isSelected()),

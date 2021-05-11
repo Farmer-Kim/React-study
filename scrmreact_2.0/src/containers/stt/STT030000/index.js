@@ -73,7 +73,23 @@ class View extends React.Component {
 					endDate : DateLib.getToday(),
 				}
 			},
-			selectboxProps : {
+			selectboxProps : {				
+				selSearchType: {
+					id : 'selSearchType',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList('STT_JOB_INFO', 'SCH_TP2'), newScrmObj.constants.select.argument.select),
+					width : 120,
+					value :'',
+					selected : 0,
+					disabled : false,
+				},
+				selCallTP : {
+					id : 'selCallTP',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList('CMN', 'CALL_TP'), newScrmObj.constants.select.argument.all),
+					width : 120,
+					selected : 0,
+					disabled : false,
+					label : "콜구분"
+				},
 				selJobStateSearch : {
 					id : 'selJobStateSearch',
 					dataset : ComLib.convComboList(ComLib.getCommCodeList('STT_JOB_INFO', 'JOB_STATE'), newScrmObj.constants.select.argument.all),
@@ -82,39 +98,14 @@ class View extends React.Component {
 					disabled : false,
 					label : "작업상태"
 				},
-				selCenterList : {
-					id : 'selCenterList',
-					dataset : ComLib.convComboList(ComLib.getCentList(), newScrmObj.constants.select.argument.all),
+				selJobTP : {
+					id : 'selJobTP',
+					dataset : ComLib.convComboList(ComLib.getCommCodeList('CMN', 'JOB_TP'), newScrmObj.constants.select.argument.all),
 					width : 120,
 					selected : 0,
 					disabled : false,
-					label : "센터"
+					label : "작업구분"
 				},
-				selTeamList : {
-					id : 'selTeamList',
-					width : 120,
-					selected : 0,
-					disabled : false,
-					label : "팀",
-					value : '',
-
-				},
-				selUserList : {
-					id : 'selUserList',
-					width : 120,
-					selected : 0,
-					disabled : false,
-					label : "상담원명",
-					value : '',
-				},
-				selReqUserList : {
-					id : 'selReqUserList',
-					width : 120,
-					selected : 0,
-					disabled : false,
-					label : "요청자명",
-					value : '',
-				}
 			},
 			textFieldProps : {
 				iptSearch : {
@@ -126,12 +117,11 @@ class View extends React.Component {
 					maxLength : 255,
 					readOnly : false,
 					disabled : false,
-					label : '콜아이디',
+					label : '',
 					
 				}
 			},
 			dsSttResultInfo : DataLib.datalist.getInstance(),
-			dsSrch: DataLib.datalist.getInstance([{CENT_CD: ComLib.setOrgComboValue("CENT_CD"), TEAM_CD: ComLib.setOrgComboValue("TEAM_CD"), USR_CD: ""}]),
 			// dsGrp: DataLib.datalist.getInstance([{CENT_CD: "", TEAM_CD: ComLib.setOrgComboValue("TEAM_CD"), USR_CD: ""}]), disabled : false,			
 		}
 		this.event.button.onClick = this.event.button.onClick.bind(this);
@@ -232,21 +222,21 @@ class View extends React.Component {
 
 				transManager.addDataset('dsSrchParamInfo', [{ JOB_START_DATE: state.rangeCalendarProps.rgcSearchJob.startDate
 					                                       ,  JOB_END_DATE  : state.rangeCalendarProps.rgcSearchJob.endDate  
-														   ,  CALL_ID       : state.textFieldProps.iptSearch.value
+					                                       ,  SCH_TP        : state.selectboxProps.selSearchType.value
+														   ,  SCH_VAL       : state.textFieldProps.iptSearch.value
 					                                       ,  JOB_STATE     : state.selectboxProps.selJobStateSearch.value
-					                                       ,  CENT_CD       : state.selectboxProps.selCenterList.value
-					                                       ,  TEAM_CD       : state.selectboxProps.selTeamList.value
-					                                       ,  CONST_CD      : state.selectboxProps.selUserList.value
+					                                       ,  CALL_TP       : state.selectboxProps.selCallTP.value
+														   ,  JOB_TP	    : state.selectboxProps.selJobTP.value
 					                                       ,  QUERY_START   : pageStart
 					                                       ,  QUERY_LIMIT   : pageLimit
 				}]);
 				state.lastStartDate = state.rangeCalendarProps.rgcSearchJob.startDate;
 			    state.lastEndDate   = state.rangeCalendarProps.rgcSearchJob.endDate;
-			    state.lastCallid   = state.textFieldProps.iptSearch.value;
+			    state.lastSearchTP  = state.selectboxProps.selSearchType.value;
+			    state.lastSearchVal = state.textFieldProps.iptSearch.value;
 			    state.lastJobState  = state.selectboxProps.selJobStateSearch.value;
-			    state.lastCenter    = state.selectboxProps.selCenterList.value;
-			    state.lastYeam      = state.selectboxProps.selTeamList.value;
-			    state.lastUser      = state.selectboxProps.selUserList.value;
+			    state.lastCallTp    = state.selectboxProps.selCallTP.value;
+			    state.lastJobTp     = state.selectboxProps.selJobTP.value;
 
 				this.setState(state);
 
@@ -265,11 +255,11 @@ class View extends React.Component {
 
 				transManager.addDataset('dsSrchParamInfo', [{ JOB_START_DATE: state.lastStartDate
 														   ,  JOB_END_DATE  : state.lastEndDate  
-														   ,  CALL_ID       : state.lastCallid  
+														   ,  SCH_TP        : state.lastSearchTP  
+														   ,  SCH_VAL       : state.lastSearchVal
 														   ,  JOB_STATE     : state.lastJobState
-														   ,  CENT_CD       : state.lastCenter
-														   ,  TEAM_CD       : state.lastYeam
-														   ,  CONST_CD      : state.lastUser
+														   ,  CALL_TP       : state.lastCallTp
+														   ,  JOB_TP	    : state.lastJobTp
 														   ,  QUERY_START   : pageStart
 														   ,  QUERY_LIMIT   : pageLimit
 				}]);
@@ -361,45 +351,35 @@ class View extends React.Component {
 		selectbox: {
 			onChange: (e) => {
 				switch (e.id) {
+				case 'selSearchType':
+				this.setState({...this.state, 
+					selectboxProps : {...this.state.selectboxProps
+											, selSearchType : 
+												{...this.state.selectboxProps.selSearchType, selected : e.target.selectedIndex, value : e.target.value}}});
+					break;
+
 				case 'selJobStateSearch':
 					this.setState({...this.state, 
 							selectboxProps : {...this.state.selectboxProps
 													, selJobStateSearch : 
 														{...this.state.selectboxProps.selJobStateSearch, selected : e.target.selectedIndex, value : e.target.value}
 											}});
-				break;
-				case 'selCenterList':
+					break;
+
+				case 'selCallTP': 
+					this.setState({...this.state, 
+							selectboxProps : {...this.state.selectboxProps
+													, selCallTP : 
+														{...this.state.selectboxProps.selCallTP, selected : e.target.selectedIndex, value : e.target.value}
+											}});
+					break;
+				case 'selJobTP':
 					this.setState({...this.state, 
 						selectboxProps : {...this.state.selectboxProps
-												, selCenterList : 
-													{...this.state.selectboxProps.selCenterList, selected : e.target.selectedIndex, value : e.target.value}
+												, selJobTP : 
+													{...this.state.selectboxProps.selJobTP, selected : e.target.selectedIndex, value : e.target.value}
 										}});
-					ComLib.setStateValue(this, "dsSrch", 0, "CENT_CD", e.target.value, "TEAM_CD", "");
-					
-				break;
-				case 'selTeamList':
-					this.setState({...this.state, 
-						selectboxProps : {...this.state.selectboxProps
-												, selTeamList : 
-													{...this.state.selectboxProps.selTeamList, selected : e.target.selectedIndex, value : e.target.value}
-										}});
-					ComLib.setStateValue(this, "dsSrch", 0, "TEAM_CD", e.target.value);	
-				break;
-				case 'selUserList':
-					this.setState({...this.state, 
-						selectboxProps : {...this.state.selectboxProps
-												, selUserList : 
-													{...this.state.selectboxProps.selUserList, selected : e.target.selectedIndex, value : e.target.value}
-										}});
-					ComLib.setStateValue(this, "dsSrch", 0, "CONST_CD", e.target.value);	
-				break;
-				case 'selReqUserList':
-					this.setState({...this.state, 
-						selectboxProps : {...this.state.selectboxProps
-												, selReqUserList : 
-													{...this.state.selectboxProps.selReqUserList, selected : e.target.selectedIndex, value : e.target.value}
-										}});
-				break;
+					break;
 				default : break;
 				}
 			},
@@ -408,7 +388,7 @@ class View extends React.Component {
 			onActionCellClicked : (e) => {
 				console.log("action cell clicked STT030000")
 				console.log(e)
-				let option = { width: '600px', height: '740px', modaless: true, UUID: e.data.STT_UNQ, callId : e.data.CALL_ID, useUuid: true}
+				let option = { width: '600px', height: '740px', modaless: true, UUID: e.data.STT_UNQ, callId : e.data.CALL_ID, useUuid: true, JOB_TP: e.data.JOB_TP}
 				ComLib.openPlayer(option);
 				
 			},
@@ -479,6 +459,7 @@ class View extends React.Component {
 						<RelativeGroup>
 							<LFloatArea>
 								<FlexPanel>
+									
 									<Label value={this.state.rangeCalendarProps.rgcSearchJob.label} req={true}/>
 									<RangeInputCalendar
 										id        = {this.state.rangeCalendarProps.rgcSearchJob.id}
@@ -488,7 +469,15 @@ class View extends React.Component {
 										endDate   = {this.state.rangeCalendarProps.rgcSearchJob.endDate}
 										onChange  = {this.event.inputcalendar.onChange}
 									/>
-									<Label value="콜아이디"/>
+									<Label value="검색조건"/>
+									<Selectbox
+										id       = {this.state.selectboxProps.selSearchType.id}
+										dataset  = {this.state.selectboxProps.selSearchType.dataset}
+										value    = {this.state.selectboxProps.selSearchType.value}
+										width    = {this.state.selectboxProps.selSearchType.width}
+										disabled = {this.state.selectboxProps.selSearchType.disabled}
+										onChange = {this.event.selectbox.onChange}
+									/>
 									<Textfield
 										width       = {300}
 										id          = {this.state.textFieldProps.iptSearch.id}
@@ -502,40 +491,33 @@ class View extends React.Component {
 										onChange    = {this.event.input.onChange}
 										onKeyPress  = {this.event.input.onKeyPress}
 									/>
-									<Label value={this.state.selectboxProps.selCenterList.label}/>
-									<Selectbox
-										id = {this.state.selectboxProps.selCenterList.id}
-										dataset = {this.state.selectboxProps.selCenterList.dataset}
-										value = {this.state.dsSrch.records[0]["CENT_CD"]}
-										width = {this.state.selectboxProps.selCenterList.width}
-										disabled = {this.state.selectboxProps.selCenterList.disabled}
-										onChange = {this.event.selectbox.onChange}
-									/>
-									<Label value={this.state.selectboxProps.selTeamList.label}/>
-									<Selectbox
-									 	id = {this.state.selectboxProps.selTeamList.id}
-									 	dataset = {ComLib.convComboList(ComLib.getTeamList(this.state.dsSrch), newScrmObj.constants.select.argument.all)}
-									 	value = {this.state.dsSrch.records[0]["TEAM_CD"]}
-									 	width = {this.state.selectboxProps.selTeamList.width}
-										disabled = {this.state.selectboxProps.selTeamList.disabled}
-									 	onChange = {this.event.selectbox.onChange}
-									/>
-									<Label value={this.state.selectboxProps.selUserList.label}/>
-									<Selectbox
-										id = {this.state.selectboxProps.selUserList.id}
-										dataset = {ComLib.convComboList(ComLib.getConstList(this.state.dsSrch), newScrmObj.constants.select.argument.all)}
-										value = {this.state.dsSrch.records[0]["CONST_CD"]}
-										width = {this.state.selectboxProps.selUserList.width}
-										disabled = {this.state.selectboxProps.selUserList.disabled}
-										onChange= {this.event.selectbox.onChange}
-									/>
-									<Label value={this.state.selectboxProps.selJobStateSearch.label}/>
+									<Label value = {this.state.selectboxProps.selJobStateSearch.label}/>
 									<Selectbox
 										id       = {this.state.selectboxProps.selJobStateSearch.id}
 										dataset  = {this.state.selectboxProps.selJobStateSearch.dataset}
 										width    = {this.state.selectboxProps.selJobStateSearch.width}
 										disabled = {this.state.selectboxProps.selJobStateSearch.disabled}
 										selected = {this.state.selectboxProps.selJobStateSearch.selected}
+										onChange = {this.event.selectbox.onChange}
+									/>									
+									<Label value = {this.state.selectboxProps.selCallTP.label}/>
+									<Selectbox
+										id       = {this.state.selectboxProps.selCallTP.id}
+										value    = {this.state.selectboxProps.selCallTP.value}
+										dataset  = {this.state.selectboxProps.selCallTP.dataset}
+										width    = {this.state.selectboxProps.selCallTP.width}
+										disabled = {this.state.selectboxProps.selCallTP.disabled}
+										selected = {this.state.selectboxProps.selCallTP.selected}
+										onChange = {this.event.selectbox.onChange}
+									/>
+									<Label value = {this.state.selectboxProps.selJobTP.label}/>
+									<Selectbox
+										id       = {this.state.selectboxProps.selJobTP.id}
+										value    = {this.state.selectboxProps.selJobTP.value}
+										dataset  = {this.state.selectboxProps.selJobTP.dataset}
+										width    = {this.state.selectboxProps.selJobTP.width}
+										disabled = {this.state.selectboxProps.selJobTP.disabled}
+										selected = {this.state.selectboxProps.selJobTP.selected}
 										onChange = {this.event.selectbox.onChange}
 									/>
 								</FlexPanel>

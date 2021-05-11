@@ -78,6 +78,7 @@ export class DefaultLinkWidget extends React.Component {
     return (
       <g key={`link-${extraProps.id}`}>
         {bottom}
+        <div>close btn</div>
         {top}
       </g>
     );

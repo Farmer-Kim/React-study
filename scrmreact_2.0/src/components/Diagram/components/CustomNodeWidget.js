@@ -40,12 +40,12 @@ export class CustomNodeWidget extends React.Component {
 
   getInPorts() {
     const { node } = this.props;
-    return node.getInPorts().map((port, i) => <DefaultPortLabel model={port} key={`in-port-${i}`} />);
+    return node.getInPorts().map((port, i) => <DefaultPortLabel model={port} key={`in-port-${i}`} diagramEngine={this.props.diagramEngine}/>);
   }
 
   getOutPorts() {
     const { node } = this.props;
-    return node.getOutPorts().map((port, i) => <DefaultPortLabel model={port} key={`out-port-${i}`} />);
+    return node.getOutPorts().map((port, i) => <DefaultPortLabel model={port} key={`out-port-${i}`} diagramEngine={this.props.diagramEngine}/>);
   }
   event = {
 		selectbox: {

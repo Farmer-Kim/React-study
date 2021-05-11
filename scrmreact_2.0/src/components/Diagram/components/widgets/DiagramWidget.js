@@ -12,8 +12,8 @@ const DEFAULT_ACTIONS = {
   deleteItems: true,
   selectItems: true,
   moveItems: true,
-  multiselect: false,
-  multiselectDrag: false,
+  multiselect: true,
+  multiselectDrag: true,
   canvasDrag: true,
   zoom: true,
   copy: true,
@@ -110,9 +110,13 @@ export class DiagramWidget extends React.Component {
         // Delete all selected
         if ([8, 46].indexOf(event.keyCode) !== -1 && selectedItems.length && deleteItems) {
           selectedItems.forEach(element => {
+            if (element instanceof NodeModel) {
+
+              console.log(element)
+              console.log(element)
+            }
             element.remove();
           });
-
           onChange(diagramEngine.getDiagramModel().serializeDiagram(), { type: 'items-deleted', items: selectedItems });
           this.forceUpdate();
         }
@@ -416,8 +420,10 @@ export class DiagramWidget extends React.Component {
         });
         
       }
-
+      
     } else if (model.model instanceof PortModel) {
+      
+      console.log("PortModel")
       const { linkInstanceFactory } = diagramEngine;
 
       // This is a port element, we want to drag a link
@@ -440,6 +446,9 @@ export class DiagramWidget extends React.Component {
       });
           
     } else if (selectItems && model.model !== null) {
+      
+      console.log("It's a direct click selection")
+
       // It's a direct click selection
       let deselect = false;
       const isSelected = model.model.isSelected();
@@ -461,7 +470,7 @@ export class DiagramWidget extends React.Component {
       // Get the selected items and filter out point model
       const selected = diagramEngine.getDiagramModel().getSelectedItems();
       const filtered = _.filter(selected, item => !(item instanceof PointModel));
-      const isLink = model.model instanceof LinkModel;
+      const isLink = model.model instanceof LinkModel; 
       const isNode = model.model instanceof NodeModel;
       const isPoint = model.model instanceof PointModel;
 
@@ -497,10 +506,10 @@ export class DiagramWidget extends React.Component {
       type: actionType
     };
 
-    console.log("onMouseUp")
-    console.log(action)
-    console.log(actionType)
-    console.log(element)
+    // console.log("onMouseUp")
+    // console.log(action)
+    // console.log(actionType)
+    // console.log(element)
     if (element === null) {
       // No element, this is a canvas event
       // actionOutput.type = 'canvas-event';
@@ -528,9 +537,7 @@ export class DiagramWidget extends React.Component {
               model.model.getLink().remove();
             }            
           }
-
-         
-
+       
           if (element.model instanceof PortModel && !pointDelete) {
             let links = diagramEngine.diagramModel.links;
             let ignoreLink = false;
@@ -601,6 +608,10 @@ export class DiagramWidget extends React.Component {
               delete actionOutput.model;
               actionOutput.linkModel = model.model.getLink();
               actionOutput.portModel = element.model;
+
+              // 링크 생성후 바로 del 키 입력시 포인트가 삭제되는 에러 막기
+              model.model.setSelected(false);
+
             }            
           }
           
@@ -619,9 +630,10 @@ export class DiagramWidget extends React.Component {
       actionOutput.items = _.filter(diagramEngine.getDiagramModel().getSelectedItems(),
         item => !(item instanceof PointModel));
     }
-    if (actionType === 'items-moved') {
-      delete actionOutput.model;
-    }
+    
+    // if (actionType === 'items-moved') {
+    //   delete actionOutput.model;
+    // }
 
     diagramEngine.clearRepaintEntities();
     
