@@ -217,9 +217,8 @@ class Player extends React.Component {
 				dao: transManager.constants.dao.base,
 				crudh: transManager.constants.crudh.sttSearch,
 				datasetsend: "test",
+				datasetrecv:"newPath",
 			});
-			console.log(this.state.dsRcvSttJobData[0].FILE_PATH)
-			console.log(this.state)
 			transManager.addDataset('test', [{PATH: this.state.dsRcvSttJobData[0].FILE_PATH, SVRIP: "172.16.0.24"}]);
 			transManager.agent();
 			break;
@@ -359,7 +358,7 @@ class Player extends React.Component {
 					} else {
 						this.howler = new Howl({
 							src : [res.data.dsRcvSttJobData[0].FILE_PATH],
-							format : ['mp3', 'wav', 'mp4'],
+							format : ['mp3', 'wav', 'mp4', 'pcm'],
 							// html5: true,
 							// preload : true,
 							onplay : this.event.player.onPlay,
@@ -380,13 +379,9 @@ class Player extends React.Component {
 			break;
 
 		case 'PLAYER_R02':		
-			let newPath = this.state.dsRcvSttJobData[0].FILE_PATH.replace('stt', 'vrm')
-			console.log(this.state.dsRcvSttJobData[0].FILE_PATH)
-			console.log(newPath)
-		
 			this.howler = new Howl({
-				src : [newPath],
-				format : ['mp3', 'wav', 'mp4'],
+				src : [res.data.newPath],
+				format : ['mp3', 'wav', 'mp4', 'pcm'],
 				// html5: true,
 				// preload : true,
 				onplay : this.event.player.onPlay,
@@ -700,7 +695,6 @@ class Player extends React.Component {
 		},
 		player : {
 			onLoad : () => {
-				console.log("player on load")
 				this.setState({playable: true, duration : this.howler.duration()} , () => {
 					if (this.props.optionalTime !== undefined && this.props.optionalTime !== null && this.props.optionalTime !== -1) {
 						if (!this.state.playing) {
@@ -715,7 +709,6 @@ class Player extends React.Component {
 				});
 			},
 			onLoadError : (e) => {
-				console.log(e)
 				ComLib.openDialog('A', 'SYSI0010', ['녹취파일 다운로드에 실패하였습니다.']);
 				this.setState({playable: false, duration : this.howler.duration()});
 			},

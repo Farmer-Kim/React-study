@@ -110,11 +110,6 @@ export class DiagramWidget extends React.Component {
         // Delete all selected
         if ([8, 46].indexOf(event.keyCode) !== -1 && selectedItems.length && deleteItems) {
           selectedItems.forEach(element => {
-            if (element instanceof NodeModel) {
-
-              console.log(element)
-              console.log(element)
-            }
             element.remove();
           });
           onChange(diagramEngine.getDiagramModel().serializeDiagram(), { type: 'items-deleted', items: selectedItems });
@@ -152,13 +147,13 @@ export class DiagramWidget extends React.Component {
     _.forEach(flatModel.nodes, node => {
       if (node.selected) {
         // Get the node instance, updated the GUID and deserialize
-        const nodeOb = diagramEngine.getInstanceFactory(node._class).getInstance();
+        const nodeOb = diagramEngine.getInstanceFactory("CustomNodeModel").getInstance();
         node.id = gMap[node.id] = Toolkit.UID();
         nodeOb.deSerialize(node);
 
         // Deserialize ports
         _.forEach(node.ports, port => {
-          const portOb = diagramEngine.getInstanceFactory(port._class).getInstance();
+          const portOb = diagramEngine.getInstanceFactory("DefaultPortModel").getInstance();
           port.id = gMap[port.id] = Toolkit.UID();
           port.links = [];
           portOb.deSerialize(port);
@@ -174,7 +169,7 @@ export class DiagramWidget extends React.Component {
     // Iterate the links
     _.forEach(flatModel.links, link => {
       if (link.selected) {
-        const linkOb = diagramEngine.getInstanceFactory(link._class).getInstance();
+        const linkOb = diagramEngine.getInstanceFactory("LinkModel").getInstance();
         link.id = gMap[link.id] = Toolkit.UID();
 
         // Change point GUIDs and set selected
@@ -390,8 +385,6 @@ export class DiagramWidget extends React.Component {
   }
 
   onMouseDown(event) {
-    
-    console.log("onMouseDown")
     const { diagramEngine } = this.props;
     const diagramModel = diagramEngine.getDiagramModel();
     const model = this.getMouseElement(event);
@@ -422,8 +415,6 @@ export class DiagramWidget extends React.Component {
       }
       
     } else if (model.model instanceof PortModel) {
-      
-      console.log("PortModel")
       const { linkInstanceFactory } = diagramEngine;
 
       // This is a port element, we want to drag a link
@@ -446,9 +437,6 @@ export class DiagramWidget extends React.Component {
       });
           
     } else if (selectItems && model.model !== null) {
-      
-      console.log("It's a direct click selection")
-
       // It's a direct click selection
       let deselect = false;
       const isSelected = model.model.isSelected();

@@ -18,14 +18,24 @@ export class DiagramModel extends BaseEntity {
     this.offsetX = object.offsetX;
     this.offsetY = object.offsetY;
     this.zoom = object.zoom;
+
+
     // Deserialize nodes
     _.forEach(object.nodes, node => {
-      const nodeOb = diagramEngine.getInstanceFactory(node._class).getInstance();
+      
+      // const nodeOb = diagramEngine.getInstanceFactory(node._class).getInstance(); 
+      // production 에서  Cannot read property 'getInstance' of undefined 
+      // _class and uglify.js 에서 class 명을 전부 deserialize 하면서 임의값으로 바꾸어 버려서
+      // 실제 사용하는 걸로 강제로 집어 넣어 해결, 클래스가 하나 이상일 경우는 문제가 있으나
+      // 현제 클래스를 하나만 쓰기에 문제 없음
+      const nodeOb = diagramEngine.getInstanceFactory("CustomNodeModel").getInstance();
+      
       nodeOb.deSerialize(node);
 
       // Deserialize ports
-      _.forEach(node.ports, port => {
-        const portOb = diagramEngine.getInstanceFactory(port._class).getInstance();
+      _.forEach(node.ports, port => {        
+        // const portOb = diagramEngine.getInstanceFactory(port._class).getInstance();
+        const portOb = diagramEngine.getInstanceFactory("DefaultPortModel").getInstance();
         portOb.deSerialize(port);
         nodeOb.addPort(portOb);
       });
@@ -35,7 +45,8 @@ export class DiagramModel extends BaseEntity {
 
     
     _.forEach(object.links, link => {
-      const linkOb = diagramEngine.getInstanceFactory(link._class).getInstance();
+      // const linkOb = diagramEngine.getInstanceFactory(link._class).getInstance();      
+      const linkOb = diagramEngine.getInstanceFactory("LinkModel").getInstance();
       linkOb.deSerialize(link);
 
       if (link.target) {
@@ -78,10 +89,7 @@ export class DiagramModel extends BaseEntity {
   }
 
   clearSelection(ignore, supressListener) {
-    console.log(ignore)
     if (ignore) ignore.setSelected(true);
-    console.log(ignore)
-
     _.forEach(this.getSelectedItems(), element => {
       if (ignore && ignore.getID() === element.getID()) {
         

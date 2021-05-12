@@ -3,7 +3,6 @@ import * as RJD from './components/main';
 import './components/sass.scss';
 import {BasicButton as Button, ComponentPanel, FlexPanel} from 'components';
 import _ from 'lodash';
-import { json } from 'mathjs';
 
 class Diagram extends React.Component {
     constructor(props) {
@@ -60,12 +59,12 @@ class Diagram extends React.Component {
          
            
             _.forEach(newNode, node => {
-                const nodeOb = engine.getInstanceFactory(node._class).getInstance();
+                const nodeOb = engine.getInstanceFactory("CustomNodeModel").getInstance();
                 nodeOb.deSerialize(node);
-          
+                                
                 // Deserialize ports
                 _.forEach(node.ports, port => {
-                  const portOb = engine.getInstanceFactory(port._class).getInstance();
+                  const portOb = engine.getInstanceFactory("DefaultPortModel").getInstance();
                   portOb.deSerialize(port);
                   nodeOb.addPort(portOb);
                 });
@@ -74,7 +73,7 @@ class Diagram extends React.Component {
             });
 
             _.forEach(newLink, link => {
-                const linkOb = engine.getInstanceFactory(link._class).getInstance();
+                const linkOb = engine.getInstanceFactory("LinkModel").getInstance();
                 linkOb.deSerialize(link);
                 
                 if (link.target && newModel.getNode(link.target)) {
@@ -91,6 +90,8 @@ class Diagram extends React.Component {
             engine.setDiagramModel(newModel);      
             this.model = newModel;
             
+            console.log(this.engine)
+
 
         }
 	}
@@ -165,12 +166,6 @@ class Diagram extends React.Component {
     onChange(model, action) {
         let propNode = this.props.dsSnroNode;
         let propLink = this.props.dsSnroLink;
-
-        console.log(action.type)
-        console.log(action.type)
-        console.log(action.type)
-        console.log(action.type)
-
         switch(action.type) {
             case 'node-moved':
                 for (let i = 0; i < propNode.length; i ++) {
@@ -253,8 +248,6 @@ class Diagram extends React.Component {
                 break;
             case 'items-deleted':
 
-                console.log(action);
-                console.log(model)
                 break;
             default: break;
         }    
@@ -279,7 +272,7 @@ class Diagram extends React.Component {
                             />
                         </ComponentPanel>
                         <ComponentPanel width={'20%'}>
-                            <div class="basic-node" 
+                            <div className="basic-node" 
                                 style={{background: "rgb(166 227 247)"}} 
                                 draggable 
                                 id = "start"
@@ -290,12 +283,12 @@ class Diagram extends React.Component {
                                     event.dataTransfer.setData("port", 1);
                                 }}
                             >
-                                <div class="title">
-                                    <div class="name">시나리오 추가</div>
+                                <div className="title">
+                                    <div className="name">시나리오 추가</div>
                                 </div>                                
                             </div>
 
-                            <div class="basic-node" 
+                            <div className="basic-node" 
                                 style={{background: "rgb(34 185 15)"}} 
                                 draggable 
                                 id = "yn"
@@ -308,12 +301,12 @@ class Diagram extends React.Component {
 
                                 }}
                             >
-                                <div class="title">
-                                    <div class="name">Y/N 프로세스</div>
+                                <div className="title">
+                                    <div className="name">Y/N 프로세스</div>
                                 </div>                                
                             </div>
 
-                            <div class="basic-node" 
+                            <div className="basic-node" 
                                 style={{background: "rgb(192, 255, 0)"}} 
                                 draggable 
                                 id = "select"
@@ -324,12 +317,12 @@ class Diagram extends React.Component {
                                     event.dataTransfer.setData("port", 4);  
                                 }}
                             >
-                                <div class="title">
-                                    <div class="name">선택지 프로세스</div>
+                                <div className="title">
+                                    <div className="name">선택지 프로세스</div>
                                 </div>                                
                             </div>
 
-                            <div class="basic-node" 
+                            <div className="basic-node" 
                                 style={{background: "rgb(255 153 0)"}} 
                                 draggable 
                                 id = "end"
@@ -340,8 +333,8 @@ class Diagram extends React.Component {
                                     event.dataTransfer.setData("port", 0);
                                 }}
                             >
-                                <div class="title">
-                                    <div class="name">시나리오 종료</div>
+                                <div className="title">
+                                    <div className="name">시나리오 종료</div>
                                 </div>                                
                             </div>
                         </ComponentPanel>
