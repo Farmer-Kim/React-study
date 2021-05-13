@@ -175,7 +175,53 @@ button:focus {outline: none;}
 	opacity: 0;
   }
   
-  
+	[data-tip] {
+		position:relative;
+
+	}
+	[data-tip]:before {
+		content:'';
+		/* hides the tooltip when not hovered */
+		display:none;
+		content:'';
+		border-left: 5px solid transparent;
+		border-right: 5px solid transparent;
+		border-bottom: 5px solid #1a1a1a;	
+		position:absolute;
+		top:30px;
+		left:35px;
+		z-index:8;
+		font-size:0;
+		line-height:0;
+		width:0;
+		height:0;
+	}
+	[data-tip]:after {
+		display: none;
+		content: attr(data-tip);
+		position: absolute;
+		top: 35px;
+		left: 0px;
+		padding: 5px 8px;
+		background: #f9f9f9;
+		color: #000;
+		z-index: 999;
+		height: 18px;
+		line-height: 18px;
+		border-radius: 3px;
+		white-space: nowrap;
+		word-wrap: normal;
+		border-radius: 5px;
+		font-family: Arial;
+		border: solid 1px black;
+		overflow: visible;
+		font-size: 11px;
+		box-shadow: 0 0 10px rgb(0 0 0 / 50%);
+	}
+	[data-tip]:hover:before,
+	[data-tip]:hover:after {
+		display:block;
+	}
 
   
 /* 레이아웃 관련 css 나중에 다시 재정의 필요 */

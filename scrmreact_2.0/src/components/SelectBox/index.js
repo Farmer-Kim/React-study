@@ -11,7 +11,8 @@ class Selectbox extends React.Component {
 	static defaultProps = {
 		selected : 0,
 		color: null,
-		onChange : () => {return;}
+		onChange : () => {return;},
+		tooltip : false
 	}
 	onChange = (e) => {
 		this.props.onChange({target : e.target, id : this.props.id});
@@ -24,25 +25,51 @@ class Selectbox extends React.Component {
 		}
 		
 		return (
-			<div className="scrm-select-div" style={{width : this.props.width}}>
-				<select
-					id = {this.props.id}
-					value = {this.props.value} 
-					disabled = {
-						(StrLib.isNull(this.props.controlOrgCombo))
-						? this.props.disabled
-						: ComLib.setDisableByAuth(this.props.controlOrgCombo, this.props.isQaCombo)
-					}
-					className={selectBoxClass}
-					onChange = {this.onChange}
-				> 
-					{
-						this.props.dataset.filter(item=> item.value !== null && item.value !== undefined).map((prop, key) => {
-							return (<option value={prop.value} key={prop.value + '_' + key} >{prop.name}</option>);
-						})
-					}
-				</select>
-			</div>
+
+			!this.props.tooltip ?
+				<div className="scrm-select-div" style={{width : this.props.width}}>
+					<select
+						id = {this.props.id}
+						value = {this.props.value} 
+						disabled = {
+							(StrLib.isNull(this.props.controlOrgCombo))
+							? this.props.disabled
+							: ComLib.setDisableByAuth(this.props.controlOrgCombo, this.props.isQaCombo)
+						}
+						className={selectBoxClass}
+						onChange = {this.onChange}
+					> 
+						{
+							this.props.dataset.filter(item=> item.value !== null && item.value !== undefined).map((prop, key) => {
+								return (<option value={prop.value} key={prop.value + '_' + key} >{prop.name}</option>);
+							})
+						}
+					</select>
+				</div>
+				:
+				<div data-tip={this.props.tooltipCont}>
+					<div className="scrm-select-div" style={{width : this.props.width}}>
+						<select
+							id = {this.props.id}
+							value = {this.props.value} 
+							disabled = {
+								(StrLib.isNull(this.props.controlOrgCombo))
+								? this.props.disabled
+								: ComLib.setDisableByAuth(this.props.controlOrgCombo, this.props.isQaCombo)
+							}
+							className={selectBoxClass}
+							onChange = {this.onChange}
+						> 
+							{
+								this.props.dataset.filter(item=> item.value !== null && item.value !== undefined).map((prop, key) => {
+									return (<option value={prop.value} key={prop.value + '_' + key} >{prop.name}</option>);
+								})
+							}
+						</select>
+					</div>
+				</div>
+
+			
 		);
 	}
 }

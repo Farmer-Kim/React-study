@@ -16,7 +16,7 @@ class AnswerArea extends React.Component {
 	componentDidMount () {
 		let params = this.props.options.param[0]		
 		let newVal = params.TYPE === 'd' ? "" : params.NEW_VALUE;
-		let spk    = params.SPK  === 'R' ? true : false;
+		let spk    = params.SPK  === 'A' ? true : false;
 		
 		this.setState({org : params.VALUE, changed: newVal, isCS: spk}, () => {
 					
@@ -50,13 +50,13 @@ class AnswerArea extends React.Component {
 			let params = this.props.options.param[0]
 
 			if (params.TYPE === 'c' || params.TYPE === 'u') {
-				if ((params.NEW_VALUE === this.state.changed) && ((params.SPK  === 'R') === this.state.isCS)) {
+				if ((params.NEW_VALUE === this.state.changed) && ((params.SPK  === 'A') === this.state.isCS)) {
 					ComLib.openDialog('A', 'SYSI0010', ['오인식 문장이 변경 되지 않았습니다.']);
 		
 					rtn = false;
 				}
 			} else {
-				if (this.state.org === this.state.changed && ((params.SPK  === 'R') === this.state.isCS)) {
+				if (this.state.org === this.state.changed && ((params.SPK  === 'A') === this.state.isCS)) {
 					ComLib.openDialog('A', 'SYSI0010', ['원문 문장과 동일 합니다.']);
 		
 					rtn = false;
@@ -96,14 +96,14 @@ class AnswerArea extends React.Component {
 					if (this.validation('btnSave')) {
 						if (this.state.isAddNew) {
 							ComLib.openDialog('C', 'SYSI0010', ['신규 문장을 추가 하시겠습니까?'], checked => { if (checked === true) {		
-								this.props.onCallbackFunc({value: changed, index: this.props.options.param[0].INDEX, type: 'new', spk: this.state.isCS ? 'R' : 'L'});
+								this.props.onCallbackFunc({value: changed, index: this.props.options.param[0].INDEX, type: 'new', spk: this.state.isCS ? 'A' : 'C'});
 								this.props.onClose();
 							}});
 							
 			
 						} else {
 							ComLib.openDialog('C', 'SYSI0010', ['오인식 문장을 저장 하시겠습니까?'], checked => { if (checked === true) {		
-								this.props.onCallbackFunc({value: changed, index: this.props.options.param[0].INDEX, type: 'update', spk: this.state.isCS ? 'R' : 'L'});
+								this.props.onCallbackFunc({value: changed, index: this.props.options.param[0].INDEX, type: 'update', spk: this.state.isCS ? 'A' : 'C'});
 								this.props.onClose();
 							}});
 							

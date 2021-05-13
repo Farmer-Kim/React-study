@@ -727,13 +727,15 @@ class View extends React.Component {
 					let smlRows = this.lagCdGridApi.rowModel.rowsToDisplay;
 					let smlRow;
 
-					for (let i = 0; i < smlRows.length; i ++) {
-						if (smlRows[i].data.TEMP_CD === e.data[e.index].TEMP_CD){
-							smlRow = this.smlCdGridApi.rowModel.rowsToDisplay[i];
-							this.smlCdGridApi.ensureIndexVisible(i, 'middle');						
-							break;
-						}
-					}
+					
+					smlRow = this.smlCdGridApi.rowModel.rowsToDisplay[e.index];
+					this.smlCdGridApi.ensureIndexVisible(e.index, 'middle');		
+
+					// for (let i = 0; i < smlRows.length; i ++) {
+					// 	if (smlRows[i].data.TEMP_CD === e.data[e.index].TEMP_CD){				
+					// 		break;
+					// 	}
+					// }
 						
 					if (smlRow.selected !== true) {
 						smlRow.setSelected(true);

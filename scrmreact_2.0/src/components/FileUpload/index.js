@@ -39,7 +39,7 @@ class InputFileUpload extends React.Component {
 		return { url: 'https://httpbin.org/post' }
 	}
 	onChangeStatus = ({ meta }, status) => { this.props.onChangeStatus({ id : this.state.id, data : {status : status, mete: meta}}) }
-	onUploadComplete = (res, files) => { this.props.onUploadComplete({id : this.props.id, msg : res, files: files}); }
+	onUploadComplete = (res, files, savedFileList) => { this.props.onUploadComplete({id : this.props.id, msg : res, files: files, savedFileList}); }
 	setProgressPercent = (progressEvent) => {
 		this.setState({...this.state, uploadPercent: Math.floor((progressEvent.loaded * 100) / progressEvent.total)});
 		if (this.state.uploadPercent === 100) {
@@ -47,6 +47,7 @@ class InputFileUpload extends React.Component {
 		}
 	}
 	handleSubmit = (files, allFiles) => {
+		console.log("File Upload Handle Submit");
 		if (this.validate(files)) {
 			this.allFiles = allFiles;
 			this.setState({...this.state, showProgressbar: false, files: files
@@ -81,8 +82,9 @@ class InputFileUpload extends React.Component {
 		case "_FILEUPLOAD" :
 			let formData = new FormData();
 			Array.from(this.state.files).forEach((f, index) => {
-				if (index >= this.index && index < this.index + this.page) {
+				if (index >= this.index && index < this.index + this.page) {					
 					formData.append("files", f.file)
+					
 				}
 			});
 	
@@ -94,6 +96,7 @@ class InputFileUpload extends React.Component {
 			transManager.addConfig({
 				crudh: transManager.constants.crudh.upload,
 				datasetsend:"fileupload",
+				datasetrecv: "savedFileList",
 			});
 			formData.append("transdata", JSON.stringify({transdata: transManager.transdata}));
 			transManager.addDataset('fileupload', formData);
@@ -118,6 +121,7 @@ class InputFileUpload extends React.Component {
 				}
 			break;
 			case "_FILEUPLOAD":
+				console.log(res)
 				if (res.result === '0') {
 					if ((this.index + this.page) < Array.from(this.state.files).length) {
 						this.allFiles.forEach((f, index) => { if (index < this.page) { f.remove() } });
@@ -126,7 +130,7 @@ class InputFileUpload extends React.Component {
 					} else {
 						this.allFiles.forEach((f) => { f.remove(); });
 						this.index = 0;
-						this.onUploadComplete(res.result, this.allFiles);
+						this.onUploadComplete(res.result, this.allFiles, res.data.savedFileList);
 					}
 				}
 				break;
@@ -159,7 +163,7 @@ class InputFileUpload extends React.Component {
 					onChangeStatus={this.onChangeStatus}
 					LayoutComponent = {Layout}
 					onSubmit={this.handleSubmit}
-					accept = {".wav"}
+					accept = {".wav, .mp3, .PCM"}
 					// maxSizeBytes = {1024 * 1024 * 3}
 					styles={{
 						dropzone: { height: (this.props.height) ? this.props.height + 'px' : '400px', display: 'block', overflow: 'hidden'} ,

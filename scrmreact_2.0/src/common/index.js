@@ -162,7 +162,87 @@ const ComLib = {
 	openPlayer : (options, callbackFunc) => {
 		options.height = '810px';
 		let title = 'STT플레이어 : ' + (options.useUuid === true ? options.UUID : options.callId);
-		ComLib.openPop('STT000001', title, options, callbackFunc);
+		
+		// ComLib.openPop('STT000001', title, options, callbackFunc);
+
+		let arrPlayerTag = Object.values(document.body.children).filter(
+			tag => tag.tagName === 'DIV'
+		).filter(
+			item => item.id.substring(0, newScrmObj.constants.mdi.PLAYER.length) === newScrmObj.constants.mdi.PLAYER
+		);
+		
+		let isAreadyOpened = false;
+
+		for (let i = 0; i < arrPlayerTag.length; i ++) {
+			let currentplayer = document.getElementById(arrPlayerTag[i].id + "_inner_div").parentElement;
+
+			if (arrPlayerTag[i].id === newScrmObj.constants.mdi.PLAYER + '_div_' + (options.useUuid === true ? options.UUID : options.callId)) {				
+				isAreadyOpened = true;
+				currentplayer.style.zIndex = '9992'
+
+			} else {
+				
+				currentplayer.style.zIndex = '9991'
+			}
+		}
+
+		if (isAreadyOpened) {
+			return;
+		}
+
+		let playerDiv = document.createElement('div');
+		let position = {x: 0, y: 0};
+
+		if (arrPlayerTag.length === 0) {
+			playerDiv.id = newScrmObj.constants.mdi.PLAYER + '_div_' + (options.useUuid === true ? options.UUID : options.callId);
+		} else {
+			playerDiv.id = newScrmObj.constants.mdi.PLAYER + '_div_' + (options.useUuid === true ? options.UUID : options.callId);
+			position = { x : arrPlayerTag.length * 10,  y: arrPlayerTag.length * 10 }
+		}
+		
+		document.body.appendChild(playerDiv);
+
+		ReactDOM.render(
+			<Provider store={store}>
+				<Dialog.PopupDialog
+					popupdivid = {playerDiv.id}
+					open={true}
+					url={'STT000001'}
+					name={title}
+					modaless={options.modaless}
+					position = {position}
+					options={options}
+					onCallbackFunc={callbackFunc}
+					onClose={
+						() => {
+							return new Promise ( (resolve, reject) => {
+								try {
+									if (typeof options.callback === "function") {
+										try {
+											options.callback();
+										} catch (err) {
+											reject(err);
+										}
+									}
+									resolve();
+								} catch (error) {
+									reject(error);
+								}
+							}).then(function () {
+								ReactDOM.unmountComponentAtNode(document.getElementById(playerDiv.id));
+							}).catch(function (error) {
+								console.log(error);
+							}).then(function () {
+								document.body.removeChild(playerDiv);
+							});
+						}
+					}
+				/>
+			</Provider>
+		, playerDiv);
+
+		return playerDiv.id;
+		
 	},
 	copyText : (txt) => {
 		const element = document.createElement('textarea');
@@ -1737,6 +1817,7 @@ class TransManager {
 				common: '/json.service.do',
 				upload: '/upload.service.do',
 				sttSearch: '/sttSearch.service.do',
+				sftp: '/sftp.service.do',
 			},
 			errorcode: {
 				SUCCESS: '0',

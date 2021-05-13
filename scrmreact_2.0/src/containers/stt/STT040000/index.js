@@ -32,7 +32,7 @@ class View extends React.Component {
 					height : "320px",
 					header : 
 					[
-						 {headerName: '파일명',	        field: 'FILE_NM',		colId: 'FILE_NM',	width: 400}
+						 {headerName: '업로드 파일명',	        field: 'CALL_ID',		colId: 'CALL_ID',	width: 400}
 						,{headerName: '작업요청자',		field: 'REG_USR_NM',	colId: 'REG_USR_NM', textAlign: 'center',	width: 100}
 						,{headerName: '학습상태',	    field: 'JOB_STATE',	     colId: 'JOB_STATE', textAlign: 'center',	width: 100,
 								cellEditor: 'agSelectCellEditor',
@@ -313,28 +313,25 @@ class View extends React.Component {
 		},		
         upload : {
 			onUploadComplete : (e) => {
-				console.log('onUploadComplete')
 				switch (e.id) {
 				case "fileUpload":
-
 					let fileArray = this.state.fileDataArray
 					const jobId = DateLib.getTodayTime();
-
-					e.files.forEach((item, index) => {
-									
+					
+					e.files.forEach((item, index) => {						
 						let row = item.file
 						
-						row.JOB_ID				= jobId
-						row.JOB_DV_CD			= ComLib.getComCodeValue('STT_TBL_JOB_INFO', 'DV_CD')[0]
-						row.CALL_ID				= row.name + "_" + jobId
+						row.JOB_ID				= jobId;
+						row.JOB_DV_CD			= ComLib.getComCodeValue('STT_TBL_JOB_INFO', 'DV_CD')[0];
+						row.CALL_ID				= row.name;
 
 						//현재는 코드에 반영되어 있는 서버리스트 서버패스의 코드값의 0번째를 셋팅함 PATH 연구소와 대화 필요
 						// row.SERVER_NM			= ComLib.getComCodeValue('SERVER_LIST')[0]
-						row.SERVER_NM			= 'vrm'
+						row.SERVER_NM			= 'rndvrm';
 						//파일 PATH 이지만 연구소에서는 실질적으로 PATH + FILE_NAME 구로조 시스템이 되어 있기 때문에 
 						// row.FILE_PATH 			= ComLib.getComCodeValue('SERVER_PATH')[0] + "/" + item.file.name
-						row.FILE_PATH 			= "/home/vrm/work/" + item.file.name
-						row.FILE_NM   			= item.file.name;
+						row.FILE_PATH 			= "/home/vrm/work/" +  e.savedFileList[index].NEW_NM;
+						row.FILE_NM   			= e.savedFileList[index].NEW_NM;
 						row.FILE_SIZE			= item.file.size;
 
 						fileArray.push(row)
@@ -364,7 +361,7 @@ class View extends React.Component {
 		grid: {
 			onActionCellClicked : (e) => {
 				console.log(e.data)
-				let option = { width: '600px', height: '740px', modaless: true, UUID: e.data.STT_UNQ, callId : e.data.CALL_ID, useUuid: true}
+				let option = { width: '600px', height: '740px', modaless: true, UUID: e.data.STT_UNQ, JOB_TP: e.data.JOB_TP, callId : e.data.CALL_ID, useUuid: true}
 				ComLib.openPlayer(option);
 
 				
@@ -394,8 +391,7 @@ class View extends React.Component {
 				
 	}
 
-	fileUploadValidation(files) {
-		
+	fileUploadValidation(files) {		
 		console.log('fileUploadValidation')
 		return true;
 	}

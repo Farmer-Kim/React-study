@@ -2,8 +2,6 @@ import React from 'react';
 import {ComLib, TransManager, StrLib, DataLib, newScrmObj} from 'common';
 import {Selectbox, Textfield, Textarea, LFloatArea, RFloatArea, RelativeGroup, ComponentPanel, FlexPanel, SubFullPanel, BasicButton, Grid, Switch} from 'components';
 import { Howl } from 'howler';
-import ReactDOM from 'react-dom';
-
 
 const playerConstants = {
 	itemBgColor :	{ default : "", selected : 'rgb(233, 233, 233)' },
@@ -211,6 +209,19 @@ class Player extends React.Component {
 
 			break;
 
+		case 'PLAYER_R02':
+			transManager.setTransId(serviceid);
+			transManager.setTransUrl(transManager.constants.url.sftp);
+			transManager.setCallBack(this.callback);
+			transManager.addConfig({
+				dao: transManager.constants.dao.base,
+				crudh: transManager.constants.crudh.sttSearch,
+				datasetsend: "dsInfo",
+				datasetrecv:"newPath",
+			});
+			transManager.addDataset('dsInfo', [{PATH: this.state.dsRcvSttJobData[0].FILE_PATH, USR_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID}]);
+			transManager.agent();
+			break;
 		default : break;
 		}
 		transManager = null;
@@ -342,27 +353,50 @@ class Player extends React.Component {
 					selKeywordData: [{value : '', name : '선택'}],
 					srchText : srchText
 				}, () => {
-					this.howler = new Howl({
-						src : [res.data.dsRcvSttJobData[0].FILE_PATH],
-						format : ['mp3', 'wav', 'mp4'],
-						// html5: true,
-						// preload : true,
-						onplay : this.event.player.onPlay,
-						onload : this.event.player.onLoad,
-						onloaderror  : this.event.player.onLoadError,
-						onpause: this.event.player.onPause,
-						onend: this.event.player.onEnd,
-						onstop : this.event.player.onStop
-					});
-					if (!StrLib.isNull(this.state.srchText)) {
-						this.handler.searchText(this.state.srchText, 0);
-					}
+					if (this.props.options.JOB_TP === 'C') {
+						this.transaction("PLAYER_R02");
+					} else {
+						this.howler = new Howl({
+							src : [res.data.dsRcvSttJobData[0].FILE_PATH],
+							format : ['mp3', 'wav', 'mp4'],
+							// html5: true,
+							// preload : true,
+							onplay : this.event.player.onPlay,
+							onload : this.event.player.onLoad,
+							onloaderror  : this.event.player.onLoadError,
+							onpause: this.event.player.onPause,
+							onend: this.event.player.onEnd,
+							onstop : this.event.player.onStop
+						});
+						if (!StrLib.isNull(this.state.srchText)) {
+							this.handler.searchText(this.state.srchText, 0);
+						}
+					}					
 				});				
 			} 
-			
+						
 			// this.setWaveForm(res.data.dsRcvSttData[0].FILE_PATH);
 			break;
-			
+
+		case 'PLAYER_R02':		
+			this.howler = new Howl({
+				src : [res.data.newPath],
+				format : ['mp3', 'wav', 'mp4'],
+				// html5: true,
+				// preload : true,
+				onplay : this.event.player.onPlay,
+				onload : this.event.player.onLoad,
+				onloaderror  : this.event.player.onLoadError,
+				onpause: this.event.player.onPause,
+				onend: this.event.player.onEnd,
+				onstop : this.event.player.onStop
+			});
+			if (!StrLib.isNull(this.state.srchText)) {
+				this.handler.searchText(this.state.srchText, 0);
+			}
+
+			break;
+
 		case 'PLAYER_C01':
 			ComLib.openDialog('A', 'SYSI0010', ['오인신 문장이 제출 되었습니다.']);
 			this.howler.stop();
@@ -615,7 +649,7 @@ class Player extends React.Component {
 						if (txtArr === undefined || txtArr.length === 0) return false;						
 						ComLib.copyText(JSON.parse(txtArr).map((item, key) => {
 							let text = "";
-							text += (item["SPK"] === "R" ? "[상담사]" : "[고객]");
+							text += (item["SPK"] === "A" ? "[상담사]" : "[고객]");
 							text += "[" + this.handler.format(item["POS_START"]/100) + "]";
 							text += item['VALUE'];
 							return text;
@@ -635,7 +669,7 @@ class Player extends React.Component {
 						if (!this.props.options.useUuid) {
 							ComLib.writeTxtFile(JSON.parse(txtArr).map((item, key) => {
 								let text = "";
-								text += (item["SPK"] === "R" ? "[상담사]" : "[고객]");
+								text += (item["SPK"] === "A" ? "[상담사]" : "[고객]");
 								text += "[" + this.handler.format(item["POS_START"]/100) + "]";
 								text += item['VALUE'];
 								return text;
@@ -644,7 +678,7 @@ class Player extends React.Component {
 						} else {
 							ComLib.writeTxtFile(JSON.parse(txtArr).map((item, key) => {
 								let text = "";
-								text += (item["SPK"] === "R" ? "[상담사]" : "[고객]");
+								text += (item["SPK"] === "A" ? "[상담사]" : "[고객]");
 								text += "[" + this.handler.format(item["POS_START"]/100) + "]";
 								text += item['VALUE'];
 								return text;
@@ -1230,7 +1264,7 @@ class Player extends React.Component {
 									{this.state.dsRcvSttAnsData.filter(item => item['ACT_TP'] !== 'e').map((ele, index) => {
 										return (
 											<div key={index} id={playerConstants.listItemDivId.item + (index+1).toString() + this.props.ctrNo} className="scrm-player-list-item-container">
-												<div className={StrLib.isNull(ele['NEW_SPK']) ? (ele['SPK'] !== 'R') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller' : (ele['NEW_SPK'] !== 'R') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller'}>
+												<div className={StrLib.isNull(ele['NEW_SPK']) ? (ele['SPK'] !== 'A') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller' : (ele['NEW_SPK'] !== 'A') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller'}>
 													<div className="scrm-player-list-item-img-div">
 														<span><i className="xi-message-o"></i></span>
 													</div>
