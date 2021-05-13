@@ -175,7 +175,7 @@ class View extends React.Component {
 					{headerName: '센터',		field: 'CENT_NM',		colId: 'CENT_NM', 		editable: false,	width: '120'},
 					{headerName: '팀',			field: 'TEAM_NM',		colId: 'TEAM_NM',		editable: false,	width: '120'},
 					{headerName: '사용자ID',	field: 'USR_ID',		colId: 'USR_ID',		editable: false,	width: '100'},
-					{headerName: '사용자명',	field: 'USR_NM',		colId: 'USR_NM',		editable: false,	width: '120'},
+					{headerName: '사용자성명',	field: 'USR_NM',		colId: 'USR_NM',		editable: false,	width: '120'},
 					{headerName: '권한',		field: 'AUTH_NM',	    colId: 'AUTH_NM', 	    editable: false,	width: '100'},
 					{headerName: '사용여부',	field: 'USE_FLAG_NM',	colId: 'USE_FLAG_NM', 	editable: false,	width: '50', textAlign: 'center'},
 					{headerName: '등록일시',	field: 'REG_DTM',		colId: 'REG_DTM', 		editable: false,	width: '80', textAlign: 'center', resizable: false},
