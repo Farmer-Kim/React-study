@@ -216,10 +216,10 @@ class Player extends React.Component {
 			transManager.addConfig({
 				dao: transManager.constants.dao.base,
 				crudh: transManager.constants.crudh.sttSearch,
-				datasetsend: "test",
+				datasetsend: "dsInfo",
 				datasetrecv:"newPath",
 			});
-			transManager.addDataset('test', [{PATH: this.state.dsRcvSttJobData[0].FILE_PATH, SVRIP: "172.16.0.24"}]);
+			transManager.addDataset('dsInfo', [{PATH: this.state.dsRcvSttJobData[0].FILE_PATH, USR_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID}]);
 			transManager.agent();
 			break;
 		default : break;
@@ -358,7 +358,7 @@ class Player extends React.Component {
 					} else {
 						this.howler = new Howl({
 							src : [res.data.dsRcvSttJobData[0].FILE_PATH],
-							format : ['mp3', 'wav', 'mp4', 'pcm'],
+							format : ['mp3', 'wav', 'mp4'],
 							// html5: true,
 							// preload : true,
 							onplay : this.event.player.onPlay,
@@ -381,7 +381,7 @@ class Player extends React.Component {
 		case 'PLAYER_R02':		
 			this.howler = new Howl({
 				src : [res.data.newPath],
-				format : ['mp3', 'wav', 'mp4', 'pcm'],
+				format : ['mp3', 'wav', 'mp4'],
 				// html5: true,
 				// preload : true,
 				onplay : this.event.player.onPlay,

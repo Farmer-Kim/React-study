@@ -140,6 +140,15 @@ class PopupDialog extends React.Component {
 			document.body.removeEventListener('keydown', this.onKeyDown);
 		}
 	}
+	onFocus = (e) => {
+		let current = e.target.parentElement.parentElement;
+		current.style.zIndex = '9992'
+	
+	}
+	onBlur = (e) => {
+		let current = e.target.parentElement.parentElement;
+		current.style.zIndex = '9991'
+	}
 	onKeyDown = (e) => {
 		if (e.code === 'Tab' || e.key === 'Tab' || e.keyCode === 9) {
 			if (e.shiftKey) {
@@ -183,7 +192,7 @@ class PopupDialog extends React.Component {
 					allowAnyClick ={false}
 					handle = {'.scrm-popup-modal-content-header'}
 				>
-					<div id={this.props.popupdivid + "_inner_div"} className = "scrm-popup-modal-content" style={{width: this.props.options.width, height: this.props.options.height}}>
+					<div id={this.props.popupdivid + "_inner_div"} onFocus={this.onFocus} onBlur={this.onBlur} className = "scrm-popup-modal-content" style={{width: this.props.options.width, height: this.props.options.height}}>
 						<div id={this.props.popupdivid + "_first_div"} tabIndex={0} className = "scrm-popup-modal-content-header">
 							<div style={{float: 'left'}}>
 								{this.props.name}

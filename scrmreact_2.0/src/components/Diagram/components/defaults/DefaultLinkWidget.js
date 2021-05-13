@@ -127,6 +127,11 @@ export class DefaultLinkWidget extends React.Component {
     const { link, smooth, diagramEngine, pointAdded } = this.props;
     const { points } = link;
     const ds = [];
+    if (link.id === "f7fabb29-cf37-415d-90dd-d3c889b858c5") {
+      console.log("drawAdvancedLine");
+      console.log(link);
+    }
+    
 
     if (smooth) {
       ds.push(
@@ -170,7 +175,13 @@ export class DefaultLinkWidget extends React.Component {
     if (link.targetPort === null) {
       paths.push(this.generatePoint(points.length - 1));
     }
-
+    if (link.id === "f7fabb29-cf37-415d-90dd-d3c889b858c5") {
+      
+      console.log(paths)
+    }
+    // point-a9617f7a-9e64-409e-bf1b-efd751a67456
+    // point-e29782b1-f51a-4de2-9f1e-79d7cbfe9429
+    // point-9124fcd5-1476-48af-bd79-b3fdf4138185
     return paths;
   }
 

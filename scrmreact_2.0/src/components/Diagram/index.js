@@ -7,8 +7,7 @@ import _ from 'lodash';
 class Diagram extends React.Component {
     constructor(props) {
         super(props);
-    
-        // Setup the diagram engine
+            // Setup the diagram engine
         this.engine = new RJD.DiagramEngine();
         this.engine.registerNodeFactory(new RJD.CustomNodeFactory());
         this.engine.registerLinkFactory(new RJD.DefaultLinkFactory());
@@ -90,7 +89,7 @@ class Diagram extends React.Component {
             engine.setDiagramModel(newModel);      
             this.model = newModel;
             
-            console.log(this.engine)
+            // console.log(this.engine)
 
 
         }
