@@ -434,14 +434,14 @@ button:focus {outline: none;}
 
 .scrm-react-custom-selectbox-darkRed {color: darkRed; background-color: lightPink; font-weight: bold;}
 .scrm-react-custom-selectbox-darkRed:hover {background-color: lightPink !important;}
-.scrm-react-custom-selectbox-grey {color: rgb(39, 36, 36); background-color:grey; font-weight: bold;}
-.scrm-react-custom-selectbox-grey:hover {background-color: grey !important;}
-.scrm-react-custom-selectbox-dodgerBlue {color: dodgerBlue;  background-color:rgb(182, 182, 201); font-weight: bold;}
-.scrm-react-custom-selectbox-dodgerBlue:hover {background-color: rgb(182, 182, 201) !important;}
-.scrm-react-custom-selectbox-darkCyan {color: darkCyan;  background-color:chartreuse; font-weight: bold;}
-.scrm-react-custom-selectbox-darkCyan:hover {background-color: chartreuse !important;}
-.scrm-react-custom-selectbox-darkGreen {color: darkGreen;  background-color:darkTurquoise; font-weight: bold;}
-.scrm-react-custom-selectbox-darkGreen:hover {background-color: darkTurquoise !important;}
+.scrm-react-custom-selectbox-grey {color: rgb(232, 232, 255); background-color:dodgerBlue; font-weight: bold;}
+.scrm-react-custom-selectbox-grey:hover {background-color: dodgerBlue !important;}
+.scrm-react-custom-selectbox-dodgerBlue {color: rgb(238, 238, 238);  background-color:rgb(38, 164, 180); font-weight: bold;}
+.scrm-react-custom-selectbox-dodgerBlue:hover {background-color: rgb(38, 164, 180) !important;}
+.scrm-react-custom-selectbox-darkCyan {color: rgb(5, 114, 99);  background-color:#dff0d8; font-weight: bold;}
+.scrm-react-custom-selectbox-darkCyan:hover {background-color: #dff0d8 !important;}
+.scrm-react-custom-selectbox-darkGreen {color: rgb(44, 44, 44);  background-color:#FFCA39; font-weight: bold;}
+.scrm-react-custom-selectbox-darkGreen:hover {background-color: #FFCA39 !important;}
 
 
 
