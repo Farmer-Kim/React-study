@@ -335,6 +335,7 @@ class View extends React.Component {
 						row.FILE_SIZE			= item.file.size;
 
 						fileArray.push(row)
+						console.log("왜 안될까")
 						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
