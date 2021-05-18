@@ -44,7 +44,7 @@ class View extends React.Component {
 					header : 
 					[	
 						
-						{headerName: '콜 UUID',	       field: 'STT_UNQ',		  colId: 'STT_UNQ',		  editable: false },
+						{headerName: '콜아이디',	       field: 'STT_UNQ',		  colId: 'STT_UNQ',		  editable: false },
 						{headerName: '오인식 상담 원문',field: 'MIS_SENT_CONT',	   colId: 'MIS_SENT_CONT', editable: false},
 						{headerName: '작성문장',		field: 'ANS_SENT_CONT',	  colId: 'ANS_SENT_CONT', editable: false},
 						{headerName: '오인식 타입',		field: 'ACT_TP',	  colId: 'ACT_TP', editable: false, textAlign: 'center',

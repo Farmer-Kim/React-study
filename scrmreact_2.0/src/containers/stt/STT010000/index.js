@@ -29,7 +29,7 @@ class View extends React.Component {
 			textFieldProps: {
 				iptCsNm: {
 					value: '',
-					placeholder: '상담사명'
+					placeholder: '상담사성명'
 				}
 			},			
 			csList    : [],
