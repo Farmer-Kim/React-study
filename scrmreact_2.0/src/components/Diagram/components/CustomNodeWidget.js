@@ -9,7 +9,8 @@ export class CustomNodeWidget extends React.Component {
     super();
     this.state ={      
       ttsCont: "",
-      kwdSco: undefined
+      name: undefined,
+      arrTts: []
     }
   }
   static defaultProps = {
@@ -25,14 +26,15 @@ export class CustomNodeWidget extends React.Component {
   componentDidMount () {
 		let { node } = this.props;
     let arr = this.props.tts.filter(ele => ele['CODE'] === node.tts);
+    let arrTts = this.props.tts.filter(ele => (ele['CODE_TP'] === this.props.node.tp) || (ele['CODE_TP'] === 'N'))
     
     if (arr.length > 0) {      
-      this.setState({...this.state, ttsCont: arr[0]['CD_VAL'], kwdSco: node.kwdSco});
+      this.setState({...this.state, ttsCont: arr[0]['CD_VAL'], name: node.name, arrTts: ComLib.convComboList(arrTts)});
     } 
 	}
   componentDidUpdate (prevProps, prevState) {
-    if (this.props.node.kwdSco !== this.state.kwdSco) {
-      this.setState({...this.state, kwdSco: this.props.node.kwdSco}, () => {
+    if (this.props.node.name !== this.state.name) {
+      this.setState({...this.state, name: this.props.node.name}, () => {
         this.props.diagramEngine.getDiagramModel() ;
       })
     }
@@ -45,8 +47,9 @@ export class CustomNodeWidget extends React.Component {
 
   getOutPorts() {
     const { node } = this.props;
-    return node.getOutPorts().map((port, i) => <DefaultPortLabel model={port} key={`out-port-${i}`} diagramEngine={this.props.diagramEngine}/>);
+    return node.getOutPorts().map((port, i) => <DefaultPortLabel  model={port} key={`out-port-${i}`} portOrd={i} diagramEngine={this.props.diagramEngine}/>);
   }
+
   event = {
 		selectbox: {
 			onChange: (e) => {
@@ -70,29 +73,39 @@ export class CustomNodeWidget extends React.Component {
     input: {
       onChange: (e) => {
         let { node } = this.props;
-        node.kwdSco = e.target.value;
-        this.setState({...this.state, kwdSco: e.target.value});
+        node.name = e.target.value;
+        this.setState({...this.state, name: e.target.value});
         
       }
     }
   }
 
-  
-
   render() {
     const { node } = this.props;
     return (
-      node.tp === 'start' ?
+      node.tp === 'B' ?
       <div className='basic-node' style={{ background: node.color }}>
         <div className='title'>
           <div className='name'>
-            {node.name}
+            <Textfield
+              width       = {200}
+              id          = {"iptNdNM_" + node.id}
+              name        = {"iptNdNM_" + node.id}
+              value       = {node.name}
+              placeholder = {""}
+              minLength   = {0}
+              maxLength   = {20}
+              readOnly    = {false}
+              disabled    = {false}
+              onChange    = {this.event.input.onChange}
+              onKeyPress  = {this.event.input.onKeyPress}
+            />
           </div>          
           <Button
             color='purple' 
             size ='xs'
             fiiled= {true} innerImage={true} icon = {'trash'}
-            id = {node.name + "btn_close_" + node.id}
+            id = {"btn_close_" + node.id}
             value = {""}
             disabled = {false}
             hidden = {false}
@@ -104,7 +117,7 @@ export class CustomNodeWidget extends React.Component {
           <Button
             color='purple' 
             fiiled= {true} innerImage={true} icon = {'eye'}
-            id = {node.name + "btn_Kwd_" + node.id}
+            id = {"btn_Kwd_" + node.id}
             value = {"키워드 등록"}
             disabled = {false}
             hidden = {false}
@@ -112,10 +125,10 @@ export class CustomNodeWidget extends React.Component {
           />
           <Label value="TTS"/>
           <Selectbox
-            id       = {node.name + "sel_TTS_" + node.id}
+            id       = {"sel_TTS_" + node.id}
             value    = {node.tts}
-            dataset  = {ComLib.convComboList(this.props.tts)}
-            width    = {"100px"}
+            dataset  = {this.state.arrTts}
+            width    = {"200px"}
             disabled = {false}
             onChange = {this.event.selectbox.onChange}            
             tooltip     = {true}
@@ -127,11 +140,23 @@ export class CustomNodeWidget extends React.Component {
         </div>
       </div>
       :
-      node.tp === 'select' ?
+      node.tp === 'S' ?
       <div className='basic-node' style={{ background: node.color }}>
         <div className='title'>
           <div className='name'>
-            {node.name}
+            <Textfield
+              width       = {200}
+              id          = {"iptNdNM_" + node.id}
+              name        = {"iptNdNM_" + node.id}
+              value       = {node.name}
+              placeholder = {""}
+              minLength   = {0}
+              maxLength   = {20}
+              readOnly    = {false}
+              disabled    = {false}
+              onChange    = {this.event.input.onChange}
+              onKeyPress  = {this.event.input.onKeyPress}
+            />
           </div>
           <Button
             color='purple' 
@@ -153,8 +178,8 @@ export class CustomNodeWidget extends React.Component {
           <Selectbox
             id       = {node.name + "sel_TTS_" + node.id}
             value    = {node.tts}
-            dataset  = {ComLib.convComboList(this.props.tts)}
-            width    = {"100px"}
+            dataset  = {this.state.arrTts}
+            width    = {"200px"}
             disabled = {false}
             onChange = {this.event.selectbox.onChange}            
             tooltip     = {true}
@@ -169,7 +194,19 @@ export class CustomNodeWidget extends React.Component {
       <div className='basic-node' style={{ background: node.color }}>
         <div className='title'>
           <div className='name'>
-            {node.name}
+            <Textfield
+              width       = {200}
+              id          = {"iptNdNM_" + node.id}
+              name        = {"iptNdNM_" + node.id}
+              value       = {node.name}
+              placeholder = {""}
+              minLength   = {0}
+              maxLength   = {20}
+              readOnly    = {false}
+              disabled    = {false}
+              onChange    = {this.event.input.onChange}
+              onKeyPress  = {this.event.input.onKeyPress}
+            />
           </div>
           <Button
             color='purple' 
@@ -191,16 +228,21 @@ export class CustomNodeWidget extends React.Component {
           <Selectbox
             id       = {node.name + "sel_TTS_" + node.id}
             value    = {node.tts}
-            dataset  = {ComLib.convComboList(this.props.tts)}
-            width    = {"100px"}
+            dataset  = {this.state.arrTts}
+            width    = {"200px"}
             disabled = {false}
             onChange = {this.event.selectbox.onChange}            
             tooltip     = {true}
             tooltipCont = {this.state.ttsCont}
           />
-          <div className='out'>
-            {this.getOutPorts()}
-          </div>
+          {node.tp === 'E'
+            ?
+              null
+            :
+              <div className='out'>
+                {this.getOutPorts()}
+              </div>
+          }          
         </div>
       </div>
     );

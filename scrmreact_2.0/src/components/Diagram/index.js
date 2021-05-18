@@ -37,7 +37,7 @@ class Diagram extends React.Component {
                 newNode[i].id     = propsNode[i].ND_UUID;
                 newNode[i].name   = propsNode[i].ND_NM;
                 newNode[i].ports  = JSON.parse(propsNode[i].ND_PORTS);
-                newNode[i].tp     = propsNode[i].ND_PROC_TP;
+                newNode[i].tp     = propsNode[i].ND_TP;
                 newNode[i].tts    = propsNode[i].ND_TTS_ID;
                 newNode[i].x      = propsNode[i].ND_X;
                 newNode[i].y      = propsNode[i].ND_Y;
@@ -85,37 +85,14 @@ class Diagram extends React.Component {
           
                 newModel.addLink(linkOb);
             });
- 
+            newModel.setZoomLevel(newModel.getZoomLevel() + (-1000 / 60));
             engine.setDiagramModel(newModel);      
             this.model = newModel;
-            
-            // console.log(this.engine)
-
-
+           
+            // engine.enableRepaintEntities([]);
+            // this.forceUpdate();
         }
 	}
-
-    createNode(options) {
-        const { name, color, x, y, tp, tts } = options;
-        var node = new RJD.CustomNodeModel(name, color, tp, tts);
-        node.x = x;
-        node.y = y;
-        node.tp = tp;
-        node.tts = tts
-        return node;
-    }
-
-    createPort(node, options) {
-        const { isInput, id, name, data } = options;
-        return node.addPort(new RJD.DefaultPortModel(isInput, id, name, data));
-    }
-
-    linkNodes(port1, port2) {
-        const link = new RJD.LinkModel();
-        link.setSourcePort(port1);
-        link.setTargetPort(port2);
-        return link;
-    }
 
     serializationSave = () => {
         const { engine, model } = this;
@@ -135,8 +112,7 @@ class Diagram extends React.Component {
                          , ND_KWD_SCO: diagramNode[i].kwdSco
                          , ND_NM     : diagramNode[i].name 
                          , ND_PORTS  : JSON.stringify(diagramNode[i].ports) 
-                         , ND_PROC_TP: diagramNode[i].tp 
-                         , ND_TP     : diagramNode[i].type 
+                         , ND_TP     : diagramNode[i].tp 
                          , ND_TTS_ID : diagramNode[i].tts 
                          , ND_X      : diagramNode[i].x   
                          , ND_Y      : diagramNode[i].y  
@@ -144,21 +120,17 @@ class Diagram extends React.Component {
         }
         let saveLink = [];
         for (let i = 0; i < diagramlinks.length; i ++) {
-            saveLink.push({LK_EN_ND     : diagramlinks[i].source
-                         , LK_EN_ND_PORT: diagramlinks[i].sourcePort
+
+            saveLink.push({LK_EN_ND     : diagramlinks[i].target
+                         , LK_EN_ND_PORT: diagramlinks[i].targetPort
                          , LK_POINT     : JSON.stringify(diagramlinks[i].points) 
-                         , LK_ST_ND     : diagramlinks[i].target 
-                         , LK_ST_ND_PORT: diagramlinks[i].targetPort 
+                         , LK_ST_ND     : diagramlinks[i].source 
+                         , LK_ST_ND_PORT: diagramlinks[i].sourcePort 
                          , LK_TP        : diagramlinks[i].type 
                          , LK_UUID      : diagramlinks[i].id
                          , rowtype      : diagramlinks[i].rowtype  })
         }
 
-        // this.model.deSerializeDiagram(model,this.engine); 
-        // this.engine.setDiagramModel(this.model);     
-
-        // model.deSerializeDiagram(JSON.parse(str),engine);             
-        // engine.setDiagramModel(model);
         this.props.onSave({node: saveNode, link: saveLink});
     }
 
@@ -173,7 +145,7 @@ class Diagram extends React.Component {
                          && action.model.y      === propNode[i].ND_Y
                          && action.model.kwdSco === propNode[i].ND_KWD_SCO
                          && action.model.name   === propNode[i].ND_NM
-                         && action.model.tp     === propNode[i].ND_PROC_TP
+                         && action.model.tp     === propNode[i].ND_TP
                          && action.model.tts    === propNode[i].ND_TTS_ID) {
                             action.model.rowtype = "r"
 
@@ -266,7 +238,7 @@ class Diagram extends React.Component {
                                 width="100%" 
                                 height={this.props.height} 
                                 tts={this.props.tts} 
-                                actions={{deleteItems: true, canvasDrag: true, multiselect: true, multiselectDrag: true}}                                
+                                actions={{deleteItems: false, canvasDrag: true, multiselect: true, multiselectDrag: true, selectAll: false}}                                
                                 onChange={this.onChange.bind(this)}
                             />
                         </ComponentPanel>
@@ -274,7 +246,7 @@ class Diagram extends React.Component {
                             <div className="basic-node" 
                                 style={{background: "rgb(166 227 247)"}} 
                                 draggable 
-                                id = "start"
+                                id = "B"
                                 onDragStart={(event) => {
                                     event.dataTransfer.setData("Type", event.target.id);
                                     event.dataTransfer.setData("title", "시나리오 추가");
@@ -290,7 +262,7 @@ class Diagram extends React.Component {
                             <div className="basic-node" 
                                 style={{background: "rgb(34 185 15)"}} 
                                 draggable 
-                                id = "yn"
+                                id = "F"
                                 onDragStart={(event) => {
                                     event.dataTransfer.setData("Type", event.target.id);
                                     event.dataTransfer.setData("title", "Y/N 프로세스");
@@ -308,7 +280,7 @@ class Diagram extends React.Component {
                             <div className="basic-node" 
                                 style={{background: "rgb(192, 255, 0)"}} 
                                 draggable 
-                                id = "select"
+                                id = "S"
                                 onDragStart={(event) => {
                                     event.dataTransfer.setData("Type", event.target.id);
                                     event.dataTransfer.setData("title", "선택지 프로세스");
@@ -324,7 +296,7 @@ class Diagram extends React.Component {
                             <div className="basic-node" 
                                 style={{background: "rgb(255 153 0)"}} 
                                 draggable 
-                                id = "end"
+                                id = "E"
                                 onDragStart={(event) => {
                                     event.dataTransfer.setData("Type", event.target.id);
                                     event.dataTransfer.setData("title", "시나리오 종료");
@@ -336,6 +308,24 @@ class Diagram extends React.Component {
                                     <div className="name">시나리오 종료</div>
                                 </div>                                
                             </div>
+                            <div className="basic-node" 
+                                style={{background: "rgb(14 115 15)"}} 
+                                draggable 
+                                id = "D"
+                                onDragStart={(event) => {
+                                    event.dataTransfer.setData("Type", event.target.id);
+                                    event.dataTransfer.setData("title", "날짜 검출");
+                                    event.dataTransfer.setData("color", "rgb(14 115 15)");
+                                    event.dataTransfer.setData("port", 2);
+                                    
+
+                                }}
+                            >
+                                <div className="title">
+                                    <div className="name">날짜 검출</div>
+                                </div>                                
+                            </div>
+
                         </ComponentPanel>
                     </FlexPanel>
                 );

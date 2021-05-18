@@ -335,17 +335,6 @@ class View extends React.Component {
 						row.FILE_SIZE			= item.file.size;
 
 						fileArray.push(row)
-						console.log("왜 안될까")
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-						// git 테스트 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				
 					})
 
@@ -489,6 +478,9 @@ class View extends React.Component {
 					<ComponentPanel>
 						<LFloatArea>
 							<Label value={"MP3, WAV, PCM 형식 지원합니다."} req={true} />
+							<Label value={"동시 최대 업로드 가능 파일수는 50개 입니다."} req={true} />
+							<Label value={"100 MB 를 초과 하는 파일은 업로드 할 수 없습니다."} req={true} />
+							<Label value={"전체 파일 용량이 1GB를 초과 할수 없습니다."} req={true} />
 						</LFloatArea>
 						<InputFileUpload
 							width = {this.state.fileUpload.width} 

@@ -516,6 +516,16 @@ const ComLib = {
 			ComLib.setSession("SVR_URL", window.location.protocol + "//" + serverInfos.local.host + ":" + serverInfos.local.port);
 			document.title = "AI-VA  ::::: [LOCAL] :::::";
 		}
+		// } else if (serverInfos.localbuild.host === window.location.hostname) {
+		// 	ComLib.setSession("SYSTEM_DV", "B");
+		// 	ComLib.setSession("SVR_URL", window.location.protocol + "//" + serverInfos.prod.host + ":" + serverInfos.prod.port);
+		// 	document.title = "AI-VA  ::::: [LOCAL] :::::";
+
+		// } else {
+		// 	ComLib.setSession("SYSTEM_DV", "L");
+		// 	ComLib.setSession("SVR_URL", window.location.protocol + "//" + serverInfos.prod.host + ":" + serverInfos.prod.port);
+		// 	document.title = "AI-VA  ::::: [LOCAL] :::::";
+		// }
 	},
 
 	getCentList: (blnBizPsb) => { //BIZ_PSB_YN Filtering

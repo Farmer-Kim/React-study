@@ -153,7 +153,6 @@ class View extends React.Component {
 								 , ND_KWD_SCO: orgNode[i].ND_KWD_SCO
 								 , ND_NM     : orgNode[i].ND_NM
 								 , ND_PORTS  : orgNode[i].ND_PORTS
-								 , ND_PROC_TP: orgNode[i].ND_PROC_TP
 								 , ND_TP     : orgNode[i].ND_TP
 								 , ND_TTS_ID : orgNode[i].ND_TTS_ID
 								 , ND_UUID   : orgNode[i].ND_UUID
@@ -190,6 +189,7 @@ class View extends React.Component {
 								 , rowtype      : "d"})
 				}
 			}
+
 			for (let j = 0; j < params[2].length; j ++) {
 				if (params[2][j].rowtype !== "r") {
 					saveLink.push(params[2][j])
@@ -213,6 +213,13 @@ class View extends React.Component {
 
 			this.saveNode = saveNode;
 			this.saveLink = saveLink;
+
+			
+			console.log(orgNode)
+			console.log(orgLink)
+
+			console.log(this.saveNode)
+			console.log(this.saveLink)
 			break;
 		default: break;
 		}
@@ -326,7 +333,7 @@ class View extends React.Component {
 
 				let addSelect = [];
 
-				addSelect.push({CODE: "0", CD_VAL: "TTS를 선택해 주세요", CODE_NM: "선택", recid: 0, rowtype: "r"});
+				addSelect.push({CODE: "0", CD_VAL: "TTS를 선택해 주세요", CODE_NM: "선택", recid: 0, rowtype: "r", CODE_TP: 'N'});
 				for (let i = 0; i < dsSnroInitTTSListRecv.length; i ++) {
 					addSelect.push(dsSnroInitTTSListRecv[i]);
 
@@ -358,11 +365,13 @@ class View extends React.Component {
 				ComLib.setStateInitRecords(this, "dsSnroNodeList", []);
 				ComLib.setStateInitRecords(this, "dsSnroLinkList", []);
 
+				this.setState({...this.state, dsSnroNode: []});
+				this.setState({...this.state, dsSnroLink: []});
 			}
 			break;
 
 		case 'BOT010000_H01':
-
+			this.transaction('BOT010000_R01');
 			break;
 		default : break;
 		}

@@ -107,10 +107,15 @@ export class DiagramWidget extends React.Component {
           this.pasteSelectedItems(selectedItems);
         }
 
-        // Delete all selected
-        if ([8, 46].indexOf(event.keyCode) !== -1 && selectedItems.length && deleteItems) {
-          selectedItems.forEach(element => {
-            element.remove();
+        if ([8, 46].indexOf(event.keyCode) !== -1 && selectedItems.length ) {
+          selectedItems.forEach(element => {         
+            // 포인트 모델인 경우만 삭제 되도록 변경
+            // 노드는 버튼으로 링크는 포트의 X 로 삭제 하도록 변경
+            if (element instanceof PointModel) {
+              if (!(element.link.getLastPoint().id === element.id) && !(element.link.getFirstPoint().id === element.id)) {
+                element.remove();
+              }
+            }
           });
           onChange(diagramEngine.getDiagramModel().serializeDiagram(), { type: 'items-deleted', items: selectedItems });
           this.forceUpdate();
@@ -724,7 +729,7 @@ export class DiagramWidget extends React.Component {
 
     const nextNode =  this.createNode(nodeOption)
     
-    if (nodeTp === "yn") {
+    if (nodeTp === "F") {
       this.createPort(nextNode, {
         isInput: false,
         name: "네"
@@ -732,29 +737,23 @@ export class DiagramWidget extends React.Component {
       this.createPort(nextNode, {
         isInput: false,
         name: "아니요"
-      })      
-      this.createPort(nextNode, {
-        isInput: false,
-        name: "인식실패"
-      })
-    } else if (nodeTp === "start") {
+      })            
+    } else if (nodeTp === "B") {
       this.createPort(nextNode, {
         isInput: false,
         name: "인식"
       });
+    } else if (nodeTp === "D") {
+      this.createPort(nextNode, {
+        isInput: false,
+        name: "날짜검출"
+      });
     } else {
-      for (let i = 0; i < nodeOutpt; i ++) {      
-        if (i !== nodeOutpt - 1) {
-          this.createPort(nextNode, {
-            isInput: false,
-            name: i + "번 인식"
-          });
-        } else {
-          this.createPort(nextNode, {
-            isInput: false,
-            name: "인식 실패"
-          });
-        }                
+      for (let i = 0; i < nodeOutpt; i ++) {  
+        this.createPort(nextNode, {
+          isInput: false,
+          name: (i + 1) + "번 인식"
+        });              
       }
     }
 

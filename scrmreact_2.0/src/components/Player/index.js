@@ -356,10 +356,12 @@ class Player extends React.Component {
 					if (this.props.options.JOB_TP === 'C') {
 						this.transaction("PLAYER_R02");
 					} else {
+						// src : [res.data.dsRcvSttJobData[0].FILE_PATH],
+						// src : ["http://172.16.0.30:8080/home/vrm/work/2019010110151000270.wav"]
 						this.howler = new Howl({
 							src : [res.data.dsRcvSttJobData[0].FILE_PATH],
 							format : ['mp3', 'wav', 'mp4'],
-							// html5: true,
+							html5: true,
 							// preload : true,
 							onplay : this.event.player.onPlay,
 							onload : this.event.player.onLoad,

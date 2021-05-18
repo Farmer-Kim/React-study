@@ -37,34 +37,36 @@ class ScrmLineBarChart extends React.Component {
 	renderCusomizedLegend = ({ payload }) => {
 		return (
 			<div className="customized-legend" style={{textAlign: 'center'}}>				
-				{payload.map(entry => {
-				const { key, color } = entry;
-				const active = _.includes(this.state.disabled, key);
-				const style = {
-					marginRight: 10,
-					color: active ? "#AAA" : color
-				};
-				return (
-					<span
-						className="legend-item"
-						onClick={() => this.handleClick(key)}
-						style={style}
-					>
-					<Surface width={10} height={10} viewBox="0 0 10 10">
-						<Symbols cx={5} cy={5} type="circle" size={50} fill={color} />
-							{active && (
-								<Symbols
-									cx={5}
-									cy={5}
-									type="circle"
-									size={25}
-									fill={"#FFF"}
-								/>
-							)}
-					</Surface>
-					<span>{key}</span>
-					</span>
-				);
+				{payload.map((entry, index) => {
+					const { key, color } = entry;
+					const active = _.includes(this.state.disabled, key);
+					const style = {
+						marginRight: 10,
+						color: active ? "#AAA" : color
+					};
+					return (
+						<span
+							className="legend-item"
+							key={index + "_legend-item"}
+							onClick={() => this.handleClick(key)}
+							style={style}
+						>
+							{/* <Surface width={10} height={10} viewBox="0 0 10 10"></Surface> */}
+							<Surface width={10} height={10} >
+								<Symbols cx={5} cy={5} type="circle" size={50} fill={color} />
+									{active && (
+										<Symbols
+											cx={5}
+											cy={5}
+											type="circle"
+											size={25}
+											fill={"#FFF"}
+										/>
+									)}
+							</Surface>
+							<span>{key}</span>
+						</span>
+					);
 				})}
 			</div>
 		);

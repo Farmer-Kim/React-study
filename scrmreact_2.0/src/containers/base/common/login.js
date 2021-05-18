@@ -433,9 +433,9 @@ class Login extends React.Component {
 									<button id = 'btnChgPasswd' onClick = {this.event.button.onClick}>{'비밀번호 변경'}</button>
 								</div>
 							</div>
-							<dic className = 'scrm-login-btn-div'>
+							<div className = 'scrm-login-btn-div'>
 								<a href="https://www.google.com/intl/ko/chrome/">Chrome에 최적화 되어 있습니다.</a>								
-							</dic>
+							</div>
 						</div>
 						<div className= 'scrm-login-img'></div>
 					</div>

@@ -22,7 +22,6 @@ export class PortWidget extends React.Component {
     _.map(this.props.port.links, link => {
       cnt ++;
     })
-
     return (
       <div
         className={`port${(this.state.selected ? ' selected' : '')}`}
@@ -31,7 +30,13 @@ export class PortWidget extends React.Component {
         data-name={name}
         data-nodeid={node.getID()}
         onClick={this.onClick.bind(this)}
-      >{cnt > 0 ? "X" : null}</div>
+      >
+        {cnt > 0 ? 
+            "링크삭제"
+          : 
+            name
+        }
+      </div>
     );
   }
 }

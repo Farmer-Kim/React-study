@@ -14,7 +14,7 @@ class InputFileUpload extends React.Component {
 		super(props);
 		this.allFiles = null;
 		this.index = 0;
-		this.page = 20;
+		this.page = 50;
 		this.state = {
 			id : this.props.id || '',
 			files : null,
@@ -35,7 +35,7 @@ class InputFileUpload extends React.Component {
 		onUploadComplete  : () => { return; },
 		uploadValidation  : () => { return true; }
 	}
-	getUploadParams = () => {
+	getUploadParams = (e) => {
 		return { url: 'https://httpbin.org/post' }
 	}
 	onChangeStatus = ({ meta }, status) => { this.props.onChangeStatus({ id : this.state.id, data : {status : status, mete: meta}}) }
@@ -48,7 +48,7 @@ class InputFileUpload extends React.Component {
 	}
 	handleSubmit = (files, allFiles) => {
 		console.log("File Upload Handle Submit");
-		if (this.validate(files)) {
+		if (this.validate(files, allFiles)) {
 			this.allFiles = allFiles;
 			this.setState({...this.state, showProgressbar: false, files: files
 			}, () => {
@@ -109,17 +109,6 @@ class InputFileUpload extends React.Component {
 	callback = (res) => {
 		try {
 			switch (res.id) {
-			case "UPLOAD":
-				if (res.data.gifnoc.ERR_CODE === 0) {
-					this.setState({...this.state, uploadStatus : "success"}
-					, () => {
-						this.props.handleSubmit({ id : this.state.id, files : this.state.files});
-						setTimeout(this.setState({...this.state,  files : null, showProgressbar: false, uploadPercent : 0, uploadStatus : ""}), 2000);
-					});
-				} else {
-					this.setState({...this.state, uploadStatus: "error"});
-				}
-			break;
 			case "_FILEUPLOAD":
 				console.log(res)
 				if (res.result === '0') {
@@ -130,7 +119,7 @@ class InputFileUpload extends React.Component {
 					} else {
 						this.allFiles.forEach((f) => { f.remove(); });
 						this.index = 0;
-						this.onUploadComplete(res.result, this.allFiles, res.data.savedFileList);
+						this.onUploadComplete(res.result, this.state.files, res.data.savedFileList);
 					}
 				}
 				break;
@@ -140,16 +129,42 @@ class InputFileUpload extends React.Component {
 			console.log(err);
 		}
 	}
-	validate = (files) => {
-		if (files.length > 100) {
-			ComLib.openDialog('A', 'SYSI0010', ['첨부파일의 갯수는 최대 100개로 제한됩니다.']);
+	validate = (files, allFiles) => {
+		if (files.length > 50) {
+			ComLib.openDialog('A', 'SYSI0010', ['첨부파일의 갯수는 최대 50개로 제한됩니다.']);
 			return false;
 		}
+
+		let Allsize = 0;
+		for (let i = 0; i < files.length; i ++) {
+			Allsize += files.size;
+		}
+		if (Allsize > (1024 * 1024 * 1024)) {
+			ComLib.openDialog('A', 'SYSI0010', ['전체 파일 용량이 1GB를 초과 할수 없습니다.']);
+			return false;
+		}
+
 		if (!this.props.uploadValidation(files)) {
 			return false;
 		}
+
 		return true;
 	}
+	valTest = (e) => {
+		console.log(e)
+		console.log(e.meta.status)
+		
+		var reader = new FileReader();
+		reader.onload = function(event) {
+			console.log('File content:', event.target.result);
+		};
+		reader.readAsText(e.file);
+		
+		console.log(reader)
+		return false;
+	}
+
+	  
 	render () {
 		return  (
 			<React.Fragment>
@@ -164,11 +179,13 @@ class InputFileUpload extends React.Component {
 					LayoutComponent = {Layout}
 					onSubmit={this.handleSubmit}
 					accept = {".wav, .mp3, .PCM"}
-					// maxSizeBytes = {1024 * 1024 * 3}
+					maxFiles = {50}
+					maxSizeBytes = {1024 * 1024 * 100}
+					validate={this.valTest}
 					styles={{
 						dropzone: { height: (this.props.height) ? this.props.height + 'px' : '400px', display: 'block', overflow: 'hidden'} ,
 						inputLabel : { fontColor: 'black'}
-					}}
+					}}					
 				/>
 			</React.Fragment>
 		);
