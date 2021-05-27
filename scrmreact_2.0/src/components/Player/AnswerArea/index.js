@@ -1,6 +1,7 @@
 import React from 'react';
 import {BasicButton as Button, Label, Textarea, RelativeGroup, ComponentPanel, Switch, SubFullPanel, RFloatArea} from 'components';
 import {ComLib, StrLib} from 'common';
+import 'assets/styles/component.css';
 
 class AnswerArea extends React.Component {
 	constructor (props) {
