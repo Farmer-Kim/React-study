@@ -51,7 +51,7 @@ button:focus {outline: none;}
 [tooltip]:hover:before{	border-top : 10px solid black; border-left : 10px solid transparent; border-right : 10px solid transparent; border-bottom : 0px solid transparent; content: ""; position: absolute; bottom:calc(100% + 1px); }
 [tooltip]:hover:after {
 	content : attr(tooltip);
-	position : absolute; bottom: calc(100% + 10px); left : calc(-110%); background-color: black; color: white; font-weight: bold; font-size: 12px; z-index: 9999; width: calc(250%);
+	position : absolute; bottom: calc(100% + 10px); left : calc(-90%); background-color: black; color: white; font-weight: bold; font-size: 12px; z-index: 9999; width: calc(250%);
 	/*position : absolute; bottom: calc(100% + 1px); left : calc(-110%); background-color: transparent; color: black; font-weight: bold; font-size: 12px; z-index: 9999; width: calc(310%);*/
 }
 
