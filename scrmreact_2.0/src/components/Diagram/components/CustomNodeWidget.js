@@ -22,7 +22,45 @@ export class CustomNodeWidget extends React.Component {
     node.remove();
     diagramEngine.forceUpdate();
   }
+  addPort() {
+    const { node, diagramEngine } = this.props;
+    let lastLabel   = node.getOutPorts()[node.getOutPorts().length -1].label;
+    let indexOfCom  = lastLabel.indexOf('번');
+    let newLabel    = (node.getOutPorts().length + 1) + lastLabel.substring(indexOfCom, lastLabel.length);
+   
+    const portOb = diagramEngine.getInstanceFactory("DefaultPortModel").getInstance();
 
+    portOb.in    = false;
+    portOb.label = newLabel;
+    portOb.name  = newLabel;
+
+    node.addPort(portOb);
+    
+    if (node.rowtype === 'r') {
+      node.rowtype = 'u';
+    } else if (node.rowtype === 'c') {
+      
+    } else if (node.rowtype === 'u') {
+
+    }
+    diagramEngine.forceUpdate();
+  }
+  delPort() {
+    const { node, diagramEngine } = this.props;
+    let port = node.getOutPorts()[node.getOutPorts().length -1];
+    node.removePort(port)
+
+    if (node.rowtype === 'r') {
+      node.rowtype = 'u';
+    } else if (node.rowtype === 'c') {
+      
+    } else if (node.rowtype === 'u') {
+
+    }
+
+    diagramEngine.forceUpdate();
+
+  }
   componentDidMount () {
 		let { node } = this.props;
     let arr = this.props.tts.filter(ele => ele['CODE'] === node.tts);
@@ -65,7 +103,7 @@ export class CustomNodeWidget extends React.Component {
     button: {
       onClick: (e) => {
         // 저장이 되있는 경우에만 할수 있도로 validation 추가 필요
-        let param = {id:this.props.node.id, name: this.props.node.name, kwdSco: this.props.node.kwdSco};
+        let param = {id:this.props.node.id, port: "IN", snroTp:"B", name: this.props.node.name};
         let option2 = { width: '600px', height: '830px', modaless: false, callback :  () => {} , param: param}
         ComLib.openPop('BOT010101', '키워드 등록 : ' + this.props.node.name, option2)
       }
@@ -158,6 +196,30 @@ export class CustomNodeWidget extends React.Component {
               onKeyPress  = {this.event.input.onKeyPress}
             />
           </div>
+          <Button
+            color='purple' 
+            size ='xs'
+            fiiled= {true} innerImage={true} icon = {'add'}
+            id = {node.name + "btn_add_" + node.id}
+            value = {""}
+            disabled = {false}
+            hidden = {false}
+            tooltip={"선택지 추가"}
+            onClick = {this.addPort.bind(this)}
+            ml = {5}
+          /> 
+          <Button
+            color='purple' 
+            size ='xs'
+            fiiled= {true} innerImage={true} icon = {'del'}
+            id = {node.name + "btn_del_" + node.id}
+            value = {""}
+            disabled = {false}
+            hidden = {false}
+            tooltip={"선택지 삭제"}
+            onClick = {this.delPort.bind(this)}
+            ml = {5}
+          /> 
           <Button
             color='purple' 
             size ='xs'

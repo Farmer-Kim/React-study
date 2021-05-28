@@ -238,10 +238,6 @@ class View extends React.Component {
 								isDup = true;
 								dupType = "상담원 IP"; 
 	
-							} else if (String(chennelRecord[intA].CHNL_NUM) === String(chennelRecord[intB].CHNL_NUM)) {
-								isDup = true;
-								dupType = "채널 번호"; 
-	
 							} else if (String(chennelRecord[intA].EXT_NUM) === String(chennelRecord[intB].EXT_NUM)) {
 								isDup = true;
 								dupType = "내선 번호"; 
@@ -381,7 +377,7 @@ class View extends React.Component {
 						cnList[cnList.length - 1].REG_USR_ID = "";
 						cnList[cnList.length - 1].USE_FLAG = "Y";
 						cnList[cnList.length - 1].CONST_IP = "";
-						cnList[cnList.length - 1].CHNL_NUM = "";
+						cnList[cnList.length - 1].UNQ = "";
 						cnList[cnList.length - 1].EXT_NUM = "";	
 						newCnt += 1;					
 					}

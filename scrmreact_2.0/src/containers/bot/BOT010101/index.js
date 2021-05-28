@@ -29,8 +29,8 @@ class BOT010101 extends React.Component {
 					areaName : '추출 키워드',
 					height   : '580px',
 					header   : [
-									{headerName: '키워드',	 field: 'KWD',	colId: 'KWD', width: 200},
-									{headerName: '가중치',   field: 'KWD_SCO',	colId: 'KWD_SCO', width: 100},
+									{headerName: '키워드',	 field: 'KWD',	colId: 'KWD', width: 200,	editable: true},
+									{headerName: '가중치',   field: 'KWD_SCO',	colId: 'KWD_SCO', width: 100,	editable: true},
 									{headerName: '사용여부', field: 'USE_FLAG',	colId: 'USE_FLAG',	editable: true, defaultValue : 'Y', width: 150, req: true, resizable: false, textAlign: 'center', singleClickEdit: true,
 										cellEditor: 'agSelectCellEditor',
 										cellEditorParams: { values : ComLib.getComCodeValue('CMN', 'USE_FLAG')},
@@ -64,7 +64,7 @@ class BOT010101 extends React.Component {
 		let props = this.props.options.param;     
 		let state = this.state;
 		state['textFieldProps']['iptSnroNm'].value = props.name;
-		state['textFieldProps']['iptSnroSco'].value = props.kwdSco;
+		state['textFieldProps']['iptSnroType'].value = props.snroTp;
 		console.log(props)
 		this.setState(state);
 		this.transaction("BOT010101_R00")	
@@ -89,14 +89,14 @@ class BOT010101 extends React.Component {
 				transManager.addConfig({
 					dao: transManager.constants.dao.base,
 					crudh: transManager.constants.crudh.read,
-					sqlmapid:"BOT.R_getSnroKeyword",
+					sqlmapid:"BOT.R_getSnroKeywordList",
 					datasetsend:"dsSearch",
 					datasetrecv:"dsSnroKeywordListRecv",
 				});
 				
 				let props = this.props.options.param;
 
-				transManager.addDataset('dsSearch', [{ND_UUID: props.id}]);
+				transManager.addDataset('dsSearch', [{ND_UUID: props.id, ND_PORT: props.port}]);
 				transManager.agent();
 
 				break;
@@ -119,6 +119,11 @@ class BOT010101 extends React.Component {
 				let dsSnroKeywordListRecv = res.data.dsSnroKeywordListRecv;
 
 				ComLib.setStateInitRecords(this, "dsSnroKeywordList", dsSnroKeywordListRecv);
+				
+				let state = this.state;
+				state['textFieldProps']['iptSnroSco'].value = res.data.dsSnroKeywordListRecv[0].REQ_SCO;
+				this.setState(state);
+
 			}	
 
 			break;
@@ -146,23 +151,6 @@ class BOT010101 extends React.Component {
 			onSelectionChanged: (e) => {
 				switch (e.id) {
 				case "grdSnroKeyword":
-					let bigRow = this.snroKeywordGrid.getSelectedRows()[0]	
-
-					let bigCd   = bigRow.BIG_CD;
-					let rowType = bigRow.rowtype;
-					let mdlCd   = bigRow.MDL_CD;					
-
-					if ((rowType === 'r' || rowType === 'u') && (this.currentRowBig !== bigCd || this.currentRowMdl !== mdlCd)) {
-						if (this.validation("SYS010000_R02")) this.transaction("SYS010000_R02", bigCd, mdlCd);
-						
-
-					} else if (rowType === 'c'){
-						ComLib.setStateInitRecords(this, "dsSmlCdList", []);
-
-					}
-
-					this.currentRowBig = this.snroKeywordGridApi.getSelectedRows()[0].BIG_CD;
-					this.currentRowMdl = this.snroKeywordGridApi.getSelectedRows()[0].MDL_CD;
 						
 					break;
 
@@ -182,19 +170,6 @@ class BOT010101 extends React.Component {
 			onRowClicked: (e) => {
 				switch (e.id) {
 				case "grdSnroKeyword":
-					let bigRows = this.snroKeywordGridApi.rowModel.rowsToDisplay;
-					let bigRow;
-
-					for (let i = 0; i < bigRows.length; i ++) {
-						if (bigRows[i].data.TEMP_CD === e.data.TEMP_CD){
-							bigRow = this.snroKeywordGridApi.rowModel.rowsToDisplay[i];
-							break;
-						}
-					}
-
-					if (bigRow.selected !== true) {
-						bigRow.setSelected(true);
-					}
 															 		
 					break;
 
@@ -204,31 +179,7 @@ class BOT010101 extends React.Component {
 			onCellValueChanged: (e) => {				
 				switch (e.id) {
 				case "grdSnroKeyword":	
-					if (e.col === "BIG_CD" || e.col === "MDL_CD" ) {
-						if (this.snroKeywordGrid.gridDataset.records[e.index].rowtype !== newScrmObj.constants.crud.create) {
-							ComLib.openDialog('A', 'COME0013', [(e.col === "BIG_CD" ? '대' : '중') + '분류 코드']);
-						
-							this.snroKeywordGrid.gridDataset.setValue(e.index , e.col, e.oldValue);
-							this.snroKeywordGridApi.setRowData(this.snroKeywordGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
-						}
-					}	
-
-					let bigRows = this.snroKeywordGridApi.rowModel.rowsToDisplay;
-					let bigRow;
-
-					for (let i = 0; i < bigRows.length; i ++) {
-						if (bigRows[i].data.TEMP_CD === e.data[e.index].TEMP_CD){
-							bigRow = this.snroKeywordGridApi.rowModel.rowsToDisplay[i];							
-							break;
-						}
-					}
-
-					this.currentRowBig = bigRow.data.BIG_CD;
-					this.currentRowMdl = bigRow.data.MDL_CD;
-
-					this.lastEditedBig = bigRow.data.BIG_CD;
-					this.lastEditedMdl = bigRow.data.MDL_CD;
-
+					
 					break;
 		
 				default: break;
@@ -237,21 +188,7 @@ class BOT010101 extends React.Component {
 			onDeleteRow: (e) => {
 				switch (e.id) {
 				case "grdSnroKeyword":
-					let bigCd   = this.snroKeywordGridApi.getSelectedRows()[0].BIG_CD
-					let mdlCd   = this.snroKeywordGridApi.getSelectedRows()[0].MDL_CD
-					let rowType = this.snroKeywordGridApi.getSelectedRows()[0].rowtype;					
-
-					if ((rowType === 'r' || rowType === 'u') && (this.currentRowBig !== bigCd || this.currentRowMdl !== mdlCd)) {
-						if (this.validation("SYS010000_R02")) this.transaction("SYS010000_R02", bigCd, mdlCd);
-							
-					} else {
-						ComLib.setStateInitRecords(this, "dsSmlCdList", []);
-
-					}
 					
-					this.currentRowBig = this.snroKeywordGridApi.getSelectedRows()[0].BIG_CD;
-					this.currentRowMdl = this.snroKeywordGridApi.getSelectedRows()[0].MDL_CD;
-
 					break;
 
 				default: break;
@@ -272,35 +209,6 @@ class BOT010101 extends React.Component {
 			onInsertRow : (e) => {
 				switch (e.id) {
 				case "grdSnroKeyword":
-					let snroKwdRecords = this.snroKeywordGrid.gridDataset.records;
-
-					snroKwdRecords[e.index].TEMP_CD = this.maxTempBigCd + 1;
-
-					this.maxTempBigCd ++;
-
-					this.snroKeywordGrid.gridDataset.setRecords(snroKwdRecords);
-
-					this.snroKeywordGridApi.setRowData(this.snroKeywordGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
-				
-					let bigRows = this.snroKeywordGridApi.rowModel.rowsToDisplay;
-					let bigRow;
-
-					for (let i = 0; i < bigRows.length; i ++) {
-						if (bigRows[i].data.TEMP_CD === this.maxTempBigCd){
-							bigRow = this.snroKeywordGridApi.rowModel.rowsToDisplay[i];
-							this.snroKeywordGridApi.ensureIndexVisible(i, 'middle');
-							break;
-						}
-					}
-
-					if (bigRow.selected !== true) {
-						bigRow.setSelected(true);
-					}					
-
-					ComLib.setStateInitRecords(this, "dsSmlCdList", []);
-					
-					this.currentRowBig = '';
-					this.currentRowMdl = '';
 
 					break;
 
@@ -315,15 +223,8 @@ class BOT010101 extends React.Component {
 				let state = this.state;
 
 				switch (e.target.id) {
-				case 'iptSnroNm':
-
-					state['textFieldProps']['iptSnroNm'].value = e.target.value;
-	
-					this.setState(state);
-					
-					break;
 				case 'iptSnroSco':
-					state['textFieldProps']['iptSnroNm'].value = e.target.value;
+					state['textFieldProps']['iptSnroSco'].value = e.target.value;
 	
 					this.setState(state);
 					
@@ -333,10 +234,6 @@ class BOT010101 extends React.Component {
 			},
 			onKeyPress: (e) => {
 				switch (e.target.id) {
-				case 'iptSnroNm':
-					
-					break;
-
 				case 'iptSnroSco':
 					
 					break;
@@ -387,8 +284,9 @@ class BOT010101 extends React.Component {
 												placeholder = {this.state.textFieldProps.iptSnroSco.placeholder}
 												minLength   = {1}
 												maxLength   = {3}
-												readOnly    = {true}
+												readOnly    = {false}
 												disabled    = {false}
+												type        = {"onlyNum"}
 												onChange    = {this.event.input.onChange}
 												onKeyPress  = {this.event.input.onKeyPress}
 											/>
@@ -403,9 +301,9 @@ class BOT010101 extends React.Component {
 									header      = {this.state.grdProps.grdSnroKeyword.header}
 									data        = {this.state.dsSnroKeywordList}
 									height      = {this.state.grdProps.grdSnroKeyword.height}
-									onGridReady        = {this.event.grid.onGridReady}
-									onDeleteRow        = {this.event.grid.onDeleteRow}
-									onInsertRow        = {this.event.grid.onInsertRow}
+									onGridReady = {this.event.grid.onGridReady}
+									onDeleteRow = {this.event.grid.onDeleteRow}
+									onInsertRow = {this.event.grid.onInsertRow}
 
 									rowNum      = {true}
 									addRowBtn   = {true}

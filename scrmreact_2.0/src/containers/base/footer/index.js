@@ -32,6 +32,8 @@ class Footer extends React.Component{
 									onClick={e => {
 										this.props.popupList.forEach(element => {
 											ReactDOM.unmountComponentAtNode(document.getElementById(element.id));
+											document.body.removeChild(document.getElementById(element.id));
+
 										});
 										AppModuleAction.delAllPop()
 									}}

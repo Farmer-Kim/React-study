@@ -60,7 +60,7 @@ class CsState extends React.Component {
 							<div 
 								key={cs.CONST_CD}
 								style={{textAlign: 'center', marginBottom: this.props.iconbm}}										
-								onClick = {callType === 'E' ? null : () => {this.props.onClickCs({ USR_CD: cs.CONST_CD, USR_NM: cs.CONST_NM })}}
+								onClick = {callType === 'E' ? null : () => {this.props.onClickCs({ CONST_CD: cs.CONST_CD, CONST_NM: cs.CONST_NM, CALL_ID: cs.CALL_ID})}}
 							>
 								<CsButton		
 									id       = {cs.CONST_CD}
@@ -85,7 +85,7 @@ class CsState extends React.Component {
 					if (csList[j].CENT_CD === item.CENT_CD ) {
 						tempCnt += 1;       
 
-						if (csList[j].CONS_STATE !== 'N') {
+						if (csList[j].CONS_STATE !== 'E') {
 							tempCnt2 += 1;
 						}
 					}

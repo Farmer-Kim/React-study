@@ -181,11 +181,12 @@ class View extends React.Component {
 		}
 	}
 	onClickCs(e) {		
-		console.log(e)
-
 		let params = e;
+		console.log("footer 에서 지울때 에러 해결해야함")
 		let option1 = { width: '600px', height: '830px', modaless: true, params}
-		ComLib.openPop('STT060001', e.CONST_NM, option1);
+		
+		ComLib.openRealTime(option1);
+		// ComLib.openPop('STT010001', e.CONST_NM, option1);
 
 	}
 	serchCs = async (target) => {
@@ -250,6 +251,7 @@ class View extends React.Component {
 							{this.state.dsCenterList.records.map((item, index) =>
 								<Checkbox  
 									id={item.CENT_CD}
+									key={item.CENT_CD}
 									value={item.CENT_NM}
 									index={index}
 									keyProp={item.CENT_CD}

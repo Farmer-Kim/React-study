@@ -358,7 +358,7 @@ button:focus {outline: none;}
 .scrm-alert-modal-content-body { text-align: left; display: flex; padding: 20px; white-space: normal; justify-content: center; margin-top: 15px;}
 
 .scrm-popup-modal { position: fixed; z-index: 9999; width: 100%; height: 100%; top: 0; left: 0; right: 0; bottom: 0; margin: auto; background-color: rgba(0,0,0, 0.5); border: 1px solid black;}
-.scrm-popup-modal-content {position: absolute;  top: 25%; left: 25%; right: 25%; bottom: 25%; margin: auto; background: white; overflow: auto; border-radius: 4px; box-shadow: -1px -1px 7px rgba(0,0,0,0.1);}
+.scrm-popup-modal-content {position: absolute;  top: 25%; left: 25%; right: 25%; bottom: 25%; margin: auto; background: white; overflow: auto; border-radius: 4px; box-shadow: -1px -1px 7px rgba(0,0,0,0.4);}
 .scrm-popup-modal-content-header {width:100%; height:40px; border-bottom: 1px solid #F1F3F5; background: #364fc7; color:#fff;}
 .scrm-popup-modal-content-body {text-align: center; width: 100%; height: calc(100% - 51px);}
 

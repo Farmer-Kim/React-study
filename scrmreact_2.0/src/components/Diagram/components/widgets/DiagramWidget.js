@@ -356,14 +356,14 @@ export class DiagramWidget extends React.Component {
     } else if (action instanceof MoveItemsAction && moveItems) {
       // Translate the items on the canvas
       action.selectionModels.forEach(model => {
-          if (model.model instanceof NodeModel || model.model instanceof PointModel) {
+        if (model.model instanceof NodeModel) {
+          model.model.x = Math.round((model.initialX + ((event.pageX - this.state.action.mouseX) / (diagramModel.getZoomLevel() / 100)))/50) * 50;
+          model.model.y = Math.round((model.initialY + ((event.pageY - this.state.action.mouseY) / (diagramModel.getZoomLevel() / 100)))/50) * 50;
+         
+        } else if (model.model instanceof PointModel) {
+          model.model.x = Math.round((model.initialX + ((event.pageX - this.state.action.mouseX) / (diagramModel.getZoomLevel() / 100)))/5) * 5;
+          model.model.y = Math.round((model.initialY + ((event.pageY - this.state.action.mouseY) / (diagramModel.getZoomLevel() / 100)))/5) * 5;
 
-          model.model.x = model.initialX + (
-            (event.pageX - this.state.action.mouseX) / (diagramModel.getZoomLevel() / 100)
-          );
-          model.model.y = model.initialY + (
-            (event.pageY - this.state.action.mouseY) / (diagramModel.getZoomLevel() / 100)
-          );
         }
       });
 
@@ -499,10 +499,13 @@ export class DiagramWidget extends React.Component {
       type: actionType
     };
 
-    // console.log("onMouseUp")
-    // console.log(action)
-    // console.log(actionType)
-    // console.log(element)
+    console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    console.log("onMouseUp")
+    console.log(action)
+    console.log(actionType)
+    console.log(element)
+    console.log(event)
+
     if (element === null) {
       // No element, this is a canvas event
       // actionOutput.type = 'canvas-event';
@@ -627,6 +630,8 @@ export class DiagramWidget extends React.Component {
     // if (actionType === 'items-moved') {
     //   delete actionOutput.model;
     // }
+    console.log(actionOutput.items)
+    console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     diagramEngine.clearRepaintEntities();
     

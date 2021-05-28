@@ -24,6 +24,7 @@ const newScrmObj = {
 			DIALOG : 'dialog',
 			POP_UP : 'popup',
 			PLAYER : 'player',
+			realTime : 'real',
 			LOADING : '_loadDiv'
 		},
 		select: {
@@ -242,6 +243,92 @@ const ComLib = {
 		, playerDiv);
 
 		return playerDiv.id;
+		
+	},
+	openRealTime : (options, callbackFunc) => {
+		options.height = '810px';
+		// let title = 'STT플레이어 : ' + (options.useUuid === true ? options.UUID : options.callId);
+		let title = options.params.CONST_NM + "(" + options.params.CONST_CD + ")";
+		
+		// ComLib.openPop('STT000001', title, options, callbackFunc);
+
+		let arrRealTimeTag = Object.values(document.body.children).filter(
+			tag => tag.tagName === 'DIV'
+		).filter(
+			item => item.id.substring(0, newScrmObj.constants.mdi.realTime.length) === newScrmObj.constants.mdi.realTime
+		);
+		
+		let isAreadyOpened = false;
+
+		for (let i = 0; i < arrRealTimeTag.length; i ++) {
+			let currentRealTime = document.getElementById(arrRealTimeTag[i].id + "_inner_div").parentElement;
+
+			if (arrRealTimeTag[i].id === newScrmObj.constants.mdi.realTime + '_div_' + options.params.CONST_CD + "_" + options.params.CALL_ID) {				
+				isAreadyOpened = true;
+				currentRealTime.style.zIndex = '9992'
+
+			} else {
+				
+				currentRealTime.style.zIndex = '9991'
+			}
+		}
+
+		if (isAreadyOpened) {
+			return;
+		}
+
+		let realTimeDiv = document.createElement('div');
+		let position = {x: 0, y: 0};
+
+		if (arrRealTimeTag.length === 0) {
+			realTimeDiv.id = newScrmObj.constants.mdi.realTime + '_div_' + options.params.CONST_CD + "_" + options.params.CALL_ID;
+		} else {
+			realTimeDiv.id = newScrmObj.constants.mdi.realTime + '_div_' + options.params.CONST_CD + "_" + options.params.CALL_ID;
+			position = { x : arrRealTimeTag.length * 10,  y: arrRealTimeTag.length * 10 }
+		}
+		
+		document.body.appendChild(realTimeDiv);
+
+		ReactDOM.render(
+			<Provider store={store}>
+				<Dialog.PopupDialog
+					popupdivid = {realTimeDiv.id}
+					open={true}
+					url={'STT010001'}
+					name={title}
+					modaless={options.modaless}
+					position = {position}
+					options={options}
+					onCallbackFunc={callbackFunc}
+					onClose={
+						() => {
+							return new Promise ( (resolve, reject) => {
+								try {
+									if (typeof options.callback === "function") {
+										try {
+											options.callback();
+										} catch (err) {
+											reject(err);
+										}
+									}
+									resolve();
+								} catch (error) {
+									reject(error);
+								}
+							}).then(function () {
+								ReactDOM.unmountComponentAtNode(document.getElementById(realTimeDiv.id));
+							}).catch(function (error) {
+								console.log(error);
+							}).then(function () {
+								document.body.removeChild(realTimeDiv);
+							});
+						}
+					}
+				/>
+			</Provider>
+		, realTimeDiv);
+
+		return realTimeDiv.id;
 		
 	},
 	copyText : (txt) => {
@@ -1828,6 +1915,7 @@ class TransManager {
 				upload: '/upload.service.do',
 				sttSearch: '/sttSearch.service.do',
 				sftp: '/sftp.service.do',
+				realTime: '/realTime.service.do',
 			},
 			errorcode: {
 				SUCCESS: '0',
@@ -1850,6 +1938,7 @@ class TransManager {
 				passwd: '10',
 				interface: '11',
 				sttSearch: '12',
+				realTime: '13',
 
 				dataset: 'ds_config'
 			},

@@ -1222,8 +1222,7 @@ class Player extends React.Component {
 												<BasicButton id={"btnSrchTextUp"} onClick={this.event.button.onClick} color={"purple"} size="xs" innerImage={true} icon = {'arrowUp'} ml="5px" tooltip={"위로"}/>
 												<BasicButton id={"btnSrchTextDown"} onClick={this.event.button.onClick} color={"purple"} size="xs" innerImage={true} icon = {'arrowDn'} ml="5px" tooltip={"아래로"}/>
 												<BasicButton id={"btnClearText"} onClick={this.event.button.onClick} color={"red"} size="xs" innerImage={true} icon = {'close'} ml="5px" mr="5px" tooltip={"초기화"}/>
-											</div>
-											
+											</div>											
 											<Selectbox
 												id = {'selKeywordType'}
 												value = {this.state.selKeywordType}

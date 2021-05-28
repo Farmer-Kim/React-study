@@ -32,11 +32,30 @@ class Diagram extends React.Component {
             let propsLink = this.props.dsSnroLink;
 
             for (let i = 0; i < propsNode.length; i ++) {
+                                
+                let ndPorts = propsNode[i].ND_PORTS;
+                
+                let portArray = ndPorts.split("||");   
+                let jsonNdPort = [];
+                console.log(portArray)
+                for (let j = 0; j < portArray.length; j ++) {
+                    
+                    console.log(portArray[j])
+                    let jsonString = JSON.parse(portArray[j])
+                    jsonNdPort.push({id: "", name: "", selected: false, _class: "DefaultPortModel", label: "", parentNode: "", links: [], data: null, in: false});
+                    jsonNdPort[j].id = jsonString.id;
+                    jsonNdPort[j].name = jsonString.name;
+                    jsonNdPort[j].label = jsonString.name;
+                    jsonNdPort[j].parentNode = propsNode[i].ND_UUID;
+                    jsonNdPort[j].links = jsonString.links;
+                    jsonNdPort[j].in = jsonString.in;
+                }
+
                 newNode.push({color:"", extras: {}, id: "", name: "", ports: "", selected: false, tp: "", tts: undefined, type: "default", x:0, y:0, _class: "CustomNodeModel", rowtype:'r'});
                 newNode[i].color  = propsNode[i].ND_COLOR;
                 newNode[i].id     = propsNode[i].ND_UUID;
                 newNode[i].name   = propsNode[i].ND_NM;
-                newNode[i].ports  = JSON.parse(propsNode[i].ND_PORTS);
+                newNode[i].ports  = jsonNdPort;
                 newNode[i].tp     = propsNode[i].ND_TP;
                 newNode[i].tts    = propsNode[i].ND_TTS_ID;
                 newNode[i].x      = propsNode[i].ND_X;
@@ -106,18 +125,32 @@ class Diagram extends React.Component {
         let diagramlinks = JSON.parse(str).links;
         let saveNode = [];
         for (let i = 0; i < diagramNode.length; i ++) {
+            let jsonProts = diagramNode[i].ports;
+            let savePort = "";
+
+            for (let j = 0; j < jsonProts.length; j ++) {
+                savePort += `{"id":"` + jsonProts[j].id + `",`;
+                savePort += `"name":"` + jsonProts[j].name + `",`;
+                savePort += `"links":` + JSON.stringify(jsonProts[j].links) + `,`;
+                savePort += `"in":` + jsonProts[j].in +`}`;
+                if (j + 1 !== jsonProts.length) {
+                    savePort += "||";
+                }
+            }
             saveNode.push({EXTRAS    : {}
                          , ND_COLOR  : diagramNode[i].color
                          , ND_UUID   : diagramNode[i].id
                          , ND_KWD_SCO: diagramNode[i].kwdSco
                          , ND_NM     : diagramNode[i].name 
-                         , ND_PORTS  : JSON.stringify(diagramNode[i].ports) 
+                         , ND_PORTS  : savePort
                          , ND_TP     : diagramNode[i].tp 
                          , ND_TTS_ID : diagramNode[i].tts 
                          , ND_X      : diagramNode[i].x   
                          , ND_Y      : diagramNode[i].y  
                          , rowtype   : diagramNode[i].rowtype   })
         }
+
+
         let saveLink = [];
         for (let i = 0; i < diagramlinks.length; i ++) {
 
@@ -140,13 +173,14 @@ class Diagram extends React.Component {
         switch(action.type) {
             case 'node-moved':
                 for (let i = 0; i < propNode.length; i ++) {
-                    if (action.model.id === propNode[i].ND_UUID) {
+                    if (action.model.id === propNode[i].ND_UUID) {                        
                         if (action.model.x      === propNode[i].ND_X 
                          && action.model.y      === propNode[i].ND_Y
                          && action.model.kwdSco === propNode[i].ND_KWD_SCO
                          && action.model.name   === propNode[i].ND_NM
                          && action.model.tp     === propNode[i].ND_TP
-                         && action.model.tts    === propNode[i].ND_TTS_ID) {
+                         && action.model.tts    === propNode[i].ND_TTS_ID
+                         && action.model.rowtype === "r") {
                             action.model.rowtype = "r"
 
                         } else {

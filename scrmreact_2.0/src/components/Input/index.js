@@ -64,7 +64,7 @@ class MultiCheckBox extends React.Component {
 				this.props.dataset.map((item, i) => {
 					return (
 						<Checkbox
-							key = {'checkbox_' + i}
+							key = {'checkbox_' + this.props.id + "_"+ i}
 							id = {this.props.id}
 							index = {i}
 							value = {item[this.props.value]}
