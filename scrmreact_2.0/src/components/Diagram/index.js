@@ -260,7 +260,7 @@ class Diagram extends React.Component {
         this.engine.setDiagramModel(this.model);        
     }
 
-    render() {
+    render() {      
         const { engine, model } = this;
         // Render the canvas
         return ( 
@@ -277,14 +277,14 @@ class Diagram extends React.Component {
                             />
                         </ComponentPanel>
                         <ComponentPanel width={'20%'}>
-                            <div className="basic-node" 
-                                style={{background: "rgb(166 227 247)"}} 
+                            <div className="basic-btn" 
+                                style={{background: "rgb(238 89 78)", marginTop: "0px"}} 
                                 draggable 
                                 id = "B"
                                 onDragStart={(event) => {
                                     event.dataTransfer.setData("Type", event.target.id);
                                     event.dataTransfer.setData("title", "시나리오 추가");
-                                    event.dataTransfer.setData("color", "rgb(166 227 247)");
+                                    event.dataTransfer.setData("color", "rgb(238 89 78)");
                                     event.dataTransfer.setData("port", 1);
                                 }}
                             >
@@ -293,14 +293,14 @@ class Diagram extends React.Component {
                                 </div>                                
                             </div>
 
-                            <div className="basic-node" 
-                                style={{background: "rgb(34 185 15)"}} 
+                            <div className="basic-btn" 
+                                style={{background: "rgb(171 198 0)"}} 
                                 draggable 
                                 id = "F"
                                 onDragStart={(event) => {
                                     event.dataTransfer.setData("Type", event.target.id);
                                     event.dataTransfer.setData("title", "Y/N 프로세스");
-                                    event.dataTransfer.setData("color", "rgb(34 185 15)");
+                                    event.dataTransfer.setData("color", "rgb(171 198 0)");
                                     event.dataTransfer.setData("port", 3);
                                     
 
@@ -311,14 +311,14 @@ class Diagram extends React.Component {
                                 </div>                                
                             </div>
 
-                            <div className="basic-node" 
-                                style={{background: "rgb(192, 255, 0)"}} 
+                            <div className="basic-btn" 
+                                style={{background: "rgb(83, 116, 245)"}} 
                                 draggable 
                                 id = "S"
                                 onDragStart={(event) => {
                                     event.dataTransfer.setData("Type", event.target.id);
                                     event.dataTransfer.setData("title", "선택지 프로세스");
-                                    event.dataTransfer.setData("color", "rgb(192, 255, 0)");
+                                    event.dataTransfer.setData("color", "rgb(83, 116, 245)");
                                     event.dataTransfer.setData("port", 4);  
                                 }}
                             >
@@ -326,30 +326,14 @@ class Diagram extends React.Component {
                                     <div className="name">선택지 프로세스</div>
                                 </div>                                
                             </div>
-
-                            <div className="basic-node" 
-                                style={{background: "rgb(255 153 0)"}} 
-                                draggable 
-                                id = "E"
-                                onDragStart={(event) => {
-                                    event.dataTransfer.setData("Type", event.target.id);
-                                    event.dataTransfer.setData("title", "시나리오 종료");
-                                    event.dataTransfer.setData("color", "rgb(255 153 0)");
-                                    event.dataTransfer.setData("port", 0);
-                                }}
-                            >
-                                <div className="title">
-                                    <div className="name">시나리오 종료</div>
-                                </div>                                
-                            </div>
-                            <div className="basic-node" 
-                                style={{background: "rgb(14 115 15)"}} 
+                            <div className="basic-btn" 
+                                style={{background: "rgb(251 185 0)"}} 
                                 draggable 
                                 id = "D"
                                 onDragStart={(event) => {
                                     event.dataTransfer.setData("Type", event.target.id);
                                     event.dataTransfer.setData("title", "날짜 검출");
-                                    event.dataTransfer.setData("color", "rgb(14 115 15)");
+                                    event.dataTransfer.setData("color", "rgb(251 185 0)");
                                     event.dataTransfer.setData("port", 2);
                                     
 
@@ -357,6 +341,22 @@ class Diagram extends React.Component {
                             >
                                 <div className="title">
                                     <div className="name">날짜 검출</div>
+                                </div>                                
+                            </div>
+
+                            <div className="basic-btn" 
+                                style={{background: "rgb(210 215 218)"}} 
+                                draggable 
+                                id = "E"
+                                onDragStart={(event) => {
+                                    event.dataTransfer.setData("Type", event.target.id);
+                                    event.dataTransfer.setData("title", "시나리오 종료");
+                                    event.dataTransfer.setData("color", "rgb(210 215 218)");
+                                    event.dataTransfer.setData("port", 0);
+                                }}
+                            >
+                                <div className="title">
+                                    <div className="name">시나리오 종료</div>
                                 </div>                                
                             </div>
 
