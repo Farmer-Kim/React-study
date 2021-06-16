@@ -24,8 +24,6 @@ export class DiagramEngine extends BaseEntity {
   }
 
   enableRepaintEntities(entities) {
-    console.log("enableRepaintEntities")
-    console.log(entities)
     this.paintableWidgets = {};
     entities.forEach(entity => {
       // If a node is requested to repaint, add all of its links

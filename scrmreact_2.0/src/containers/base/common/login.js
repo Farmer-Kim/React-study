@@ -11,6 +11,7 @@ class Login extends React.Component {
 		super();
 				// state 초기화
 		this.state = {
+			timeoutId: null,
 			warning: false,
 			dsLogin: DataLib.datalist.getInstance(),
 			dsRst: DataLib.datalist.getInstance(),
@@ -23,16 +24,41 @@ class Login extends React.Component {
 	}
 
 	componentDidUpdate(){
-		if (this.state.warning) {
-			setTimeout(() => this.setState({...this.state, warning: false}), 1500);
+		if (this.state.warning && this.state.timeoutId !== null) {
+			let timeoutId = setTimeout(() => this.setState({...this.state, warning: false, timeoutId: null}), 1500);
+			this.setState({...this.state, timeoutId: timeoutId});
 		}		
 	}
 
 	componentDidMount () {
-		window.dispatchEvent(new CustomEvent("navigationhandler"));
 		var serverInfos = this.getInfos();
 		localStorage.setItem("infos", JSON.stringify(serverInfos));
 		ComLib.setServerInfos();
+
+		function get_query(){
+			var url = document.location.href;
+			var qs = url.substring(url.indexOf('?') + 1).split('&');
+			for(var i = 0, result = {}; i < qs.length; i++){
+				qs[i] = qs[i].split('=');
+				result[qs[i][0]] = decodeURIComponent(qs[i][1]);
+			}
+			return result;
+		}
+
+		var result = get_query();
+		
+		if (result.TA !== undefined && result.TA !== "false") {			
+			
+			ComLib.setSession('token', true);
+			ComLib.setSession('token_TA', true);
+
+			this.transaction('LOGIN_R04');
+						
+
+		} else {
+			ComLib.setSession("token_TA", false)
+			window.dispatchEvent(new CustomEvent("navigationhandler"));
+		}
 		
 	}
 	/*******************************************************************
@@ -190,6 +216,7 @@ class Login extends React.Component {
 	 * LOGIN_U01 : 비멀번호 오류 카운트 업데이트
 	 *******************************************************************/
 	transaction = (serviceid) => {
+		console.log(serviceid)
 		let transManager = new TransManager();
 		try {
 			switch (serviceid) {
@@ -309,6 +336,31 @@ class Login extends React.Component {
 				transManager.addDataset('dsSendData', this.state.dsRst.getTransRecords());
 				transManager.agent();
 				break;
+
+			case 'LOGIN_R04':
+				transManager.setTransId(serviceid);
+				transManager.setTransUrl(transManager.constants.url.common);
+				transManager.setCallBack(this.callback);
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"COM.R_getMsgList",
+					datasetsend:"dsSrchData",
+					datasetrecv:"dsMsgList"
+				});
+				transManager.addConfig({
+					dao: transManager.constants.dao.base,
+					crudh: transManager.constants.crudh.read,
+					sqlmapid:"COM.R_getCommCode",
+					datasetsend:"dsSrchData",
+					datasetrecv:"dsCommCodeInfo"
+				});
+				
+				transManager.addDataset('dsSrchData', [{ EMPTY : "" }]);
+				transManager.agent();
+				break;
+
+				
 			// 비밀번호 에러 카운트 업데이트
 			case 'LOGIN_U01':
 				transManager.setTransId(serviceid);
@@ -392,6 +444,27 @@ class Login extends React.Component {
 			document.getElementById('linkBase').click();
 
 			break;
+		
+		case 'LOGIN_R04':	
+			let taUser = [{USR_ID   : "TA"
+			            , CENT_CD  : "TA"
+						, CENT_NM  : "TA접속"
+				        , TEAM_CD  : "TA"
+				        , TEAM_NM  : "TA접속"
+				        , AUTH_LV  : "4"
+				        , USR_NM   : "TA"
+				        , LGN_IP   : ""
+				        , LOGIN_DT : ""
+				        , USE_FLAG : "Y"}];
+
+			ComLib.setSession('gdsUserInfo',	taUser);
+			ComLib.setSession('gdsCommCode',	res.data.dsCommCodeInfo);			
+			ComLib.setSession('gdsMsgList',		res.data.dsMsgList);
+
+			console.log(res.data)
+			document.getElementById('linkBase').click();
+
+			
 		case 'LOGIN_U01':
 			break;
 		default:
@@ -442,6 +515,7 @@ class Login extends React.Component {
 				</div>
 				<div style = {{display: 'none'}}>
 					<Link id = 'linkBase'	to = {{pathname: '/',	state: {}}}/>
+					<Link id = 'linkToPlayer'	to = {{pathname: '/Player',	state: {test: true}}}/>					
 				</div>
 			</React.Fragment>
 		);

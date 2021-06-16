@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import 'assets/styles/component.css';
 
 class AppPanel extends React.Component {
 	static defaultProps = { width: '100%'}

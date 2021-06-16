@@ -111,7 +111,13 @@ export class CustomNodeWidget extends React.Component {
     input: {
       onChange: (e) => {
         let { node } = this.props;
+        
         node.name = e.target.value;
+
+        if (node.rowtype == "r") {  
+          node.rowtype = "u";
+        }
+
         this.setState({...this.state, name: e.target.value});
         
       }

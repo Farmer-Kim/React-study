@@ -13,7 +13,7 @@ class STT010001 extends React.Component {
 				<RealTimeViewer
 					constCd={this.props.options.params.CONST_CD}
 					constNm={this.props.options.params.CONST_NM}
-					callId={this.props.options.params.CALL_ID}
+					sttUnq={this.props.options.params.STT_UNQ}
 				/>
 			</div>
 		);

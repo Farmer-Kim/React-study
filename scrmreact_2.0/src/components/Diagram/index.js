@@ -37,10 +37,8 @@ class Diagram extends React.Component {
                 
                 let portArray = ndPorts.split("||");   
                 let jsonNdPort = [];
-                console.log(portArray)
                 for (let j = 0; j < portArray.length; j ++) {
                     
-                    console.log(portArray[j])
                     let jsonString = JSON.parse(portArray[j])
                     jsonNdPort.push({id: "", name: "", selected: false, _class: "DefaultPortModel", label: "", parentNode: "", links: [], data: null, in: false});
                     jsonNdPort[j].id = jsonString.id;
@@ -170,6 +168,9 @@ class Diagram extends React.Component {
     onChange(model, action) {
         let propNode = this.props.dsSnroNode;
         let propLink = this.props.dsSnroLink;
+        console.log("onChange")
+        console.log(model)
+        console.log(action)
         switch(action.type) {
             case 'node-moved':
                 for (let i = 0; i < propNode.length; i ++) {
@@ -255,9 +256,9 @@ class Diagram extends React.Component {
 
                 break;
             default: break;
-        }    
-        this.model.deSerializeDiagram(model,this.engine); 
-        this.engine.setDiagramModel(this.model);        
+        }
+        this.model.deSerializeDiagram(model,this.engine);
+        this.engine.setDiagramModel(this.model);
     }
 
     render() {      
@@ -302,8 +303,6 @@ class Diagram extends React.Component {
                                     event.dataTransfer.setData("title", "Y/N 프로세스");
                                     event.dataTransfer.setData("color", "rgb(171 198 0)");
                                     event.dataTransfer.setData("port", 3);
-                                    
-
                                 }}
                             >
                                 <div className="title">

@@ -84,6 +84,10 @@ class Player extends React.Component {
 			this.howler.stop();
 			this.howler = null;
 		}
+		
+		if (this.props.options.JOB_TP === 'C') {
+			this.trasaction("PLAYER_D01");
+		}		
 	}
 	validation = (serviceid) => {
 		switch (serviceid) {
@@ -219,7 +223,20 @@ class Player extends React.Component {
 				datasetsend: "dsInfo",
 				datasetrecv:"newPath",
 			});
-			transManager.addDataset('dsInfo', [{PATH: this.state.dsRcvSttJobData[0].FILE_PATH, USR_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID}]);
+
+			transManager.addDataset('dsInfo', [{PATH: this.state.dsRcvSttJobData[0].FILE_PATH, USR_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID, ACT_TP: "DOWNLOAD"}]);
+			transManager.agent();
+			break;
+		case 'PLAYER_D01':
+			transManager.setTransId(serviceid);
+			transManager.setTransUrl(transManager.constants.url.sftp);
+			transManager.setCallBack(this.callback);
+			transManager.addConfig({
+				dao: transManager.constants.dao.base,
+				crudh: transManager.constants.crudh.sttSearch,
+				datasetsend: "dsInfo",
+			});
+			transManager.addDataset('dsInfo', [{PATH: this.state.newPath, USR_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID, ACT_TP: "D"}]);
 			transManager.agent();
 			break;
 		default : break;
@@ -396,7 +413,7 @@ class Player extends React.Component {
 			if (!StrLib.isNull(this.state.srchText)) {
 				this.handler.searchText(this.state.srchText, 0);
 			}
-
+			this.setState({...this.state, newPath : res.data.newPath});
 			break;
 
 		case 'PLAYER_C01':
@@ -743,6 +760,9 @@ class Player extends React.Component {
 				}
 			},
 			onClickListValue : (idx, value, newValue, ACT_TP, spk) => {
+				if (this.props.options.disAllowEdit) {
+					return;
+				}
 				if (!StrLib.isNull(this.state.openId)) {
 					document.body.removeChild(document.getElementById(this.state.openId));
 					

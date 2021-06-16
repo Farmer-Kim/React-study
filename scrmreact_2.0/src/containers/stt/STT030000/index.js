@@ -299,17 +299,27 @@ class View extends React.Component {
 			ComLib.setStateInitRecords(this, "dsSttResultInfo", res.data.dsSttResultInfo);
 			
 			if (this.state.gridSttResultList.paging.excelLoadAll) {
-				this.sttResultGrd.downExcelData();
-			}
-
-			this.setState({...this.state
-				, gridSttResultList : { ...this.state.gridSttResultList
-					, paging : { ...this.state.gridSttResultList.paging
-						, loading : false
-						, excelLoadAll: false
+				this.setState({...this.state
+					, gridSttResultList : { ...this.state.gridSttResultList
+						, paging : { ...this.state.gridSttResultList.paging
+							, loading : false
+							, excelLoadAll: false
+						}
 					}
-				}
-			});
+				}, () => {
+						this.sttResultGrd.downExcelData();
+
+				});
+				
+			} else {
+				this.setState({...this.state
+					, gridSttResultList : { ...this.state.gridSttResultList
+						, paging : { ...this.state.gridSttResultList.paging
+							, loading : false
+						}
+					}
+				});
+			}
 			break;
 		default : break;
 		}

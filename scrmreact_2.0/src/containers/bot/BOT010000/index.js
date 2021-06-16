@@ -15,7 +15,6 @@ import { ComLib
 	   , StrLib
 	   , TransManager
 	   , newScrmObj            } from 'common';
-import BOT010100 from '../BOT010100';
 
 class View extends React.Component {
 	constructor(props) {
@@ -215,11 +214,11 @@ class View extends React.Component {
 			this.saveLink = saveLink;
 
 			
-			console.log(orgNode)
-			console.log(orgLink)
+			// console.log(orgNode)
+			// console.log(orgLink)
 
-			console.log(this.saveNode)
-			console.log(this.saveLink)
+			// console.log(this.saveNode)
+			// console.log(this.saveLink)
 			break;
 		default: break;
 		}
@@ -290,6 +289,8 @@ class View extends React.Component {
 
 				break
 			case 'BOT010000_H01':
+
+				// 노드 지울떄 노드에 걸린 키워드들도 같이 지우는 기능 추가 필요
 				transManager.addConfig  ({
 					dao        : transManager.constants.dao.base,
 					crudh      : transManager.constants.crudh.handle,
@@ -304,7 +305,24 @@ class View extends React.Component {
 					datasetsend: "dsNodeList"
 				});
 
+				let dsDelNodeList = [];
+
+				for (let i = 0; i < this.saveNode.length; i ++) {
+					if (this.saveNode[i].rowtype === "d") {
+						dsDelNodeList.push(this.saveNode[i]);
+					}
+					
+				}
+
+				transManager.addConfig  ({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.destroy,
+					sqlmapid   : "BOT.D_delSnroKeyword",
+					datasetsend: "dsDelNodeList"
+				});
+
 				transManager.addDataset('dsLinkList', this.saveLink);
+				transManager.addDataset('dsDelNodeList', dsDelNodeList);
 				transManager.addDataset('dsNodeList', this.saveNode);
 
 				transManager.agent();
@@ -372,6 +390,7 @@ class View extends React.Component {
 
 		case 'BOT010000_H01':
 			this.transaction('BOT010000_R01');
+		
 			break;
 		default : break;
 		}

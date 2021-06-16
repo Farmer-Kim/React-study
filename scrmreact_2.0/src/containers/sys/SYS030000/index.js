@@ -17,7 +17,7 @@ class View extends React.Component {
 		this.state = {
 			dsSrch: DataLib.datalist.getInstance([{CENT_CD: ComLib.setOrgComboValue("CENT_CD"), TEAM_CD: "", SRCH_DV: "NM", SRCH_VALUE: ""}]),
 			dsConstList : DataLib.datalist.getInstance(),
-			dsConstDetail : DataLib.datalist.getInstance([{CONST_CD: "", CONST_NM: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: ""}]),
+			dsConstDetail : DataLib.datalist.getInstance([{CONST_CD: "", CONST_NM: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: "", EXT_NUM: ""}]),
 			
 			btnProps : {
 				btnSearch : {
@@ -112,6 +112,16 @@ class View extends React.Component {
 					readOnly    : false,
 					disabled    : false
 				},
+				iptPhoneNb : {
+					id          : 'iptPhoneNb',
+					name        : 'iptPhoneNb',
+					value       : '',
+					placeholder : '',
+					minLength   : 1,
+					maxLength   : 20,
+					readOnly    : false,
+					disabled    : false
+				},
 			},
 			singleCheckProp : {
 				id : 'chkUseYn',
@@ -130,6 +140,7 @@ class View extends React.Component {
 					{headerName: '팀',			field: 'TEAM_NM',		colId: 'TEAM_NM',		editable: false,	width: 100},
 					{headerName: '상담원CD',	field: 'CONST_CD',		colId: 'CONST_CD',		editable: false,	width: 100},
 					{headerName: '상담원명',	field: 'CONST_NM',		colId: 'CONST_NM',		editable: false,	width: 100, textAlign: 'center'},
+					{headerName: '내선번호',	field: 'EXT_NUM',		colId: 'EXT_NUM',		editable: false,	width: 100},
 					{headerName: '사용여부',	field: 'USE_FLAG_NM',	colId: 'USE_FLAG_NM', 	editable: false,	width: 50, textAlign: 'center'},
 					{headerName: '등록/수정자',	field: 'REG_USR_ID',	colId: 'REG_USR_ID', 	editable: false,	width: 100, textAlign: 'center'},
 					{headerName: '등록/수정 일시',	field: 'REG_DTM',	 colId: 'REG_DTM', 	    editable: false,	width: 100, textAlign: 'center'},
@@ -181,6 +192,10 @@ class View extends React.Component {
 				}
 				if(StrLib.isNull(this.state.dsConstDetail.getValue(0, 'TEAM_CD'))) {
 					ComLib.openDialog('A', 'SYSI0204');
+					return false;
+				}
+				if(StrLib.isNull(this.state.dsConstDetail.getValue(0, 'EXT_NUM'))) {
+					ComLib.openDialog('A', 'SYSI0210');
 					return false;
 				}
 				break;
@@ -344,7 +359,7 @@ class View extends React.Component {
 					ComLib.setStateRecords(this, "dsConstList", []);	
 				}
 				
-				state.dsConstDetail = DataLib.datalist.getInstance([{CONST_CD: "", CONST_NM: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: ""}]);
+				state.dsConstDetail = DataLib.datalist.getInstance([{CONST_CD: "", CONST_NM: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: "", EXT_NUM: ""}]);
 				state['gridProps']['paging'].loading = false;
 				
 				this.setState(state);
@@ -413,6 +428,7 @@ class View extends React.Component {
 							CENT_CD: "", 
 							TEAM_CD: "", 
 							USE_FLAG: "Y", 
+							EXT_NUM: "",
 							REG_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID, 
 							CHG_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID}]
 						);
@@ -506,6 +522,11 @@ class View extends React.Component {
 
 				case 'iptConstNm':
 					ComLib.setStateValue(this, "dsConstDetail", 0, "CONST_NM", e.target.value);
+					
+					break;
+				
+				case 'iptPhoneNb':
+					ComLib.setStateValue(this, "dsConstDetail", 0, "EXT_NUM", e.target.value);
 					
 					break;
 
@@ -653,7 +674,7 @@ class View extends React.Component {
 								<FlexPanel>
 									<Table  
 										id="tblUsrDetInfo" 
-										colGrp = {[{width: '8%'}, {width: '12%'}, {width: '8%'}, {width: '12%'}, {width: '8%'}, {width: '12%'}, {width: '8%'}, {width: '8%'}, {width: '8%'}, {width: '8%'}, {width: '4%'}, {width: '4%'} ]}
+										colGrp = {[{width: '6%'}, {width: '10%'}, {width: '6%'}, {width: '10%'}, {width: '6%'}, {width: '10%'}, {width: '6%'}, {width: '6%'}, {width: '6%'}, {width: '10%'}, {width: '6%'}, {width: '4%'}, {width: '4%'}, {width: '4%'} ]}
 										tbData = {[
 											[   {type : 'T', value : '상담원 CD'},
 												{type : 'D', value : <Textfield width='100%' 
@@ -696,6 +717,19 @@ class View extends React.Component {
 																		width ={'100%'}
 																		disabled = {false}
 																		onChange = {this.event.selectbox.onChange}
+																	/>},
+												{type : 'T', value : '내선번호'},
+												{type : 'D', value : <Textfield width='100%'
+																		id = {this.state.textFieldProps.iptPhoneNb.id}
+																		name = {this.state.textFieldProps.iptPhoneNb.name}
+																		value = {this.state.dsConstDetail.records[0]["EXT_NUM"]}
+																		placeholder = {this.state.textFieldProps.iptPhoneNb.placeholder}
+																		minLength = {this.state.textFieldProps.iptPhoneNb.minLength}
+																		maxLength = {this.state.textFieldProps.iptPhoneNb.maxLength}
+																		readOnly = {this.state.textFieldProps.iptPhoneNb.readOnly}
+																		disabled = {this.state.textFieldProps.iptPhoneNb.disabled}
+																		onChange = {this.event.input.onChange}
+																		type     = {"onlyNum"}
 																	/>},
 												{type : 'T', value : '사용여부'},
 												{type : 'D', value : <Checkbox

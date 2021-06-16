@@ -60,7 +60,7 @@ class CsState extends React.Component {
 							<div 
 								key={cs.CONST_CD}
 								style={{textAlign: 'center', marginBottom: this.props.iconbm}}										
-								onClick = {callType === 'E' ? null : () => {this.props.onClickCs({ CONST_CD: cs.CONST_CD, CONST_NM: cs.CONST_NM, CALL_ID: cs.CALL_ID})}}
+								onClick = {callType === 'E' ? null : () => {this.props.onClickCs({ CONST_CD: cs.CONST_CD, CONST_NM: cs.CONST_NM, STT_UNQ: cs.STT_UNQ})}}
 							>
 								<CsButton		
 									id       = {cs.CONST_CD}

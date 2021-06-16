@@ -15,7 +15,7 @@ class RealTimeViewer extends React.Component {
 		super(props);
 		this.state = {
 			dsRealTimeSentence : [],
-			callId: "",
+			sttUnq: "",
 			timeoutID: null,
 			dsKeywordList : [],
 			srchText : '',
@@ -45,7 +45,7 @@ class RealTimeViewer extends React.Component {
 	}
 	static defaultProps = {
 		constCd : '_default',
-		callId : '_default',
+		sttUnq : '_default',
 		bodyHeight : '605px'
 	}
 	componentDidMount () {
@@ -116,10 +116,13 @@ class RealTimeViewer extends React.Component {
 				datasetsend:"dsSrchData",
 				datasetrecv:"dsRealTimeSentence",
 			});
-
+			console.log(this.props)
+			console.log(this.props)
+			console.log(this.props)
+			console.log(this.props)
 			transManager.addDataset('dsSrchData', [{ CONST_CD : this.props.constCd
 				                                   , CONST_NM : this.props.constNm
-				                                   , CALL_ID  : this.props.callId }]);
+				                                   , CALL_ID  : this.props.sttUnq }]);
 			transManager.agent();
 			break;
 		case 'REAL_R02':
@@ -137,7 +140,7 @@ class RealTimeViewer extends React.Component {
 
 			transManager.addDataset('dsSrchData', [{ CONST_CD : this.props.constCd
 													, CONST_NM : this.props.constNm
-													, CALL_ID  : this.state.callId }]);
+													, CALL_ID  : this.state.sttUnq }]);
 			transManager.agent();
 			break;
 		default : break;
@@ -149,7 +152,7 @@ class RealTimeViewer extends React.Component {
 		let dsRealTimeSentence = "";
 		let lastSpk   = "none";
 		let lastIndex = this.state.lastIndex;
-		let callId = "";
+		let sttUnq = "";
 		let timeoutID = "";
 
 		switch(res.id) {
@@ -187,16 +190,18 @@ class RealTimeViewer extends React.Component {
 				this.transaction('REAL_R02');
 			}, 3000);
 
-			callId = (this.props.callId === res.data.callId ? this.props.callId : res.data.callId);
+			sttUnq = (this.props.sttUnq === res.data.sttUnq ? this.props.sttUnq : res.data.sttUnq);
 
 			this.setState({
 				dsKeywordList: dsKeywordList,
-				callId: callId,
+				sttUnq: sttUnq,
 				timeoutID : timeoutID,
 				dsRealTimeSentence : dsRealTimeSentence,
 			}, () => { 	if (this.state.checkboxProps.chkAutoScroll.checked === 'Y') {
-							this.handler.moveToLastItem();
-								
+							if (dsRealTimeSentence.length > 0) {
+								this.handler.moveToLastItem();		
+
+							}	
 						}							
 					});
 			
@@ -205,7 +210,7 @@ class RealTimeViewer extends React.Component {
 			dsRealTimeSentence = res.data.dsRealTimeSentence;
 			dsKeywordList      = this.state.dsKeywordList;
 			
-			if (dsRealTimeSentence.length !== this.state.dsRealTimeSentence.length || this.state.callId !== res.data.callId) {
+			if (dsRealTimeSentence.length !== this.state.dsRealTimeSentence.length || this.state.sttUnq !== res.data.sttUnq) {
 				for (let i = 0; i < dsKeywordList.length; i ++) {
 					let cnt = 0;
 					let regexAll = new RegExp(dsKeywordList[i].KWD.substring(0, dsKeywordList[i].KWD.indexOf("(")), "g");
@@ -223,7 +228,7 @@ class RealTimeViewer extends React.Component {
 				}
 			}			
 
-			callId = this.state.callId === res.data.callId ? this.state.callid : res.data.callId;
+			sttUnq = this.state.sttUnq === res.data.sttUnq ? this.state.sttUnq : res.data.sttUnq;
 
 			timeoutID = setTimeout(() => {
 				this.transaction('REAL_R02');
@@ -238,13 +243,16 @@ class RealTimeViewer extends React.Component {
 						
 			this.setState({
 				dsKeywordList: dsKeywordList,
-				callId: callId,
+				sttUnq: sttUnq,
 				timeoutID : timeoutID,
 				selKeywordData: selKeywordData.filter(item=> item !== null && item !== undefined),
 				dsRealTimeSentence : dsRealTimeSentence }, () => { 							
 					this.handler.refreshSearch();	
 					if (this.state.checkboxProps.chkAutoScroll.checked === 'Y') {
-						this.handler.moveToLastItem();						
+						if (dsRealTimeSentence.length > 0) {
+							this.handler.moveToLastItem();		
+
+						}				
 					}							
 			});
 

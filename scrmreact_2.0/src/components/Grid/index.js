@@ -643,11 +643,15 @@ class Grid extends React.Component {
 
 		let lengthCheck = this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.create)
 
-		if (this.props.infinite && this.props.totalRowCnt <= lengthCheck.length) {	
+		if (this.props.infinite && Number(this.props.totalRowCnt) > 1000) {
+			ComLib.openDialog('A', 'SYSI0010', ['1000건 이내의 결과만 엑셀다운 가능합니다. 검색 조건을 변경하여 다시 시도 부탁드립니다.']);
+
+		} else if (this.props.infinite && this.props.totalRowCnt <= lengthCheck.length) {	
 			ExcelLib.exportToExcel(setGridHeader(this.props.header, this.props), exelData, true, this.props.areaName);
 
 		} else if (this.props.infinite) {
 			this.props.onScrollEnd({ id : this.props.id, excelLoadAll: true});
+			
 		} else {
 			ExcelLib.exportToExcel(setGridHeader(this.props.header, this.props), exelData, true, this.props.areaName);
 		}

@@ -37,129 +37,21 @@ class View extends React.Component {
 				},
 			},
 			selectboxProps : {
-				cmbSrchCent : {
-					id : 'cmbSrchCent',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbSrchTeam : {
-					id : 'cmbSrchTeam',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
 				cmbSrchUseYn : {
 					id       : 'cmbSrchUseYn',
 					value    : '',
 					width    : 80,
 					selected : 0,
 					disabled : false
-				},
-				// 상세정보 영역
-				cmbCentCd : {
-					id : 'cmbCentCd',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbTeamCd : {
-					id : 'cmbTeamCd',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},	
-				cmbConstNm : {
-					id : 'cmbConstNm',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbUseYn : {
-					id : 'cmbUseYn',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-			},
-			textFieldProps : {
-				iptSrchword : {
-					id          : 'iptSrchword',
-					name        : 'iptSrchword',
-					value       : '',
-					placeholder : '성명/CD',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-				iptConstCd : {
-					id          : 'iptConstCd',
-					name        : 'iptConstCd',
-					value       : '',
-					placeholder : '',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : true
-				},
-				iptConstIp : {
-					id          : 'iptConstIp',
-					name        : 'iptConstIp',
-					value       : '',
-					placeholder : '0.0.0.0',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-				iptChennelNum : {
-					id          : 'iptChennelNum',
-					name        : 'iptChennelNum',
-					value       : '',
-					placeholder : '',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-				iptExtNum : {
-					id          : 'iptExtNum',
-					name        : 'iptExtNum',
-					value       : '',
-					placeholder : '',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-			},
-			singleCheckProp : {
-				id : 'chkUseYn',
-				index : 0,
-				keyProp : 'SUP080000_chkUseYn',
-				value : '',
-				checked : 'N',
-				readOnly : false,
-				disabled : false
-			},
+				},				
+			},			
 			gridProps : {
 				id : 'grdCsList',
 				areaName : '상당원 목록',
 				header: [
-					{headerName: '채널번호(자동채번)',	field: 'UNQ',	  colId: 'UNQ',		    editable: false,	width: '100', textAlign: 'center'},
-					{headerName: '센터',		field: 'CENT_NM',		colId: 'CENT_NM', 		editable: false,	width: '100'},
-					{headerName: '팀',			field: 'TEAM_NM',		colId: 'TEAM_NM',		editable: false,	width: '100'},
-					{headerName: '상담원CD',	field: 'CONST_CD',		colId: 'CONST_CD',		editable: false,	width: '100'},
-					{headerName: '상담원명',	field: 'CONST_NM',		colId: 'CONST_NM',		editable: false,	width: '100'},
-					{headerName: '상담원IP',	field: 'CONST_IP',		colId: 'CONST_IP',		editable: true,	width: '100', req: true},
 					{headerName: '내선번호',	field: 'EXT_NUM',		colId: 'EXT_NUM',		editable: true,	width: '100', req: true},
+					{headerName: '채널번호',	field: 'CHNL_NUM',	  colId: 'UNQ',		    editable: true,	width: '100', textAlign: 'center', req: true},					
+					{headerName: 'IP'       ,	field: 'CONST_IP',		colId: 'CONST_IP',		editable: true,	width: '100', req: true},
 					{headerName: '사용여부',	 field: 'USE_FLAG',	    colId: 'USE_FLAG',   	editable: true, defaultValue : 'Y', width: 90, 
 					    req: true, resizable: false, textAlign: 'center', singleClickEdit: true,
 						cellEditor: 'agSelectCellEditor',
@@ -236,7 +128,7 @@ class View extends React.Component {
 							let dupType = ""; 
 							if (String(chennelRecord[intA].CONST_IP) === String(chennelRecord[intB].CONST_IP)) {
 								isDup = true;
-								dupType = "상담원 IP"; 
+								dupType = "IP"; 
 	
 							} else if (String(chennelRecord[intA].EXT_NUM) === String(chennelRecord[intB].EXT_NUM)) {
 								isDup = true;
@@ -310,18 +202,15 @@ class View extends React.Component {
 						datasetrecv: "dsChennelList",
 					});
 
-					transManager.addConfig  ({
-						dao        : transManager.constants.dao.base,
-						crudh      : transManager.constants.crudh.read,
-						sqlmapid   : "SUP.R_getNewChennelList",
-						datasetsend: "dsSend",
-						datasetrecv: "dsNewChennelList",
-					});
+					// transManager.addConfig  ({
+					// 	dao        : transManager.constants.dao.base,
+					// 	crudh      : transManager.constants.crudh.read,
+					// 	sqlmapid   : "SUP.R_getNewChennelList",
+					// 	datasetsend: "dsSend",
+					// 	datasetrecv: "dsNewChennelList",
+					// });
 					
 					let param = {
-						CENT_CD    : state.dsSrch.records[0]["CENT_CD"],
-						TEAM_CD    : state.dsSrch.records[0]["TEAM_CD"],
-						SRCH_VALUE : state.dsSrch.records[0]["SRCH_VALUE"].trim(),	
 						USE_FLAG   : state.dsSrch.records[0]["USE_FLAG"],		
 					};
 
@@ -360,28 +249,7 @@ class View extends React.Component {
 		switch (res.id) {
 			case 'SUP080000_R01':
 				let cnList = res.data.dsChennelList;
-				let ncnList = res.data.dsNewChennelList;
 
-				let newCnt = 0;
-				for (let i = 0; i < ncnList.length; i ++) {
-					let isExist = false;
-					for (let j = 0; j < cnList.length; j ++) {
-						if (ncnList[i].CONST_CD === cnList[j].CONST_CD) {
-							isExist = true;
-							break;
-						}
-					}
-					if (!isExist) {
-						cnList.push(ncnList[i]);
-						cnList[cnList.length - 1].REG_DTM = "";
-						cnList[cnList.length - 1].REG_USR_ID = "";
-						cnList[cnList.length - 1].USE_FLAG = "Y";
-						cnList[cnList.length - 1].CONST_IP = "";
-						cnList[cnList.length - 1].UNQ = "";
-						cnList[cnList.length - 1].EXT_NUM = "";	
-						newCnt += 1;					
-					}
-				}
 				let cnt = 0;
 				for (let j = 0; j < cnList.length; j ++) {
 					cnList[j].TEMP = cnt;
@@ -391,9 +259,6 @@ class View extends React.Component {
 				ComLib.setStateInitRecords(this, "dsChennelList", cnList);
 
 				this.setState(state);
-				if (newCnt > 0) {
-					ComLib.openDialog('A', 'SYSI0010', ['채널이 등록되지 않은 ' + newCnt + '명의 상담원 리스트를 자동 생성 하였습니다.']);	
-				}
 				
 				let chennelRow = this.chennelGridApi.rowModel.rowsToDisplay[0];
 				this.chennelGridApi.ensureIndexVisible(0, 'middle');	
@@ -460,73 +325,39 @@ class View extends React.Component {
 				constRow.setSelected(true);
 			},
 			onDeleteRow: (e) => {
-				
+				console.log(e)
+				console.log(e)
 			},
 			onBeforeInsertRow: (e) => {
-				let rtnVal = true;
-				let index = 0;
 				let records = this.chennelGrid.gridDataset.records;
-
+				let rtn = true;
+				let cnt = 0;
 				for (let i = 0; i < records.length; i ++) {
-					if (records[i]["TEMP"] === this.currntChennel) {
-						index = i;
-
-						break;
+					if (records[i].USE_FLAG === 'Y'){
+						cnt += 1;
 					}
 				}
-				
-				return {'rtn': rtnVal, 'index': index + 1};
+				let allowed = ComLib.getComCodeCdVal("CMN_SET","CHNL_CNT","STT_SYS_CONST");
+
+				if (cnt > allowed) {
+					rtn = false
+					ComLib.openDialog("A", "SUPI0701",[allowed,cnt]);
+				} 
+
+				return {'rtn': rtn, 'index': records.length};
 			},
 			onInsertRow: (e) => {	
-				let chennelRowNm = - 1;
-				let records      = this.chennelGrid.gridDataset.records;
-				let chennelRow ;
-				
-				let rowData = this.chennelGrid.gridDataset.getRecords();
-
-				if (!StrLib.isNull(this.currntChennel)) {
-					let index = 0;
-
-					for (let i = 0; i < records.length; i++) {
-						if (records[i]["TEMP"] === this.currntChennel) {
-							index = i;
-
-							break;
-						}
-					}
-					chennelRowNm = index;
-				}
-				
-				for (let i = 0; i < records.length; i ++) {
-					if (e.index === i) {						
-						records[i].CENT_CD   = records[chennelRowNm]["CENT_CD"];
-						records[i].TEAM_CD   = records[chennelRowNm]["TEAM_CD"];
-						records[i].CENT_NM   = records[chennelRowNm]["CENT_NM"];
-						records[i].TEAM_NM   = records[chennelRowNm]["TEAM_NM"];
-						records[i].CONST_CD  = records[chennelRowNm]["CONST_CD"];
-						records[i].CONST_NM  = records[chennelRowNm]["CONST_NM"];
-						records[i].CONST_IP  = records[chennelRowNm]["CONST_IP"];
-						records[i].TEMP      = records.length;
-						
-					} 
-
-					let data = JSON.parse(JSON.stringify(records[i]));
-					Object.assign(rowData[i], data);
-				}
-								
+				let records    = this.chennelGrid.gridDataset.records;
+				let rowData    = this.chennelGrid.gridDataset.getRecords();
+											
 				this.chennelGrid.gridDataset.setRecords(rowData);
 
 				this.chennelGridApi.setRowData(this.chennelGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
 
-				let chennelRows = this.chennelGridApi.rowModel.rowsToDisplay;
-
-				for (let i = 0; i < chennelRows.length; i ++) {
-					if (chennelRows[i].data.TEMP === records[chennelRowNm].TEMP){
-						chennelRow = this.chennelGridApi.rowModel.rowsToDisplay[i + 1];
-						this.chennelGridApi.ensureIndexVisible(i, 'middle');	
-						break;
-					}
-				}
+				
+				let chennelRow = this.chennelGridApi.rowModel.rowsToDisplay[e.index];
+				
+				this.chennelGridApi.ensureIndexVisible(e.index, 'middle');
 
 				if (chennelRow.selected !== true) {
 					chennelRow.setSelected(true);
@@ -536,29 +367,9 @@ class View extends React.Component {
 
 			}
 		},
-		input : {
-			onChange : (e) => {
-				switch (e.target.id) {
-				case 'iptSrchword' :
-					ComLib.setStateValue(this, "dsSrch", 0, "SRCH_VALUE", e.target.value);
-
-					break;
-				default : break;
-				}
-			}
-		},
 		selectbox: {
 			onChange: (e) => {
 				switch (e.id) {
-				case 'cmbSrchCent' : 
-					ComLib.setStateValue(this, "dsSrch", 0, "CENT_CD", e.target.value);
-					ComLib.setStateValue(this, "dsSrch", 0, "TEAM_CD", "");
-
-					break;
-				case 'cmbSrchTeam' :
-					ComLib.setStateValue(this, "dsSrch", 0, "TEAM_CD", e.target.value);
-
-					break;
 					
 				case 'cmbSrchUseYn' :
 					ComLib.setStateValue(this, "dsSrch", 0, "USE_FLAG", e.target.value);
@@ -582,38 +393,6 @@ class View extends React.Component {
 						<RelativeGroup>
 							<LFloatArea>
 								<FlexPanel>
-									<Label value="센터"/>
-									<Selectbox
-										id = {this.state.selectboxProps.cmbSrchCent.id}
-										dataset = {ComLib.convComboList(ComLib.getCentList(), newScrmObj.constants.select.argument.all)}
-										value = {this.state.dsSrch.records[0]["CENT_CD"]}
-										width = {200}
-										disabled = {false}
-										controlOrgCombo = {'CENT'}
-										onChange = {this.event.selectbox.onChange}
-									/>
-									<Label value="팀"/>
-									<Selectbox
-										id = {this.state.selectboxProps.cmbSrchTeam.id}
-										dataset = {ComLib.convComboList(ComLib.getTeamList(this.state.dsSrch), newScrmObj.constants.select.argument.all)}
-										value = {this.state.dsSrch.records[0]["TEAM_CD"]}
-										width = {200}
-										disabled = {false}
-										onChange = {this.event.selectbox.onChange}
-									/>
-									<Label value="상담원명/CD"/>
-									<Textfield 
-										width={200}
-										id = {this.state.textFieldProps.iptSrchword.id}
-										name =  {this.state.textFieldProps.iptSrchword.name}
-										value =  {this.state.dsSrch.records[0]["SRCH_VALUE"]}
-										placeholder =  {this.state.textFieldProps.iptSrchword.placeholder}
-										minLength =   {this.state.textFieldProps.iptSrchword.minLength}
-										maxLength =   {this.state.textFieldProps.iptSrchword.maxLength}
-										readOnly =  {this.state.textFieldProps.iptSrchword.readOnly}
-										disabled =  {this.state.textFieldProps.iptSrchword.disabled}
-										onChange = {this.event.input.onChange}
-									/>
 									<Label value="사용여부"/>
 									<Selectbox
 										id       = {this.state.selectboxProps.cmbSrchUseYn.id}

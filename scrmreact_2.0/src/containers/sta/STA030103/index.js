@@ -203,11 +203,6 @@ class View extends React.Component {
 	componentDidMount () {
 		
 		//this.initPage(this.props.options)
-		console.log(this.props.options);
-		console.log(this.props.options);
-		console.log(this.props.options);
-		console.log(this.props.options);
-		console.log(this.props.options);
 		
 	}
 
@@ -218,8 +213,6 @@ class View extends React.Component {
 		
 
 		if (options.data !== undefined){
-			console.log(options.data.FT_CURR)
-			console.log("결함 신규 추가가 아닐경우")
 			fltCurr = options.data.FT_CURR;
 			if (options.type === 'old') {
 				console.log("히스토리 확인시 조치,확인중 1개만 열리고 열리는 텝은 active")

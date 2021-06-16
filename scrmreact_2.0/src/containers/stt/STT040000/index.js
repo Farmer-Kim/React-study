@@ -263,15 +263,32 @@ class View extends React.Component {
 			ComLib.setStateInitRecords(this, "dsSelfFileList", res.data.dsSelfFileList);
 			
 			if (this.state.gridProps.grdSelfFileList.paging.excelLoadAll) {
-				this.selfFileListGrd.downExcelData();
+				this.setState({...this.state
+					, gridProps: {...this.state.gridProps, 
+						grdSelfFileList : { ...this.state.gridProps.grdSelfFileList
+							, paging : { ...this.state.gridProps.grdSelfFileList.paging
+								, loading : false
+								, excelLoadAll: false
+							}
+						}
+					}
+				}, () => {
+						this.selfFileListGrd.downExcelData();
+
+				});
+				
+			} else {
+				this.setState({...this.state
+					, gridProps: {...this.state.gridProps, 
+						grdSelfFileList : { ...this.state.gridProps.grdSelfFileList
+							, paging : { ...this.state.gridProps.grdSelfFileList.paging
+								, loading : false
+								, excelLoadAll: false
+							}
+						}
+					}
+				});
 			}
-
-			this.setState({...this.state, 
-							gridProps: {...this.state.gridProps, 
-								        grdSelfFileList: {...this.state.gridProps.grdSelfFileList, 
-											              paging: {...this.state.gridProps.grdSelfFileList.paging, loading: false, excelLoadAll: false}}}})
-			
-
 			break;
 
 		case 'STT040000_C01':
@@ -374,7 +391,7 @@ class View extends React.Component {
 				if (!this.state.gridProps.grdSelfFileList.paging.loading) {
 					this.setState({...this.state
 						, gridProps : {...this.state.gridProps
-							, gridSttResultList : { ...this.state.gridProps.grdSelfFileList
+							, grdSelfFileList : { ...this.state.gridProps.grdSelfFileList
 								, paging : { ...this.state.gridProps.grdSelfFileList.paging
 									, start : this.state.gridProps.grdSelfFileList.paging.start + this.state.gridProps.grdSelfFileList.paging.size
 									, loading : true

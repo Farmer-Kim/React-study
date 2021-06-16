@@ -263,7 +263,7 @@ const ComLib = {
 		for (let i = 0; i < arrRealTimeTag.length; i ++) {
 			let currentRealTime = document.getElementById(arrRealTimeTag[i].id + "_inner_div").parentElement;
 
-			if (arrRealTimeTag[i].id === newScrmObj.constants.mdi.realTime + '_div_' + options.params.CONST_CD + "_" + options.params.CALL_ID) {				
+			if (arrRealTimeTag[i].id === newScrmObj.constants.mdi.realTime + '_div_' + options.params.CONST_CD + "_" + options.params.STT_UNQ) {				
 				isAreadyOpened = true;
 				currentRealTime.style.zIndex = '9992'
 
@@ -281,9 +281,9 @@ const ComLib = {
 		let position = {x: 0, y: 0};
 
 		if (arrRealTimeTag.length === 0) {
-			realTimeDiv.id = newScrmObj.constants.mdi.realTime + '_div_' + options.params.CONST_CD + "_" + options.params.CALL_ID;
+			realTimeDiv.id = newScrmObj.constants.mdi.realTime + '_div_' + options.params.CONST_CD + "_" + options.params.STT_UNQ;
 		} else {
-			realTimeDiv.id = newScrmObj.constants.mdi.realTime + '_div_' + options.params.CONST_CD + "_" + options.params.CALL_ID;
+			realTimeDiv.id = newScrmObj.constants.mdi.realTime + '_div_' + options.params.CONST_CD + "_" + options.params.STT_UNQ;
 			position = { x : arrRealTimeTag.length * 10,  y: arrRealTimeTag.length * 10 }
 		}
 		
@@ -579,7 +579,6 @@ const ComLib = {
 	},
 
 	setServerInfos: () => {
-		console.log("1. setSercerInfos")
 		var serverInfos = JSON.parse(localStorage.getItem("infos"));
 		if (serverInfos.prod.domain === window.location.hostname) {
 			ComLib.setSession("SYSTEM_DV", "P");
@@ -603,16 +602,6 @@ const ComLib = {
 			ComLib.setSession("SVR_URL", window.location.protocol + "//" + serverInfos.local.host + ":" + serverInfos.local.port);
 			document.title = "AI-VA  ::::: [LOCAL] :::::";
 		}
-		// } else if (serverInfos.localbuild.host === window.location.hostname) {
-		// 	ComLib.setSession("SYSTEM_DV", "B");
-		// 	ComLib.setSession("SVR_URL", window.location.protocol + "//" + serverInfos.prod.host + ":" + serverInfos.prod.port);
-		// 	document.title = "AI-VA  ::::: [LOCAL] :::::";
-
-		// } else {
-		// 	ComLib.setSession("SYSTEM_DV", "L");
-		// 	ComLib.setSession("SVR_URL", window.location.protocol + "//" + serverInfos.prod.host + ":" + serverInfos.prod.port);
-		// 	document.title = "AI-VA  ::::: [LOCAL] :::::";
-		// }
 	},
 
 	getCentList: (blnBizPsb) => { //BIZ_PSB_YN Filtering

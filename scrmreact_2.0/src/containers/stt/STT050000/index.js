@@ -309,21 +309,34 @@ class View extends React.Component {
 
 		case 'STT050000_R02':				
 			ComLib.setStateInitRecords(this, "dsTrainList", res.data.dsTrainList);
-
+			
 			if (this.state.gridProps.grdTrainList.paging.excelLoadAll) {
-				this.trainListGrid.downExcelData();
-			}
-
-			this.setState({...this.state
-				, gridProps : {...this.state.gridProps
-					, gridSttResultList : { ...this.state.gridProps.grdTrainList
-						, paging : { ...this.state.gridProps.grdTrainList.paging
-							, loading : false
-							, excelLoadAll : false
+				this.setState({...this.state
+					, gridProps: {...this.state.gridProps, 
+						grdTrainList : { ...this.state.grdTrainList
+							, paging : { ...this.state.grdTrainList.paging
+								, loading : false
+								, excelLoadAll: false
+							}
 						}
 					}
-				}
-			})
+				}, () => {
+						this.trainListGrid.downExcelData();
+
+				});
+				
+			} else {
+				this.setState({...this.state
+					, gridProps: {...this.state.gridProps, 
+						grdTrainList : { ...this.state.gridProps.grdTrainList
+							, paging : { ...this.state.gridProps.grdTrainList.paging
+								, loading : false
+								, excelLoadAll: false
+							}
+						}
+					}
+				});
+			}
 
 			break;	
 

@@ -33,7 +33,8 @@ class View extends React.Component {
 				}
 			},			
 			csList    : [],
-			centerList: []
+			centerList: [],
+			timeoutID : ""
 		}
 
 		this.event.checkbox.onChange = this.event.checkbox.onChange.bind(this);	
@@ -46,6 +47,9 @@ class View extends React.Component {
 		if(this.validation("STT010000_R01")) this.transaction("STT010000_R01");
 	}
 
+	componentWillUnmount () {
+		clearTimeout(this.state.timeoutID);
+	}
 	/*------------------------------------------------------------------------------------------------*/
 	// [3. validation Event Zone]
 	//  - validation 관련 정의
@@ -66,7 +70,12 @@ class View extends React.Component {
 	/*------------------------------------------------------------------------------------------------*/
 	transaction = (serviceid) => {
 		let transManager = new TransManager();
+		
+		const userCent = ComLib.getSession("gdsUserInfo")[0].CENT_CD;
+		const userAuth = ComLib.getSession("gdsUserInfo")[0].AUTH_LV;
+
 		transManager.setTransId (serviceid);
+		transManager.setProgress(false);	
 		transManager.setTransUrl(transManager.constants.url.common);
 		transManager.setCallBack(this.callback);
 
@@ -88,14 +97,23 @@ class View extends React.Component {
 					datasetrecv: "dsUser",
 				});
 					
-				const userCent = ComLib.getSession("gdsUserInfo")[0].CENT_CD;
-				const userAuth = ComLib.getSession("gdsUserInfo")[0].AUTH_LV;
-
 				transManager.addDataset('dsSend', [{AUTH_LV: userAuth, CENT_CD: userCent}]);
 				transManager.agent();
 
 				break;
+			case 'STT010000_R02':			
+				transManager.addConfig({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "STT.R_getUserList",
+					datasetsend: "dsSend",
+					datasetrecv: "dsUser",
+				});
+					
+				transManager.addDataset('dsSend', [{AUTH_LV: userAuth, CENT_CD: userCent}]);
+				transManager.agent();
 
+				break;
 			default: break;
 			}
 		} catch (err) {
@@ -112,13 +130,30 @@ class View extends React.Component {
 			ComLib.setStateInitRecords(this, "dsCenterList", res.data.dsCent);
 			ComLib.setStateInitRecords(this, "dsCsList"    , res.data.dsUser);
 
+			let timeoutID = setTimeout(() => {
+				this.transaction('STT010000_R02');
+			}, 5000);
+
 			this.setState({
 				...this.state,
+				timeoutID: timeoutID,
 				csList    : res.data.dsUser,
 				centerList: res.data.dsCent
 			})
-
 			break;	
+		case 'STT010000_R02':													
+			ComLib.setStateInitRecords(this, "dsCsList"    , res.data.dsUser);
+
+			let timeoutID2 = setTimeout(() => {
+				this.transaction('STT010000_R02');
+			}, 5000);
+
+			this.setState({
+				...this.state,
+				timeoutID: timeoutID2,
+				csList    : res.data.dsUser,
+			})
+			break;
 		default : break;
 		}
 	}
@@ -182,7 +217,6 @@ class View extends React.Component {
 	}
 	onClickCs(e) {		
 		let params = e;
-		console.log("footer 에서 지울때 에러 해결해야함")
 		let option1 = { width: '600px', height: '830px', modaless: true, params}
 		
 		ComLib.openRealTime(option1);

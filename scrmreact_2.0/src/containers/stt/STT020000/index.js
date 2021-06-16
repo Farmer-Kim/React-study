@@ -456,8 +456,6 @@ class View extends React.Component {
 			cnt ++;			
 
 		}
-		console.log("toGrid => ");
-		console.log(gridData);
 		
 		if (total !== this.state.resultTotal) {
 			this.setState({...this.state, resultTotal: Number(total)});
@@ -465,18 +463,29 @@ class View extends React.Component {
 		
 		ComLib.setStateInitRecords(this, "dsSttResultInfo", gridData);
 
+		
 		if (excelLoadAll) {
-			this.sttGrd.downExcelData();
-		}	
-
-		this.setState({...this.state
-			, gridSttResultList : { ...this.state.gridSttResultList
-				, paging : { ...this.state.gridSttResultList.paging
-					, loading : false
-					, excelLoadAll : false
+			this.setState({...this.state
+				, gridSttResultList : { ...this.state.gridSttResultList
+					, paging : { ...this.state.gridSttResultList.paging
+						, loading : false
+						, excelLoadAll: false
+					}
 				}
-			}
-		});
+			}, () => {
+					this.sttGrd.downExcelData();
+
+			});
+			
+		} else {
+			this.setState({...this.state
+				, gridSttResultList : { ...this.state.gridSttResultList
+					, paging : { ...this.state.gridSttResultList.paging
+						, loading : false
+					}
+				}
+			});
+		}
 	}
 
 	/*------------------------------------------------------------------------------------------------*/

@@ -108,7 +108,7 @@ export class DiagramWidget extends React.Component {
         }
 
         if ([8, 46].indexOf(event.keyCode) !== -1 && selectedItems.length ) {
-          selectedItems.forEach(element => {         
+          selectedItems.forEach(element => {
             // 포인트 모델인 경우만 삭제 되도록 변경
             // 노드는 버튼으로 링크는 포트의 X 로 삭제 하도록 변경
             if (element instanceof PointModel) {
@@ -523,7 +523,7 @@ export class DiagramWidget extends React.Component {
 
           let pointDelete = false;
           if (element.element.tagName === 'circle' && actionOutput.type !== 'link-created') {           
-            pointDelete = true
+            pointDelete = true;
             
           } 
 
@@ -635,7 +635,7 @@ export class DiagramWidget extends React.Component {
 
     diagramEngine.clearRepaintEntities();
     
-    if (actionOutput.type !== 'unknown') {
+    if (actionOutput.type !== 'unknown' && event !== null) {
       onChange(diagramEngine.getDiagramModel().serializeDiagram(), actionOutput);
     }
     this.setState({ action: null, actionType: 'unknown' });

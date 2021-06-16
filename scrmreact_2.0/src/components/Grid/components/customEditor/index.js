@@ -139,6 +139,9 @@ class CustomEditor extends React.Component {
 			} else if (inputType === 'code') {
 				inputValue = inputValue.replace(new RegExp("[^A-Za-z0-9_-]", "g"), "")
 
+			} else if (inputType === 'kor') {
+				inputValue = inputValue.replace(new RegExp("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", "g"), "")
+
 			} 
 		}	
 
