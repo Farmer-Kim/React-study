@@ -45,7 +45,8 @@ class Player extends React.Component {
 			openAnswerArea : false,
 			loadingBuffer : true,
 			missSenEdited : false,
-			dsRcvCallList : DataLib.datalist.getInstance()
+			dsRcvCallList : DataLib.datalist.getInstance(),
+			newPath: ""
 		};
 		this.event.player.onLoad = this.event.player.onLoad.bind(this);
 		this.event.player.onLoadError = this.event.player.onLoadError.bind(this);
@@ -86,7 +87,7 @@ class Player extends React.Component {
 		}
 		
 		if (this.props.options.JOB_TP === 'C') {
-			this.trasaction("PLAYER_D01");
+			this.transaction("PLAYER_D01");
 		}		
 	}
 	validation = (serviceid) => {
@@ -370,7 +371,9 @@ class Player extends React.Component {
 					selKeywordData: [{value : '', name : '선택'}],
 					srchText : srchText
 				}, () => {
-					if (this.props.options.JOB_TP === 'C') {
+					// 데모 시연용 실시간도 24 번 서버에 올라가있음 
+					if (this.props.options.JOB_TP === 'C' || this.props.options.JOB_TP === 'R' ) {
+					// if (this.props.options.JOB_TP === 'C') {
 						this.transaction("PLAYER_R02");
 					} else {
 						// src : [res.data.dsRcvSttJobData[0].FILE_PATH],
@@ -1272,12 +1275,18 @@ class Player extends React.Component {
 								</RelativeGroup>
 							</SubFullPanel>
 							<SubFullPanel>
+								{this.state.missSenEdited ? 
+									<div style={{position: "absolute", zIndex: "100", marginTop: "10px", marginLeft: "200px"}}>
+										<LFloatArea>
+											<BasicButton id={"btnCommitMisSen"} onClick={this.event.button.onClick} innerImage={true} fiiled="o" color="purple" icon = {'save'} value={'오인식 문장 제출'}/>
+										</LFloatArea>
+									</div>
+								:
+									null
+								}
 								<div className="scrm-player-body" id={playerConstants.listItemDivId.container + this.props.ctrNo} style={{height : parseInt(this.props.bodyHeight.split('px')[0]) + ((this.state.listOpen) ? 0 : 125) + 'px', marginTop : '10px'}}>
 									{this.state.missSenEdited ? 
-										<div style={{position: "absolute", zIndex: "100"}}>
-											<LFloatArea>
-												<BasicButton id={"btnCommitMisSen"} onClick={this.event.button.onClick} innerImage={true} fiiled="o" color="purple" icon = {'save'} value={'오인식 문장 제출'}/>
-											</LFloatArea>
+										<div style={{height: "43px"}}>
 										</div>
 									:
 										null

@@ -48,6 +48,7 @@ class View extends React.Component {
 			gridProps : {
 				id : 'grdCsList',
 				areaName : '상당원 목록',
+				orgAreaName: '상당원 목록',
 				header: [
 					{headerName: '내선번호',	field: 'EXT_NUM',		colId: 'EXT_NUM',		editable: true,	width: '100', req: true},
 					{headerName: '채널번호',	field: 'CHNL_NUM',	  colId: 'UNQ',		    editable: true,	width: '100', textAlign: 'center', req: true},					
@@ -73,6 +74,7 @@ class View extends React.Component {
 	// => 컴포넌트가 마운트된 직후, 호출 ->  해당 함수에서 this.setState를 수행할 시, 갱신이 두번 일어나 render()함수가 두번 발생 -> 성능 저하 가능성
 	/*------------------------------------------------------------------------------------------------*/
 	componentDidMount () { // 조회
+		this.setState({...this.state, allowed: ComLib.getComCodeCdVal("CMN_SET","CHNL_CNT","STT_SYS_CONST")});
 		if(this.validation("SUP080000_R01")) this.transaction("SUP080000_R01");
 	}
 
@@ -245,11 +247,17 @@ class View extends React.Component {
 	//  - Callback 관련 정의
 	/*------------------------------------------------------------------------------------------------*/
 	callback = (res) => {
-		let state = this.state;
 		switch (res.id) {
 			case 'SUP080000_R01':
 				let cnList = res.data.dsChennelList;
-
+				
+				let cntUse = 0;
+				for (let i = 0; i < cnList.length; i ++) {
+					if (cnList[i].USE_FLAG === 'Y'){
+						cntUse += 1;
+					}
+				}
+				
 				let cnt = 0;
 				for (let j = 0; j < cnList.length; j ++) {
 					cnList[j].TEMP = cnt;
@@ -257,8 +265,6 @@ class View extends React.Component {
 				}
 
 				ComLib.setStateInitRecords(this, "dsChennelList", cnList);
-
-				this.setState(state);
 				
 				let chennelRow = this.chennelGridApi.rowModel.rowsToDisplay[0];
 				this.chennelGridApi.ensureIndexVisible(0, 'middle');	
@@ -268,7 +274,7 @@ class View extends React.Component {
 				}	
 
 				this.currntChennel = chennelRow.data.TEMP
-
+				
 				break; 
 
 			case 'SUP080000_C01':
@@ -325,8 +331,14 @@ class View extends React.Component {
 				constRow.setSelected(true);
 			},
 			onDeleteRow: (e) => {
-				console.log(e)
-				console.log(e)
+				let records    = this.chennelGrid.gridDataset.records;
+				let cnt = 0;
+				for (let i = 0; i < records.length; i ++) {
+					if (records[i].USE_FLAG === 'Y'){
+						cnt += 1;
+					}
+				}
+				
 			},
 			onBeforeInsertRow: (e) => {
 				let records = this.chennelGrid.gridDataset.records;
@@ -337,7 +349,7 @@ class View extends React.Component {
 						cnt += 1;
 					}
 				}
-				let allowed = ComLib.getComCodeCdVal("CMN_SET","CHNL_CNT","STT_SYS_CONST");
+				let allowed = this.state.allowed;
 
 				if (cnt > allowed) {
 					rtn = false
@@ -347,13 +359,21 @@ class View extends React.Component {
 				return {'rtn': rtn, 'index': records.length};
 			},
 			onInsertRow: (e) => {	
-				let records    = this.chennelGrid.gridDataset.records;
+				let records    = this.chennelGrid.gridDataset.records;				
+				let cnt = 0;
+
+				for (let i = 0; i < records.length; i ++) {
+					if (records[i].USE_FLAG === 'Y'){
+						cnt += 1;
+					}
+				}
+				
+
 				let rowData    = this.chennelGrid.gridDataset.getRecords();
 											
 				this.chennelGrid.gridDataset.setRecords(rowData);
 
 				this.chennelGridApi.setRowData(this.chennelGrid.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
-
 				
 				let chennelRow = this.chennelGridApi.rowModel.rowsToDisplay[e.index];
 				
@@ -364,7 +384,7 @@ class View extends React.Component {
 				}	
 			
 				this.currntChennel = chennelRow.data.TEMP;
-
+				
 			}
 		},
 		selectbox: {
@@ -385,7 +405,7 @@ class View extends React.Component {
 	// [7. render Zone]
 	//  - 화면 관련 내용 작성
 	/*------------------------------------------------------------------------------------------------*/
-	render () {
+	render () {		
 		return (
 			<React.Fragment>
 				<FullPanel>
@@ -426,7 +446,7 @@ class View extends React.Component {
 								header  = {this.state.gridProps.header}
 								areaName= {this.state.gridProps.areaName}
 								height  = "610px"
-
+								rowNum    = {true}	
 								addRowBtn = {true}
 								delRowBtn = {true}
 

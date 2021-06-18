@@ -1,6 +1,6 @@
 import React from 'react';
 import {ComLib, TransManager, StrLib, DataLib, newScrmObj} from 'common';
-import {Selectbox, Textfield, LFloatArea, RFloatArea, RelativeGroup, ComponentPanel, FlexPanel, SubFullPanel, BasicButton, Checkbox} from 'components';
+import {Selectbox, Textfield, LFloatArea, RFloatArea, RelativeGroup, ComponentPanel, FlexPanel, SubFullPanel, BasicButton, Checkbox, Label} from 'components';
 import { indexOf } from 'lodash';
 
 
@@ -15,6 +15,7 @@ class RealTimeViewer extends React.Component {
 		super(props);
 		this.state = {
 			dsRealTimeSentence : [],
+			csState: "I",
 			sttUnq: "",
 			timeoutID: null,
 			dsKeywordList : [],
@@ -116,13 +117,9 @@ class RealTimeViewer extends React.Component {
 				datasetsend:"dsSrchData",
 				datasetrecv:"dsRealTimeSentence",
 			});
-			console.log(this.props)
-			console.log(this.props)
-			console.log(this.props)
-			console.log(this.props)
 			transManager.addDataset('dsSrchData', [{ CONST_CD : this.props.constCd
 				                                   , CONST_NM : this.props.constNm
-				                                   , CALL_ID  : this.props.sttUnq }]);
+				                                   , STT_UNQ  : this.props.sttUnq }]);
 			transManager.agent();
 			break;
 		case 'REAL_R02':
@@ -140,7 +137,7 @@ class RealTimeViewer extends React.Component {
 
 			transManager.addDataset('dsSrchData', [{ CONST_CD : this.props.constCd
 													, CONST_NM : this.props.constNm
-													, CALL_ID  : this.state.sttUnq }]);
+													, STT_UNQ  : this.state.sttUnq }]);
 			transManager.agent();
 			break;
 		default : break;
@@ -245,6 +242,7 @@ class RealTimeViewer extends React.Component {
 				dsKeywordList: dsKeywordList,
 				sttUnq: sttUnq,
 				timeoutID : timeoutID,
+				csState: res.data.csState,
 				selKeywordData: selKeywordData.filter(item=> item !== null && item !== undefined),
 				dsRealTimeSentence : dsRealTimeSentence }, () => { 							
 					this.handler.refreshSearch();	
@@ -465,7 +463,7 @@ class RealTimeViewer extends React.Component {
 			return item.map((ele, index) => {
 				return (
 					<div key={index} id={playerConstants.listItemDivId.item + (index).toString()} className="scrm-player-list-item-container">
-						<div className={(ele['SPK_TP'] === 'A') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller'}>
+						<div className={(ele['SPK_TP'] !== 'A') ?  'scrm-player-list-item-client' : 'scrm-player-list-item-caller'}>
 							<div className="scrm-player-list-item-img-div">
 								<span><i className="xi-message-o"></i></span>
 							</div>
@@ -644,6 +642,14 @@ class RealTimeViewer extends React.Component {
 						<ComponentPanel>
 							<SubFullPanel>
 								<RelativeGroup>
+									<LFloatArea>
+										{this.state.csState === 'I' 
+											?
+												<Label value="통화중"/>
+											:
+												<Label value="통화 종료"/>
+										}
+									</LFloatArea>
 									<RFloatArea>
 										<Checkbox   
 											id       = {this.state.checkboxProps.chkAutoScroll.id}
