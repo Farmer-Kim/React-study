@@ -86,7 +86,9 @@ class Player extends React.Component {
 			this.howler = null;
 		}
 		
-		if (this.props.options.JOB_TP === 'C') {
+		// 데모 시연용 실시간도 24 번 서버에 올라가있음 
+		// if (this.props.options.JOB_TP === 'C') {
+		if (this.props.options.JOB_TP === 'C' || this.props.options.JOB_TP === 'R' ) {
 			this.transaction("PLAYER_D01");
 		}		
 	}

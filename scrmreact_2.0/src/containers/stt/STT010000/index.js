@@ -263,7 +263,19 @@ class View extends React.Component {
 										onChange    = {this.event.input.onChange}
 										onKeyPress  = {this.event.input.onKeyPress}
 									/>						
-									
+									{this.state.dsCenterList.records.map((item, index) =>
+										<Checkbox  
+											id={item.CENT_CD}
+											key={item.CENT_CD}
+											value={item.CENT_NM}
+											index={index}
+											keyProp={item.CENT_CD}
+											readOnly={false}
+											disabled={false}
+											checked={item.CHK}
+											onChange={this.event.checkbox.onChange}
+										/>
+									)}
 								</FlexPanel>	
 							</LFloatArea>
 							<RFloatArea>
@@ -280,21 +292,6 @@ class View extends React.Component {
 										mt         = {5}
 								/>								
 							</RFloatArea>
-						</RelativeGroup>
-						<RelativeGroup>
-							{this.state.dsCenterList.records.map((item, index) =>
-								<Checkbox  
-									id={item.CENT_CD}
-									key={item.CENT_CD}
-									value={item.CENT_NM}
-									index={index}
-									keyProp={item.CENT_CD}
-									readOnly={false}
-									disabled={false}
-									checked={item.CHK}
-									onChange={this.event.checkbox.onChange}
-								/>
-							)}
 						</RelativeGroup>
 					</SearchPanel>
 					<SubFullPanel>

@@ -1525,7 +1525,7 @@ const DateLib = {
 
 		let sYear	= objDate.getFullYear().toString();
 		let sMonth	= StrLib.getRight("0" + (objDate.getMonth() + 1), 2);
-		let sDay	= StrLib.getRight("0", objDate.getDate(), 2);
+		let sDay	= StrLib.getRight("0" + objDate.getDate(), 2);
 
 		return sYear + sMonth + sDay;
 	},

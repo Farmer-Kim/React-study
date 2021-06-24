@@ -163,6 +163,10 @@ button:focus {outline: none;}
 .react-daterange-picker__calendar-button > svg {display: none;}
 .react-daterange-picker__calendar-button {width:2rem; height: 27px; background: url('../images/calendar.svg') no-repeat; background-position: top 4px left 50%;}
 
+.Chart-tooltip {
+	background-color: #f0f7ff;
+	padding: 2px;
+}
 
 .custom-tooltip {
 	position: absolute;
@@ -530,7 +534,7 @@ button:focus {outline: none;}
 .scrm-dash-data1 > div h6 { margin-top: 5px; margin-bottom: 5px;}
 .srcm-dash-data2 { position: absolute; right:10px; bottom:10px; z-index: 100;}
 
-.scrm-dash-h3 {margin: 0px 0px 0px 0px; padding-left: 25%;}
+.scrm-dash-h3 {margin: 0px 0px 0px 0px; padding-left: 25%; width: 100%;}
 .scrm-dash-h3 > span {color:#3B5BDB;}
 
 .srcm-dash-data3 {font-weight:bold; color:#343A40; border-radius: 4px; background-color: #F1F3F5; padding:16px 10px 10px;}
