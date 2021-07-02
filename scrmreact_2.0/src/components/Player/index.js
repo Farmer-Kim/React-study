@@ -83,6 +83,7 @@ class Player extends React.Component {
 	componentWillUnmount () {
 		if (this.howler) {
 			this.howler.stop();
+			this.howler.unload();
 			this.howler = null;
 		}
 		
@@ -732,7 +733,12 @@ class Player extends React.Component {
 					}
 				});
 			},
-			onLoadError : (e) => {
+			onLoadError : (id, code) => {
+				console.log("howler onLoadError");
+				console.log(this.howler)
+				console.log(id)
+				console.log(code)
+
 				ComLib.openDialog('A', 'SYSI0010', ['녹취파일 다운로드에 실패하였습니다.']);
 				this.setState({playable: false, duration : this.howler.duration()});
 			},

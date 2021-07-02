@@ -17,7 +17,7 @@ import { max } from 'moment';
 const CustomTooltip = (e) => {
 	let {label, payload, content} = e;
 	if (payload && payload.length && label) {
-		let dataKeys = content._self.props.options.dataKey;
+		let dataKeys = content._owner.memoizedProps.options.dataKey;
 		return (
 			<div style={{backgroundColor: "white", border: "1px solid #1a1a1a"}}>
 				<div className="scrm-label-div" >
@@ -77,7 +77,6 @@ class ScrmLineBarChart extends React.Component {
 		// } else {
 		//   	this.setState({ disabled: this.state.disabled.concat(dataKey) });
 		// }
-		console.log(dataKey)
 	};
 	onMouseEnter = (e) => {
 		
@@ -127,7 +126,7 @@ class ScrmLineBarChart extends React.Component {
 	};
 	shouldComponentUpdate (nextProps) {
 		if (nextProps.data === this.dataSet) {
-			console.log("not update")
+
 			return false;
 		} else {
 			return true;
@@ -139,15 +138,6 @@ class ScrmLineBarChart extends React.Component {
 		// dataSet = this.props.data;
 		
 	}
-	findMaxData = () => {
-		let max = 0;
-		let data = this.props.data;
-		for (let i = 0; i < data.length; i ++) {
-			console.log(data[i])
-		}
-		return max;
-	}
-
 
 	render () {		
 		return (				

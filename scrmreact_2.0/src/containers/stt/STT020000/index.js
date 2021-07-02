@@ -565,7 +565,7 @@ class View extends React.Component {
 
 			},
 			onActionCellClicked : (e) => {
-				let option = { width: '600px', height: '740px', modaless: true, UUID : e.data.uuid, useUuid: true, JOB_TP: e.data.JOB_TP, srchText: this.state.lastSearchType === "WORD" ? e.data.searchTxt : null}
+				let option = { width: '600px', height: '740px', modaless: true, UUID : e.data.uuid, useUuid: true, JOB_TP: e.data.job_tp, srchText: this.state.lastSearchType === "WORD" ? e.data.searchTxt : null}
 				ComLib.openPlayer(option);
 				
 			},
