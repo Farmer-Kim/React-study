@@ -229,7 +229,7 @@ class View extends React.Component {
 				transManager.addConfig  ({
 					dao        : transManager.constants.dao.base,
 					crudh      : transManager.constants.crudh.read,
-					sqlmapid   : "RES.R_getSearchJobTimeline",
+					sqlmapid   : "STT_STATIS.R_getSearchJobTimeline",
 					datasetsend: "dsSearchParam",
 					datasetrecv: "dsJobInfo",
 				});
@@ -237,7 +237,7 @@ class View extends React.Component {
 				transManager.addConfig  ({
 					dao        : transManager.constants.dao.base,
 					crudh      : transManager.constants.crudh.read,
-					sqlmapid   : "RES.R_getSearchErrTimeline",
+					sqlmapid   : "STT_STATIS.R_getSearchErrTimeline",
 					datasetsend: "dsSearchParam",
 					datasetrecv: "dsErrInfo",
 				});

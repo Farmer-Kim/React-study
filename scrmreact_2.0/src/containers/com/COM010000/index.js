@@ -188,7 +188,7 @@ class View extends React.Component {
 				transManager.addConfig({
 					dao        : transManager.constants.dao.base,
 					crudh      : transManager.constants.crudh.read,
-					sqlmapid   : "COM.R_getSrvJobStatistic",
+					sqlmapid   : "STT_STATIS.R_getSrvJobStatistic",
 					datasetsend: "dsSvrJobStaticInfo",
 					datasetrecv: "dsSvrJobInfo"
 				});
@@ -196,7 +196,7 @@ class View extends React.Component {
 				transManager.addConfig({
 					dao        : transManager.constants.dao.base,
 					crudh      : transManager.constants.crudh.read,
-					sqlmapid   : "COM.R_getSrvAllJobStatisticDaily",
+					sqlmapid   : "STT_STATIS.R_getSrvAllJobStatisticDaily",
 					datasetsend: "dsSvrJobStaticInfo",
 					datasetrecv: "dsSvrAllJobDailyInfo"
 				});	
