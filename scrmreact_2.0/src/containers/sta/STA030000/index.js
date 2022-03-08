@@ -92,11 +92,11 @@ class View extends React.Component {
 			grdProps : {
 				grdErrList : {
 					id : 'grdErrList',
-					areaName : '에러 내역',
+					areaName : 'STT 오류 내역',
 					header: [
 								{headerName: '발생건수',	field: 'CNT',	colId: 'CNT',	editable: false, width: 50, textAlign: 'center'},
-								{headerName: '에러코드',	field: 'ERR_CD',	colId: 'ERR_CD',	editable: false, width: 70, textAlign: 'center'},
-								{headerName: '에러내용',	field: 'ERR_MSG',	colId: 'ERR_MSG',	editable: false, width: 150},			
+								{headerName: '오류코드',	field: 'ERR_CD',	colId: 'ERR_CD',	editable: false, width: 70, textAlign: 'center'},
+								{headerName: '오류내용',	field: 'ERR_MSG',	colId: 'ERR_MSG',	editable: false, width: 150},			
 							],
 					height: '300px'
 				},			
@@ -554,7 +554,7 @@ class View extends React.Component {
 									/>
 								</RFloatArea>	
 								<div style={{height: "50%", width:"100%"}}>
-									<Label value = {"기간내 성공 작업 내역"} />
+									<Label value = {"STT 성공 건수"} />
 									<ScrmLineBarChart 
 										data = {this.state.dsJobInfo.getRecords()}
 										maxData = {this.state.useMaxSucc}
@@ -564,7 +564,7 @@ class View extends React.Component {
 									/>
 								</div>
 								<div style={{height: "50%", width:"100%"}}>
-									<Label value = {"기간내 실패 작업 내역"} />
+									<Label value = {"STT 실패 건수"} />
 									<ScrmLineBarChart 
 										data = {this.state.dsJobInfo.getRecords()}
 										maxData = {this.state.useMaxFail}

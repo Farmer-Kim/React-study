@@ -86,7 +86,7 @@ class View extends React.Component {
 				}
 
 				if(!/^[가-힣\s]+$/.test(targetParams)) {					
-					ComLib.openDialog('A', 'SYSI0010', '문장 추가에 실패하였습니다. \n(영문자, 특수문자 불가능)');
+					ComLib.openDialog('A', 'SYSI0010', '문장 추가에 실패하였습니다. \n 한글만 입력해주세요. \n(영문자, 특수문자 불가능)');
 
 					return false;
 				}			
@@ -131,7 +131,7 @@ class View extends React.Component {
 								this.props.addSentence({targetSentence : addSentence});
 
 							} else {
-								ComLib.openDialog('A', 'SYSI0010', '이미 추가된 문장 입니다.');
+								ComLib.openDialog('A', 'SYSI0010', '중복 처리 되었습니다.');
 							}
 
 							state['textFieldProps']['iptAddSentence'].value = '';

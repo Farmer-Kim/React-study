@@ -1249,7 +1249,7 @@ const FileLib = {
 const ExcelLib = {
 	exportToExcel : (header, data, rtn, grdId) => {
 		if (rtn) {
-			let fileName = "[" + DateLib.getTodayTime() + "]_" + grdId + '_excel.xls';
+			let fileName = "[" + DateLib.getTodayTime() + "]_" + grdId + '.xls';
 			let excelComponent = document.createElement('a');
 			excelComponent.setAttribute('id', '_aExcelExport');
 			excelComponent.setAttribute('download', fileName);

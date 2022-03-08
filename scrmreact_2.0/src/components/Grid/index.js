@@ -549,7 +549,7 @@ class Grid extends React.Component {
 
 	addGridRow = () => {
 		let rtnJson = this.props.onBeforeInsertRow({ id : this.props.id });
-
+		
 		if (rtnJson['rtn'] !== false) rtnJson['rtn'] = true;
 
 		if (rtnJson['rtn']) {

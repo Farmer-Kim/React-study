@@ -95,7 +95,7 @@ class View extends React.Component {
 				}
 
 				if(!/^[가-힣\n]+$/.test(targetParams)) {					
-					ComLib.openDialog('A', 'SYSI0010', '복합 명사 추가에 실패하였습니다. \n(영문자, 특수문자, 띄어쓰기 불가능)');
+					ComLib.openDialog('A', 'SYSI0010', '복합 명사 추가에 실패하였습니다. \n한글만 입력해 주세요. \n(영문자, 특수문자, 띄어쓰기 불가능)');
 
 					return false;
 				}			
@@ -195,7 +195,7 @@ class View extends React.Component {
 								this.props.addCombineWord({targetWord : addWord});
 
 							} else {
-								ComLib.openDialog('A', 'SYSI0010', '이미 추가된 복합명사 입니다.');
+								ComLib.openDialog('A', 'SYSI0010', '중복 처리 되었습니다.');
 							}
 							
 							let state = this.state;

@@ -27,13 +27,14 @@ class View extends React.Component {
 			},
 			gridProps: {
 				grdSelfFileList : {
-					areaName : '수동STT	요청',
+					areaName : 'STT 수동처리 목록',
 					id : 'grdSelfFileList',
 					height : "320px",
 					header : 
 					[
-						 {headerName: '업로드 파일명',	        field: 'CALL_ID',		colId: 'CALL_ID',	width: 400}
-						,{headerName: '작업요청자',		field: 'REG_USR_NM',	colId: 'REG_USR_NM', textAlign: 'center',	width: 100}
+						 {headerName: '등록 파일명',	        field: 'CALL_ID',		colId: 'CALL_ID',	width: 400}
+						 ,{headerName: '작업요청자',		field: 'REG_USR_NM',	colId: 'REG_USR_NM', 	width: 100}
+						,{headerName: '녹취길이',		field: 'REC_TM',			colId: 'REC_TM', textAlign: 'center',	width: 100}
 						,{headerName: '학습상태',	    field: 'JOB_STATE',	     colId: 'JOB_STATE', textAlign: 'center',	width: 100,
 								cellEditor: 'agSelectCellEditor',
 								cellEditorParams: { values : ComLib.getComCodeValue('STT_JOB_INFO', 'JOB_STATE')},
@@ -431,38 +432,38 @@ class View extends React.Component {
 								<FlexPanel>
 									<Label value={this.state.rangeCalendarProps.label} req={true} />
 									<RangeInputCalendar
-										id ={this.state.rangeCalendarProps.id}
+										id        = {this.state.rangeCalendarProps.id}
 										startDate = {this.state.rangeCalendarProps.startDate}
-										endDate = {this.state.rangeCalendarProps.endDate}
-										onChange = {this.event.inputcalendar.onChange}
-										strtId  = {this.state.rangeCalendarProps.strtId}
-										endId  = {this.state.rangeCalendarProps.endId}
+										endDate   = {this.state.rangeCalendarProps.endDate}
+										strtId    = {this.state.rangeCalendarProps.strtId}
+										endId     = {this.state.rangeCalendarProps.endId}
+										onChange  = {this.event.inputcalendar.onChange}
 									/>
 									<div style={{marginLeft : '10px'}}/>
 									<Label value={this.state.selectboxProps.selUserList.label}/>
 									<Selectbox
-										id = {this.state.selectboxProps.selUserList.id}
-										dataset = {ComLib.convComboList(ComLib.getUserList(this.state.dsGrp, false), newScrmObj.constants.select.argument.all)}
-										width = {this.state.selectboxProps.selUserList.width}
+										id       = {this.state.selectboxProps.selUserList.id}
+										dataset  = {ComLib.convComboList(ComLib.getUserList(this.state.dsGrp, false), newScrmObj.constants.select.argument.all)}
+										width    = {this.state.selectboxProps.selUserList.width}
 										disabled = {this.state.selectboxProps.selUserList.disabled}
 										selected = {this.state.selectboxProps.selUserList.selected}
-										onChange= {this.event.selectbox.onChange}
+										onChange = {this.event.selectbox.onChange}
 									/>
 								</FlexPanel>														
 							</LFloatArea>
 							<RFloatArea>
 								<FlexPanel>							
 									<Button 
-										id = {this.state.buttonProps.btnSearchProps.id}
-										value = {this.state.buttonProps.btnSearchProps.value}
+										id       = {this.state.buttonProps.btnSearchProps.id}
+										value    = {this.state.buttonProps.btnSearchProps.value}
 										disabled = {this.state.buttonProps.btnSearchProps.disabled}
-										hidden = {this.state.buttonProps.btnSearchProps.hidden}
-										onClick = {this.event.button.onClick}
-										mr = {10}							
-										color= 'blue' 
-										icon = {'srch'}
+										hidden   = {this.state.buttonProps.btnSearchProps.hidden}
+										onClick  = {this.event.button.onClick}
 										innerImage={true}
-										fiiled = "o"
+										mr     = {10}							
+										color  = {"blue"} 
+										icon   = {"srch"}
+										fiiled = {"o"}
 									/>
 								</FlexPanel>
 							</RFloatArea>

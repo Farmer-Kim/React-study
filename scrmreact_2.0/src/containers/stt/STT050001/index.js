@@ -242,7 +242,7 @@ class View extends React.Component {
 						<RelativeGroup>
 							<Label value="학습진행일자 선택 및 학습타이틀을 입력하세요."/>
 							<Label value="학습 가능 일자는 금일 부터입니다."/><br/>
-							<Label value="학습 가능 시간대는 20시 ~ 02 사이입니다."/>
+							<Label value="학습 가능 시간대는 20:00 ~ 02:00 사이 입니다."/>
 						</RelativeGroup>
 						<br/><br/><br/>
 						<RelativeGroup>

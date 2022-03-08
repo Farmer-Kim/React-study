@@ -4,7 +4,7 @@ function getInfos() {
 			host: '172.16.0.30',
 			domain: 'itfact.iptime.org',
 			port: '8080',
-			domainPort: '12388'
+			domainPort: '12380'
 		},
 		dev: {
 			host: '',

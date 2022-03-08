@@ -26,7 +26,7 @@ class View extends React.Component {
 				},
 			},
 			gridSttResultList : {
-				areaName : 'STT결과조회',
+				areaName : 'STT 결과 목록',
 				id : 'gridSttResultList',
 				infoCheckBox :  {
 					use : true,
@@ -35,13 +35,14 @@ class View extends React.Component {
 				header : 				
 				[
 					
-					 {headerName: '콜 아이디',	field: 'CALL_ID',		colId: 'CALL_ID',		editable: true, width : '300' }
+					 {headerName: 'UUID/콜 아이디',	field: 'CALL_ID',		colId: 'CALL_ID',		editable: true, width : '300' }
 					,{headerName: '콜구분',	field: 'CALL_TP',		colId: 'CALL_TP',		editable: false, width : '130', textAlign: 'center', 
 						valueFormatter : (params) => { return ComLib.getComCodeName('CMN', params.value,'CALL_TP')}
 					}
 					,{headerName: '작업구분',	field: 'JOB_TP',	    colId: 'JOB_TP',	editable: false, width : '120', textAlign: 'center', 
 						valueFormatter : (params) => { return ComLib.getComCodeName('CMN', params.value,'JOB_TP')}
-					}				
+					}
+					,{headerName: '녹취길이',	field: 'REC_TM',		colId: 'REC_TM',	editable: false, width : '80'}			// VAULE FORMATTER
 					,{headerName: '등록일시',	field: 'REG_DTM',	    colId: 'REG_DTM',	editable: false, width : '200'}	
 					,{headerName: '센터',		field: 'CENT_NM',		colId: 'CENT_NM',	editable: false, width : '120'}
 					,{headerName: '팀',			field: 'TEAM_NM',	    colId: 'TEAM_NM',	editable: false, width : '120'}					
@@ -65,7 +66,7 @@ class View extends React.Component {
 			},
 			rangeCalendarProps : {
 				rgcSearchJob : {
-					label : '등록일시',
+					label : '등록일자',
 					id : 'searchJobDateCalender',
 					strtId : 'searchJobDateCalenderStart',
 					endId : 'searchJobDateCalenderEnd',
@@ -336,7 +337,7 @@ class View extends React.Component {
 			onClick : (e) => {
 				switch (e.target.id) {
 				case "btnJobFileSearchList" :
-					if(this.validation("STT030000_R01")) {
+					if (this.validation("STT030000_R01")) {
 						this.handler.setDs('STT030000_R01');	
 					}
 					break;
@@ -500,16 +501,7 @@ class View extends React.Component {
 										disabled    = {this.state.textFieldProps.iptSearch.disabled}
 										onChange    = {this.event.input.onChange}
 										onKeyPress  = {this.event.input.onKeyPress}
-									/>
-									<Label value = {this.state.selectboxProps.selJobStateSearch.label}/>
-									<Selectbox
-										id       = {this.state.selectboxProps.selJobStateSearch.id}
-										dataset  = {this.state.selectboxProps.selJobStateSearch.dataset}
-										width    = {this.state.selectboxProps.selJobStateSearch.width}
-										disabled = {this.state.selectboxProps.selJobStateSearch.disabled}
-										selected = {this.state.selectboxProps.selJobStateSearch.selected}
-										onChange = {this.event.selectbox.onChange}
-									/>									
+									/>								
 									<Label value = {this.state.selectboxProps.selCallTP.label}/>
 									<Selectbox
 										id       = {this.state.selectboxProps.selCallTP.id}
@@ -530,6 +522,15 @@ class View extends React.Component {
 										selected = {this.state.selectboxProps.selJobTP.selected}
 										onChange = {this.event.selectbox.onChange}
 									/>
+									<Label value = {this.state.selectboxProps.selJobStateSearch.label}/>
+									<Selectbox
+										id       = {this.state.selectboxProps.selJobStateSearch.id}
+										dataset  = {this.state.selectboxProps.selJobStateSearch.dataset}
+										width    = {this.state.selectboxProps.selJobStateSearch.width}
+										disabled = {this.state.selectboxProps.selJobStateSearch.disabled}
+										selected = {this.state.selectboxProps.selJobStateSearch.selected}
+										onChange = {this.event.selectbox.onChange}
+									/>	
 								</FlexPanel>
 							</LFloatArea>
 							<RFloatArea>
@@ -558,7 +559,7 @@ class View extends React.Component {
 
 							addRowBtn   = {false}
 							delRowBtn   = {false}
-							dnlExcelBtn = {true}
+							dnlExcelBtn = {ComLib.getSession("gdsUserInfo")[0]['AUTH_LV'] === 1 ? true : false}
 							rowNum      = {true}							
 							paging      = {true}
 							infinite    = {true}

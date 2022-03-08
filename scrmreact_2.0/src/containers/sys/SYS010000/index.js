@@ -20,7 +20,10 @@ import { ComLib
 	   , StrLib
 	   , TransManager
 	   , newScrmObj            } from 'common';
-
+const testTeamGetter = (centcd) => {
+	let teamList = ComLib.getSession("gdsTeamList");
+	return teamList.filter(item => item.CENT_CD === centcd).map(item => {return item.CODE_NM})
+}
 class View extends React.Component {
 	constructor(props) {
 		super(props);
@@ -30,7 +33,6 @@ class View extends React.Component {
 
 		this.password   = '';
 		this.clickBtnId = '';
-
 		this.state = {
 			dsSrch       : DataLib.datalist.getInstance([{CENT_CD: "", TEAM_CD: "", AUTH_LV: "", SRCH_DV: "NM", SRCH_VALUE: ""}]),
 			dsUserList   : DataLib.datalist.getInstance(),
@@ -94,8 +96,8 @@ class View extends React.Component {
 				cmbSrchDv : {
 					id : 'cmbSrchDv',
 					dataset : [
-						{value : 'NM', name : '성명'},
-						{value : 'ID', name : 'ID'}
+						{value : 'NM', name : '이름'},
+						{value : 'ID', name : '아이디'}
 					],
 					//value : '',
 					width : 200,
@@ -132,7 +134,7 @@ class View extends React.Component {
 					id          : 'iptSrchword',
 					name        : 'iptSrchword',
 					value       : '',
-					placeholder : '성명/ID',
+					placeholder : '이름/아이디',
 					minLength   : 1,
 					maxLength   : 20,
 					readOnly    : false,
@@ -162,7 +164,7 @@ class View extends React.Component {
 			singleCheckProp : {
 				id : 'chkUseYn',
 				index : 0,
-				keyProp : 'SYS020000_chkUseYn',
+				keyProp : 'SYS010000_chkUseYn',
 				value : '',
 				checked : 'N',
 				readOnly : false,
@@ -171,14 +173,16 @@ class View extends React.Component {
 			gridProps : {
 				id : 'grdUserList',
 				areaName : '사용자 목록',
+
 				header: [
-					{headerName: '센터',		field: 'CENT_NM',		colId: 'CENT_NM', 		editable: false,	width: '120'},
-					{headerName: '팀',			field: 'TEAM_NM',		colId: 'TEAM_NM',		editable: false,	width: '120'},
-					{headerName: '사용자ID',	field: 'USR_ID',		colId: 'USR_ID',		editable: false,	width: '100'},
-					{headerName: '사용자성명',	field: 'USR_NM',		colId: 'USR_NM',		editable: false,	width: '120'},
-					{headerName: '권한',		field: 'AUTH_NM',	    colId: 'AUTH_NM', 	    editable: false,	width: '100'},
-					{headerName: '사용여부',	field: 'USE_FLAG_NM',	colId: 'USE_FLAG_NM', 	editable: false,	width: '50', textAlign: 'center'},
-					{headerName: '등록일시',	field: 'REG_DTM',		colId: 'REG_DTM', 		editable: false,	width: '80', textAlign: 'center', resizable: false},
+					{headerName: '센터',		field: 'CENT_NM',		colId: 'CENT_NM', 		width: '120', req: true},
+					{headerName: '센터',		field: 'CENT_CD',		colId: 'CENT_CD', 		hide: true},
+					{headerName: '팀',			field: 'TEAM_NM',		colId: 'TEAM_NM',		width: '120', req: true},
+					{headerName: '권한',		field: 'AUTH_NM',	    colId: 'AUTH_NM', 	    width: '100', req: true},
+					{headerName: '아이디',		field: 'USR_ID',		colId: 'USR_ID',		width: '100', req: true},
+					{headerName: '이름',		field: 'USR_NM',		colId: 'USR_NM',		width: '120', req: true},
+					{headerName: '사용여부',	 field: 'USE_FLAG_NM',	colId: 'USE_FLAG_NM',	width: '50', req: true, textAlign: 'center'},	
+					{headerName: '등록일시',	field: 'REG_DTM',		colId: 'REG_DTM', 		width: '80', textAlign: 'center', resizable: false},
 				],				
 				paging : {
 					start: 0,
@@ -199,7 +203,10 @@ class View extends React.Component {
 	// => 컴포넌트가 마운트된 직후, 호출 ->  해당 함수에서 this.setState를 수행할 시, 갱신이 두번 일어나 render()함수가 두번 발생 -> 성능 저하 가능성
 	/*------------------------------------------------------------------------------------------------*/
 	componentDidMount () { // 조회
-		this.transaction("SYS020000_R00");
+		this.transaction("SYS010000_R00");
+
+		
+
 	}
 
 
@@ -209,41 +216,7 @@ class View extends React.Component {
 	/*------------------------------------------------------------------------------------------------*/
 	validation = (serviceid) => {
 		switch (serviceid) {
-			case 'SYS020000_R01' :
-				break;
-			
-			case 'SYS020000_H01' :
-				// 사용자ID, 성명, 권한, 센터, 팀, 활동여부
-				if(StrLib.isNull(this.state.dsUserDetail.getValue(0, 'USR_ID'))) {
-					ComLib.openDialog('A', 'COMI0062');
-					return false;
-				}
-				if(StrLib.isNull(this.state.dsUserDetail.getValue(0, 'USR_NM'))) {
-					ComLib.openDialog('A', 'SYSI0201');
-					return false;
-				}
-				if(StrLib.isNull(this.state.dsUserDetail.getValue(0, 'AUTH_LV'))) {
-					ComLib.openDialog('A', 'SYSI0202');
-					return false;
-				}
-				if(StrLib.isNull(this.state.dsUserDetail.getValue(0, 'CENT_CD'))) {
-					ComLib.openDialog('A', 'SYSI0203');
-					return false;
-				}
-				if(StrLib.isNull(this.state.dsUserDetail.getValue(0, 'TEAM_CD'))) {
-					ComLib.openDialog('A', 'SYSI0204');
-					return false;
-				}
-				break;
-			case 'SYS020000_R03':
-			case 'SYS020000_U02':
-				// 그리드 데이터 선택
-				let usrCd = this.state.dsUserDetail.records[0].USR_ID;
-
-				if(StrLib.isNull(usrCd)) {
-					ComLib.openDialog('A', 'SYSI0206');
-					return false;
-				}
+			case 'SYS010000_R01' :
 				break;
 			default :
 				break;
@@ -254,7 +227,7 @@ class View extends React.Component {
 	handler = {
 		setDs : (transId) => {
 			switch (transId) {
-			case "SYS020000_R01" :
+			case "SYS010000_R01" :
 
 				let state = this.state;
 
@@ -262,7 +235,7 @@ class View extends React.Component {
 				state['gridProps']['paging'].page = 1;
 
 				this.setState(state, () => {
-					this.transaction('SYS020000_R01');
+					this.transaction('SYS010000_R01');
 				});
 				break;
 			}
@@ -287,7 +260,7 @@ class View extends React.Component {
 
 		try  {
 			switch (serviceid) {
-				case 'SYS020000_R00' :
+				case 'SYS010000_R00' :
 					transManager.addConfig  ({
 						dao        : transManager.constants.dao.base,
 						crudh      : transManager.constants.crudh.read,
@@ -300,7 +273,7 @@ class View extends React.Component {
 					
 					break;
 
-				case 'SYS020000_R01' :
+				case 'SYS010000_R01' :
 					transManager.addConfig  ({
 						dao        : transManager.constants.dao.base,
 						crudh      : transManager.constants.crudh.read,
@@ -328,7 +301,7 @@ class View extends React.Component {
 
 					break;
 
-				case 'SYS020000_R02' :
+				case 'SYS010000_R02' :
 					transManager.addConfig  ({
 						dao        : transManager.constants.dao.base,
 						crudh      : transManager.constants.crudh.read,
@@ -352,136 +325,6 @@ class View extends React.Component {
 
 					break;
 
-				case 'SYS020000_R03' :
-					transManager.addConfig({
-						dao        : transManager.constants.dao.base,
-						crudh      : transManager.constants.crudh.read,
-						sqlmapid   : 'SYS.R_getPwdStndCode',
-						datasetsend: 'dsSrch',
-						datasetrecv: 'dsPwdStndCd'
-					});
-					
-					let stndParam = {
-						CENT_CD: this.state.dsUserDetail.records[0]["CENT_CD"],
-					};
-					
-					transManager.addDataset('dsSrch', [ stndParam ]);
-					transManager.agent();
-
-					break;
-
-				case 'SYS020000_R04' : // 신규일 때, 사용자아이디 및 사용자성명 체크 용도
-					transManager.addConfig({
-						dao: transManager.constants.dao.base,
-						crudh: transManager.constants.crudh.read,
-						sqlmapid: 'SYS.R_getUserCdCheck',
-						datasetsend: 'dsSrch',
-						datasetrecv: 'dsgetUserCdCheck'
-					});
-					transManager.addConfig({
-						dao: transManager.constants.dao.base,
-						crudh: transManager.constants.crudh.read,
-						sqlmapid: 'SYS.R_getUserNmCheck',
-						datasetsend: 'dsSrch',
-						datasetrecv: 'dsgetUserNmCheck'
-					});	
-					transManager.addDataset('dsSrch', this.state.dsUserDetail.getRow(0));
-					transManager.agent();
-					break;
-
-				case 'SYS020000_R05' : // 수정할 때, 사용자성명 체크 용도
-									transManager.addConfig({
-						dao: transManager.constants.dao.base,
-						crudh: transManager.constants.crudh.read,
-						sqlmapid: 'SYS.R_getUserNmCheck',
-						datasetsend: 'dsSrch',
-						datasetrecv: 'dsgetUserNmCheck'
-					});					
-					transManager.addDataset('dsSrch', this.state.dsUserDetail.getRow(0));
-					transManager.agent();
-					break;
-
-				case 'SYS020000_C01' : 
-					// transManager.addConfig({
-					// 	dao: transManager.constants.dao.base,
-					// 	crudh: transManager.constants.crudh.create,
-					// 	sqlmapid: 'SYS.C_setUsrLog',
-					// 	datasetsend: 'dsSend',
-					// });		
-
-					// transManager.addDataset('dsSend', this.state.dsUserDetail.getRow(0));
-					// transManager.agent();
-
-					break;
-
-				case 'SYS020000_H01' :
-					transManager.addConfig  ({
-						dao        : transManager.constants.dao.base,
-						crudh      : transManager.constants.crudh.update,
-						sqlmapid   : "SYS.U_setUsrInfo",
-						datasetsend: "dsSend",
-					});
-					
-					// 비밀번호 정보 추가 해야함. (기준값 테이블에서 조회한 값으로 셋팅)
-					let rowtype = this.state.dsUserDetail.getRow(0)[0].rowtype;
-					if(rowtype === 'c') {
-						transManager.addConfig({
-							crudh: transManager.constants.crudh.passwd,
-							datasetsend: 'dsSendPwd',
-							columnid: 'INIT_PWD'
-						});
-						transManager.addConfig  ({
-							dao        : transManager.constants.dao.base,
-							crudh      : transManager.constants.crudh.create,
-							sqlmapid   : "SYS.U_setPwdInit",
-							datasetsend: "dsSendPwd",
-						});
-					}
-					
-					let dsPwdData = {
-						USR_ID: this.state.dsUserDetail.records[0]["USR_ID"],
-						INIT_PWD: this.password,
-					};
-					
-					transManager.addDataset('dsSendPwd', [ dsPwdData ] );
-					transManager.addDataset('dsSend', this.state.dsUserDetail.getRow(0));
-					transManager.agent();
-
-					break;
-
-				case 'SYS020000_U01' :
-					transManager.addConfig({
-						crudh      : transManager.constants.crudh.passwd,
-						datasetsend: 'dsSendPwd',
-						columnid   : 'INIT_PWD'
-					});
-					transManager.addConfig  ({
-						dao        : transManager.constants.dao.base,
-						crudh      : transManager.constants.crudh.update,
-						sqlmapid   : "SYS.U_setPwdInit",
-						datasetsend: "dsSendPwd",
-					});
-
-					dsPwdData = {
-						USR_ID: this.state.dsUserDetail.records[0]["USR_ID"],
-						INIT_PWD: this.password
-					};
-
-					transManager.addDataset('dsSendPwd', [ dsPwdData ] );
-					transManager.agent();
-
-					break;
-
-				case 'SYS020000_U02' :
-					transManager.addConfig({
-						dao: transManager.constants.dao.base,
-						crudh: transManager.constants.crudh.update,
-						sqlmapid: 'SYS.U_setLoginInit',
-						datasetsend: 'dsSend'
-					});
-					transManager.addDataset('dsSend', this.state.dsUserDetail.getRow(0));
-					transManager.agent();
-					break;
 				default :
 					break;
 			}
@@ -499,7 +342,7 @@ class View extends React.Component {
 		let state = this.state;
 
 		switch (res.id) {
-			case 'SYS020000_R00': 
+			case 'SYS010000_R00': 
 				let dsAuthList   = res.data.dsAuthList;
 				let authData     = state.selectboxProps.cmbAuthCd.dataset;
 				let authSearData = state.selectboxProps.cmbSrchAuth.dataset;
@@ -517,11 +360,11 @@ class View extends React.Component {
 				state['selectboxProps']['cmbAuthCd'].dataset = authData;
 				
 				this.setState(state);
-				this.transaction('SYS020000_R01');
+				this.transaction('SYS010000_R01');
 
 				break;
 
-			case 'SYS020000_R01':
+			case 'SYS010000_R01':
 				if (res.data.dsUserList.length > 0) {
 					ComLib.setStateInitRecords(this, "dsUserList", res.data.dsUserList);
 				} else {
@@ -535,7 +378,7 @@ class View extends React.Component {
 
 				break; 
 			
-			case 'SYS020000_R02':
+			case 'SYS010000_R02':
 				ComLib.setStateInitRecords(this, "dsUserList", res.data.dsUserList);
 
 				state['gridProps']['paging'].loading = false;
@@ -543,66 +386,6 @@ class View extends React.Component {
 				this.setState(state);
 
 				break; 
-
-			case 'SYS020000_R03':
-				if(res.data.dsPwdStndCd.length > 0) {
-					this.password = res.data.dsPwdStndCd[0].STND_VAL;
-
-					if (this.password === null || this.password === '') {
-						// 해당 제휴사의 비밀번호 기준값이 존재하지 않습니다.[!@]\n관리자에게 문의해 주십시오
-						ComLib.openDialog('A', 'SYSI0207');
-						return false;
-					}
-
-					// 버튼 트랜젝션 컨트롤
-					this.btnTransactionControl();
-				} else {
-					// 해당 제휴사의 비밀번호 기준값이 존재하지 않습니다.[!@]\n관리자에게 문의해 주십시오
-					ComLib.openDialog('A', 'SYSI0207');
-					return false;
-				}
-				
-				break;
-			case 'SYS020000_R04': // 신규일 때, 사용자아이디 및 사용자성명 체크 용도
-				if (res.data.dsgetUserCdCheck[0].CHK_CNT > 0) {
-					ComLib.openDialog('A', 'SYSI0208');
-					return false;
-				} else if (res.data.dsgetUserNmCheck[0].CHK_CNT > 0) {
-					ComLib.openDialog('A', 'SYSI0209');
-					return false;
-				}
-				else {
-					this.transaction("SYS020000_H01");
-				}
-				break;
-
-			case 'SYS020000_R05': // 수정할 때, 사용자성명 체크 용도
-				if (res.data.dsgetUserNmCheck[0].CHK_CNT > 0) {
-					ComLib.openDialog('A', 'SYSI0209');
-					return false;
-				} else {
-					this.transaction("SYS020000_H01");
-				}
-				break;
-
-			case 'SYS020000_H01':
-				ComLib.openDialog("A", "COMI0003");
-				// this.transaction("SYS020000_C01");
-				this.handler.setDs('SYS020000_R01');
-
-				break;
-
-			case 'SYS020000_U02':
-				ComLib.openDialog("A", "SYSI0004");
-				break;
-
-			case 'SYS020000_U01':
-				ComLib.openDialog("A", "SYSI0003");
-				break;
-			
-			case 'SYS020000_C01':
-				this.handler.setDs('SYS020000_R01');
-				break;
 
 			default : break;
 		}
@@ -619,62 +402,23 @@ class View extends React.Component {
 				this.clickBtnId = e.target.id;
 				switch (e.target.id) {
 					case "btnSearch" :	// 조회
-						if (this.validation("SYS020000_R01")) this.handler.setDs('SYS020000_R01');
-						break;
-					case "btnAdd" : 	// 신규
-						this.setState({...this.state, radioProps : {...this.state.radioProps, selected : 'A'}});
-						this.setState({...this.state, singleCheckProp: {...this.state.singleCheckProp, checked : 'Y'}});
-						
-						ComLib.setStateRecords(this, "dsUserDetail", [{
-							rowtype: "c",
-							USR_ID: "", 
-							USR_NM: "", 
-							AUTH_LV: "4", 
-							CENT_CD: "", 
-							TEAM_CD: "", 
-							USE_FLAG: "Y", 
-							REG_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID, 
-							CHG_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID}]
-						);
-
-						// 신규 버튼을 클릭시 사용자 목록에서 이미 선택되어 있던 인덱스가 선택 해제되도록 하기
-						//let records = this.grdUser.gridDataset.getRecords();
-						// let rowNum = 0;
-						
-						if(this.grdUserApi.getSelectedRows().length > 0){
-							// for (let i = 0; i < records.length; i ++) {
-							// 	if (records[i].USR_ID === this.grdUserApi.getSelectedRows()[0].USR_ID) {
-							// 		rowNum = i;
-							// 		break;
-							// 	}
-							// }
-					
-							if (this.grdUserApi.rowModel.rowsToDisplay.length !== 0) {
-								this.grdUserApi.rowModel.rowsToDisplay[this.grdUser.gridDataset.getRecords().findIndex(
-									item => item['USR_ID'] === this.grdUserApi.getSelectedRows()[0].USR_ID
-								)].setSelected(false);
-							}
-						}
-	
-						break;
-					case "btnSave" : 	// 저장
-						if (this.validation("SYS020000_H01")) {
-							// 기준값 조회
-							this.transaction('SYS020000_R03');
-						}
-						break;
-					case "btnInitLogin" : 	// 로그인 초기화
-						if(this.validation("SYS020000_U02")) this.transaction("SYS020000_U02"); 
-						break;
-					case "btnInitPwd" : 	// 비밀번호 초기화
-						// 기준값 조회
-						if(this.validation("SYS020000_R03"))this.transaction("SYS020000_R03");
+						if (this.validation("SYS010000_R01")) this.handler.setDs('SYS010000_R01');
 						break;
 					default : break;
 				}
 			}
 		},
 		grid: {
+			onBeforeInsertRow: (e) => {				
+				let param = {id: 'test', records: [{USR_ID: "", USR_NM: "", AUTH_LV: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: "Y"}], authList: this.state.selectboxProps.cmbAuthCd.dataset, isNew: true};
+				let option2 = { width: '600px', height: '300px', modaless: false, param: param}
+				ComLib.openPop('SYS010001', '신규 사용자 등록', option2, this.event.grid.afterAddUser)
+
+				return {rtn:false};
+			},
+			afterAddUser: (e) => {
+				this.handler.setDs('SYS010000_R01');
+			},
 			onGridReady : (e) => {
 				//this.setState({grdMenuApi : e.gridApi, grdMenu : e.grid});
 				switch(e.id) {
@@ -686,16 +430,6 @@ class View extends React.Component {
 				}
 			},
 			onRowClicked: (e) => {	
-				ComLib.setStateRecords(this, "dsUserDetail", [this.grdUser.gridDataset.records[e.index]]);
-				
-				// 상세정보 체크박스 셋팅
-				this.setState({...this.state, singleCheckProp: {...this.state.singleCheckProp, checked : e.data.USE_FLAG}});
-
-				if(e.data.CENT_CD === '' || e.data.CENT_CD === null) {
-					ComLib.setStateValue(this, "dsUserDetail", 0, "CENT_CD", "");
-					ComLib.setStateValue(this, "dsUserDetail", 0, "TEAM_CD", "");
-				}
-
 				// 클릭을 한 번 더 했을 때 그리드에 선택된 인덱스가 풀리지 않도록 하기
 				let userRows = this.grdUserApi.rowModel.rowsToDisplay;
 				let userRow;
@@ -708,6 +442,11 @@ class View extends React.Component {
 				}
 				userRow.setSelected(true);
 			},
+			onCellDoubleClicked: (e) => {
+				let param = {id: 'test', records: [e.data], authList: this.state.selectboxProps.cmbAuthCd.dataset, isNew: false};
+				let option2 = { width: '600px', height: '300px', modaless: false, param: param}
+				ComLib.openPop('SYS010001', '사용자 정보 변경', option2, this.event.grid.afterAddUser)
+			},
 			onScrollEnd: (e) => {
 				if (!this.state.gridProps.paging.loading) {
 					this.setState({...this.state
@@ -719,7 +458,7 @@ class View extends React.Component {
 							}
 						}
 					}, () => {
-						this.transaction("SYS020000_R02");
+						this.transaction("SYS010000_R02");
 					});
 				}
 			},
@@ -729,23 +468,6 @@ class View extends React.Component {
 				switch (e.target.id) {
 					case 'iptSrchword' :
 						ComLib.setStateValue(this, "dsSrch", 0, "SRCH_VALUE", e.target.value);
-						break;
-					case 'iptUsrCd' :
-						ComLib.setStateValue(this, "dsUserDetail", 0, "USR_ID", e.target.value);
-						break;
-					case 'iptUsrNm' :
-						ComLib.setStateValue(this, "dsUserDetail", 0, "USR_NM", e.target.value);
-						break;
-					default : break;
-				}
-			}
-		},
-		checkbox : {
-			onChange : (e) => {
-				switch (e.id) {
-					case 'chkUseYn' :
-						this.setState({...this.state, singleCheckProp: {...this.state.singleCheckProp, checked : (e.checked) ? 'Y' : 'N'}});
-						ComLib.setStateValue(this, "dsUserDetail", 0, "USE_FLAG", (e.checked) ? 'Y' : 'N');
 						break;
 					default : break;
 				}
@@ -767,51 +489,12 @@ class View extends React.Component {
 					case 'cmbSrchDv' :
 						ComLib.setStateValue(this, "dsSrch", 0, "SRCH_DV", e.target.value);
 						break;
-					// 상세정보 영역
-					case 'cmbCentCd' : 
-						ComLib.setStateValue(this, "dsUserDetail", 0, "CENT_CD", e.target.value);
-						ComLib.setStateValue(this, "dsUserDetail", 0, "TEAM_CD", "");
-						/*
-						if(e.target.value !== '') {
-							let teamCd = [];
-							teamCd = DataLib.datalist.getInstance(ComLib.getTeamList(this.state.dsSrchTemp)).find('CENT_CD', e.target.value);
-							ComLib.setStateValue(this, "dsUserDetail", 0, "TEAM_CD", teamCd[0].CODE);
-						} else {
-							ComLib.setStateValue(this, "dsUserDetail", 0, "TEAM_CD", "");
-						}
-						*/
-						break;
-					case 'cmbTeamCd' :
-						ComLib.setStateValue(this, "dsUserDetail", 0, "TEAM_CD", e.target.value);
-						break;
-					case 'cmbAuthCd' :
-						ComLib.setStateValue(this, "dsUserDetail", 0, "AUTH_LV", e.target.value);
-						break;
 					default : break;
 				}
 			}
 		}
 	}
 
-	// 버튼 트랜젝션 컨트롤
-	btnTransactionControl =() => {
-		switch (this.clickBtnId) {
-			case 'btnSave' : // 저장
-				let rowtype = this.state.dsUserDetail.records[0]["rowtype"];
-				if(rowtype === 'c') { // 신규이면 사용자 ID와 사용자성명 중복체크
-					this.transaction("SYS020000_R04");
-				}else if (rowtype === 'r') { // 수정시 사용자성명 중복체크
-					this.transaction("SYS020000_R05");
-				}else {
-					this.transaction("SYS020000_H01");
-				}
-				break;
-			case 'btnInitPwd':	// 비밀번호 초기화
-				this.transaction("SYS020000_U01");
-				break;
-			default : break;
-		}
-	}
 
 	/*------------------------------------------------------------------------------------------------*/
 	// [7. render Zone]
@@ -898,143 +581,23 @@ class View extends React.Component {
 								ref       = {this.state.gridProps.id} 
 								header    = {this.state.gridProps.header}
 								areaName  = {this.state.gridProps.areaName}
-								height    = "465px" 
-								addRowBtn = {false}
-								delRowBtn = {false}
+								height    = "650px" 
 								rowNum    = {true}						
 								paging    = {true}
 								infinite  = {true}
+								delRowBtn = {false}
 
 								data        = {this.state.dsUserList}
 								totalRowCnt = {(this.state.dsUserList.getRecords().length === 0) ? 0 : this.state.dsUserList.getValue(0, 'totalcount')}
-
+								onBeforeInsertRow  = {this.event.grid.onBeforeInsertRow}
 								onGridReady        = {this.event.grid.onGridReady}	
 								onScrollEnd        = {this.event.grid.onScrollEnd}		
 								onRowClicked       = {this.event.grid.onRowClicked}
+								onCellDoubleClicked= {this.event.grid.onCellDoubleClicked}
 							/>
 						</ComponentPanel>
 					</SubFullPanel>
-					<SubFullPanel>
-						<ComponentPanel>
-							<FullPanel>
-								<FlexPanel>
-									<Table  
-										id="tblUsrDetInfo" 
-										colGrp = {[{width: '10%'}, {width: '15%'}, {width: '10%'}, {width: '15%'}, {width: '10%'}, {width: '15%'}, {width: '10%'}, {width: '15%'} ]}
-										tbData = {[
-											[   {type : 'T', value : '사용자 ID'},
-												{type : 'D', value : <Textfield width='100%' 
-																		id = {this.state.textFieldProps.textUsrCd.id}
-																		name =  {this.state.textFieldProps.textUsrCd.name}
-																		value =  {this.state.dsUserDetail.records[0]["USR_ID"]}
-																		placeholder =  {this.state.textFieldProps.textUsrCd.placeholder}
-																		minLength =   {this.state.textFieldProps.textUsrCd.minLength}
-																		maxLength =   {this.state.textFieldProps.textUsrCd.maxLength}
-																		readOnly =  {this.state.textFieldProps.textUsrCd.readOnly}
-																		disabled = {this.state.dsUserDetail.records[0]["rowtype"] !== newScrmObj.constants.crud.create ? true : false}
-																		onChange={this.event.input.onChange}
-																	/>},	
-												{type : 'T', value : '사용자 성명'},
-												{type : 'D', value : <Textfield width='100%'
-																		id = {this.state.textFieldProps.textUsrNm.id}
-																		name = {this.state.textFieldProps.textUsrNm.name}
-																		value = {this.state.dsUserDetail.records[0]["USR_NM"]}
-																		placeholder = {this.state.textFieldProps.textUsrNm.placeholder}
-																		minLength = {this.state.textFieldProps.textUsrNm.minLength}
-																		maxLength = {this.state.textFieldProps.textUsrNm.maxLength}
-																		readOnly = {this.state.textFieldProps.textUsrNm.readOnly}
-																		disabled = {this.state.textFieldProps.textUsrNm.disabled}
-																		onChange = {this.event.input.onChange}
-																	/>},
-												{type : 'T', value : '권한'},
-												{type : 'D', value : <Selectbox 
-																		id = {this.state.selectboxProps.cmbAuthCd.id}
-																		value = {this.state.dsUserDetail.records[0]["AUTH_LV"]}
-																		dataset = {this.state.selectboxProps.cmbAuthCd.dataset}
-																		width ={'100%'}
-																		disabled = {false}
-																		selected = {this.state.selectboxProps.cmbAuthCd.selected}
-																		onChange= {this.event.selectbox.onChange}
-																	/>},											
-											],
-											[   {type : 'T', value : '센터'},
-												{type : 'D', value : <Selectbox
-																		id = {this.state.selectboxProps.cmbCentCd.id}
-																		dataset = {ComLib.convComboList(ComLib.getCentList(), newScrmObj.constants.select.argument.select)}
-																		value = {this.state.dsUserDetail.records[0]["CENT_CD"]}
-																		width ={'100%'}
-																		disabled = {false}
-																		onChange = {this.event.selectbox.onChange}
-																	/>},
-												{type : 'T', value : '팀'},
-												{type : 'D', value : <Selectbox
-																		id = {this.state.selectboxProps.cmbTeamCd.id}
-																		dataset = {ComLib.convComboList(ComLib.getTeamList(this.state.dsUserDetail), newScrmObj.constants.select.argument.select)}
-																		value = {this.state.dsUserDetail.records[0]["TEAM_CD"]}
-																		width ={'100%'}
-																		disabled = {false}
-																		onChange = {this.event.selectbox.onChange}
-																	/>},
-												{type : 'T', value : '사용여부'},
-												{type : 'D', value : <Checkbox
-																		id = {this.state.singleCheckProp.id}
-																		keyProp = {this.state.singleCheckProp.keyProp}
-																		value = {this.state.singleCheckProp.value}
-																		checked = {this.state.singleCheckProp.checked}
-																		disabled = {this.state.singleCheckProp.disabled}
-																		onChange = {this.event.checkbox.onChange}
-																	/>}										
-											]
-										]}
-									/>
-								</FlexPanel>
-							</FullPanel>
-							<SubFullPanel>
-								<RelativeGroup>
-									<LFloatArea>
-										<Button
-											color= 'purple' fiiled= {true} 
-											id = {this.state.btnProps.btnInitLogin.id}
-											value = {this.state.btnProps.btnInitLogin.value}
-											disabled = {this.state.btnProps.btnInitLogin.disabled}
-											hidden = {this.state.btnProps.btnInitLogin.hidden}
-											onClick = {this.event.button.onClick}
-											ml = {5}
-											mr = {5}
-										/>
-										<Button
-											color= 'purple' fiiled= {true} 
-											id = {this.state.btnProps.btnInitPwd.id}
-											value = {this.state.btnProps.btnInitPwd.value}
-											disabled = {this.state.btnProps.btnInitPwd.disabled}
-											hidden = {this.state.btnProps.btnInitPwd.hidden}
-											onClick = {this.event.button.onClick}
-										/>
-									</LFloatArea>
-									<RFloatArea>
-										<Button
-											color="green" fiiled= {true} 
-											id = {this.state.btnProps.btnAdd.id}
-											value = {this.state.btnProps.btnAdd.value}
-											disabled = {this.state.btnProps.btnAdd.disabled}
-											hidden = {this.state.btnProps.btnAdd.hidden}
-											onClick = {this.event.button.onClick}
-											mr = {5}
-										/>
-										<Button
-											color="purple" fiiled= {true} 
-											id = {this.state.btnProps.btnSave.id}
-											value = {this.state.btnProps.btnSave.value}
-											disabled = {this.state.btnProps.btnSave.disabled}
-											hidden = {this.state.btnProps.btnSave.hidden}
-											onClick = {this.event.button.onClick}
-											mr = {5}
-										/>
-									</RFloatArea>
-								</RelativeGroup>
-							</SubFullPanel>
-						</ComponentPanel>
-					</SubFullPanel>
+					
 				</FullPanel>
 			</React.Fragment>
 		)

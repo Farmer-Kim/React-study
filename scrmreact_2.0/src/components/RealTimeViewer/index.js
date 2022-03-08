@@ -298,7 +298,7 @@ class RealTimeViewer extends React.Component {
 				switch (e.target.id) {
 				case 'selKeywordType' :
 					if (this.state.playing) {
-						ComLib.openDialog('A', 'SYSI0010', ['정지 후 플레이어를 검색하기 바랍니다.']);
+						ComLib.openDialog('A', 'SYSI0010', ['플래이어 정지 후 내용을 검색하기 바랍니다.']);
 						return false;
 					} else {
 						this.setState({ selKeywordType : e.target.value, typeSelectedIndex: e.target.selectedIndex, selKeywordColor: ComLib.getComCodeCdVal('STT_SYS_KWD', e.target.value, 'KWD_TP')}, () => {

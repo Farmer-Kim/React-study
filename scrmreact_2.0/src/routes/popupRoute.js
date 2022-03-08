@@ -17,6 +17,9 @@ import STA030003 from 'containers/sta/STA030003';
 import BOT010001 from 'containers/bot/BOT010001';
 import BOT010101 from 'containers/bot/BOT010101';
 
+
+import SYS010001 from 'containers/sys/SYS010001';
+
 import AnswerArea from 'components/Player/AnswerArea';
 
 export const popRoute = [
@@ -41,4 +44,7 @@ export const popRoute = [
 	{ id: 'STA030003',		component: STA030003 },
 	{ id: 'BOT010001',		component: BOT010001 },
 	{ id: 'BOT010101',		component: BOT010101 },
+	
+	{ id: 'SYS010001',		component: SYS010001 },
+
 ];

@@ -55,12 +55,12 @@ class View extends React.Component {
 			},
 			gridProps : {
 				grdTrainList : {
-					areaName : '사용자학습목록',
+					areaName : '학습 목록',
 					id : 'grdTrainList',
 					header : 
 					[						  		
 						{headerName:  '학습일자',	field: 'TRN_DTM',		 colId: 'TRN_DTM',		}
-						,{headerName: '타이틀',	field: 'TRN_TIT',			colId: 'TRN_TIT',		editable: false }
+						,{headerName: '제목',	field: 'TRN_TIT',			colId: 'TRN_TIT',		editable: false }
 						,{headerName: '작업상태',	field: 'TRN_STATE',			colId: 'TRN_STATE',		editable: false,
 							cellEditorParams: { values : ComLib.getComCodeValue('CMN', 'TRN_STATE')},
 							valueFormatter : (params) => { return ComLib.getComCodeName('CMN', params.value, 'TRN_STATE')}}
@@ -344,7 +344,7 @@ class View extends React.Component {
 			let stateChk = res.data.dsTrainState;
 			
 			if(stateChk[0].TrainUse_YN === 'X'){
-				ComLib.openDialog('A', 'SYSI0010', '이미 등록된 학습 완료 후 신규 등록이 가능합니다.\n학습 완료 후 시도하십시오.');	
+				ComLib.openDialog('A', 'SYSI0010', '이미 등록된 학습이 있습니다. \n학습 완료 후 진행해주세요.');	
 
 				return;
 		 
@@ -681,11 +681,11 @@ class View extends React.Component {
 	
 	onExelDownLoad = async() => {	
 		if (this.state.activeTab === 0) {
-			let header = [{headerName:  '복합명사',	field: 'word', colId: 'word'}]
+			let header = [{headerName:  '학습_복합명사',	field: 'word', colId: 'word'}]
 			ExcelLib.exportToExcel(header, this.state.dsWordList.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy), true, "복합명사");
 			
 		} else {
-			let header = [{headerName:  '문장',	field: 'sentence', colId: 'sentence'}]
+			let header = [{headerName:  '학습_문장',	field: 'sentence', colId: 'sentence'}]
 			ExcelLib.exportToExcel(header, this.state.dsSentenceList.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy), true, "문장");
 			
 
@@ -698,35 +698,6 @@ class View extends React.Component {
 				<SubFullPanel>
 					<FlexPanel>
 						<ComponentPanel>
-							<RelativeGroup>
-								<RFloatArea>
-									<LFloatArea>
-										<ReactFileReader  fileTypes={['.xlsx']} handleFiles={this.onUploadFiles}>											
-											<Button 
-												id    = {this.state.buttonProps.btnExcelUpload.id} 
-												color = {this.state.buttonProps.btnExcelUpload.color} 
-												value = {this.state.buttonProps.btnExcelUpload.value}	
-												onClick= {this.event.button.onClick}
-												fiiled= {true} 										
-											/>
-										</ReactFileReader>
-									</LFloatArea>	
-									<Button 
-										id     = {this.state.buttonProps.btnDataDownload.id} 
-										color  = {this.state.buttonProps.btnDataDownload.color} 
-										value  = {this.state.buttonProps.btnDataDownload.value}
-										onClick= {this.event.button.onClick}	
-										fiiled = {true} 										
-									/>																	
-									<Button 
-										id     = {this.state.buttonProps.btnExecuteLearning.id} 
-										color  = {this.state.buttonProps.btnExecuteLearning.color} 
-										value  = {this.state.buttonProps.btnExecuteLearning.value}
-										onClick= {this.event.button.onClick}	
-										fiiled = {true} 										
-									/>
-								</RFloatArea>
-							</RelativeGroup>
 							<Tabs tabWidth='100px' onClick = {this.event.tab.onClick}>
 								<TabPanel id = {'STT050100'} index={0} label={'복합명사'}>
 									<STT050100 
@@ -747,6 +718,42 @@ class View extends React.Component {
 									/>
 								</TabPanel>
 							</Tabs>
+							<RelativeGroup>
+								<LFloatArea>
+									<FlexPanel>
+										<ReactFileReader  fileTypes={['.xlsx']} handleFiles={this.onUploadFiles}>											
+											<Button 
+												id    = {this.state.buttonProps.btnExcelUpload.id} 
+												color = {this.state.buttonProps.btnExcelUpload.color} 
+												value = {this.state.buttonProps.btnExcelUpload.value}	
+												onClick= {this.event.button.onClick}
+												ml     = {4}
+												fiiled= {true} 										
+											/>
+										</ReactFileReader>										
+										<Button 
+											id     = {this.state.buttonProps.btnDataDownload.id} 
+											color  = {this.state.buttonProps.btnDataDownload.color} 
+											value  = {this.state.buttonProps.btnDataDownload.value}
+											onClick= {this.event.button.onClick}	
+											ml     = {10}
+											fiiled = {true} 										
+										/>	
+									</FlexPanel>	
+								</LFloatArea>	
+								<RFloatArea>	
+									<FlexPanel>												
+										<Button 
+											id     = {this.state.buttonProps.btnExecuteLearning.id} 
+											color  = {this.state.buttonProps.btnExecuteLearning.color} 
+											value  = {this.state.buttonProps.btnExecuteLearning.value}
+											onClick= {this.event.button.onClick}	
+											mr     = {7}
+											fiiled = {true} 										
+										/>
+									</FlexPanel>		
+								</RFloatArea>
+							</RelativeGroup>
 						</ComponentPanel>
 						<ComponentPanel>
 							<Grid
