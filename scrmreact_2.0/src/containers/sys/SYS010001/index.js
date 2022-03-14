@@ -20,10 +20,7 @@ import { ComLib
 	   , StrLib
 	   , TransManager
 	   , newScrmObj            } from 'common';
-const testTeamGetter = (centcd) => {
-	let teamList = ComLib.getSession("gdsTeamList");
-	return teamList.filter(item => item.CENT_CD === centcd).map(item => {return item.CODE_NM})
-}
+	   
 class View extends React.Component {
 	constructor(props) {
 		super(props);

@@ -20,10 +20,6 @@ import { ComLib
 	   , StrLib
 	   , TransManager
 	   , newScrmObj            } from 'common';
-const testTeamGetter = (centcd) => {
-	let teamList = ComLib.getSession("gdsTeamList");
-	return teamList.filter(item => item.CENT_CD === centcd).map(item => {return item.CODE_NM})
-}
 class View extends React.Component {
 	constructor(props) {
 		super(props);
@@ -45,131 +41,12 @@ class View extends React.Component {
 					value    : '조회',
 					hidden   : false
 				},
-				btnSave : {
-					id       : 'btnSave',
-					disabled : false,
-					value    : '저장',
-					hidden   : false
-				},
-				btnAdd : {
-					id       : 'btnAdd',
-					disabled : false,
-					value    : '신규',
-					hidden   : false
-				},
-				btnInitLogin : {
-					id       : 'btnInitLogin',
-					disabled : false,
-					value    : '로그인초기화',
-					hidden   : false
-				},
-				btnInitPwd : {
-					id       : 'btnInitPwd',
-					disabled : false,
-					value    : '비밀번호초기화',
-					hidden   : false
-				},
 			},
-			selectboxProps : {
-				cmbSrchCent : {
-					id : 'cmbSrchCent',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbSrchTeam : {
-					id : 'cmbSrchTeam',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbSrchAuth : {
-					id : 'cmbSrchAuth',
-					dataset: [{value : 'ALL', name : '전체'},],
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbSrchDv : {
-					id : 'cmbSrchDv',
-					dataset : [
-						{value : 'NM', name : '이름'},
-						{value : 'ID', name : '아이디'}
-					],
-					//value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-
-				// 상세정보 영역
-				cmbCentCd : {
-					id : 'cmbCentCd',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbTeamCd : {
-					id : 'cmbTeamCd',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbAuthCd : {
-					id : 'cmbAuthCd',
-					value : '',
-					dataset: [{value : '', name : '선택'},],
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-			},
-			textFieldProps : {
-				textSrchWord : {
-					id          : 'iptSrchword',
-					name        : 'iptSrchword',
-					value       : '',
-					placeholder : '이름/아이디',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-				textUsrCd : {
-					id          : 'iptUsrCd',
-					name        : 'iptUsrCd',
-					value       : '',
-					placeholder : '',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-				textUsrNm : {
-					id          : 'iptUsrNm',
-					name        : 'iptUsrNm',
-					value       : '',
-					placeholder : '',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-			},
-			singleCheckProp : {
-				id : 'chkUseYn',
-				index : 0,
-				keyProp : 'SYS010000_chkUseYn',
-				value : '',
-				checked : 'N',
-				readOnly : false,
-				disabled : false
-			},
+			cmbSrchAuth_dataset: [{value : 'ALL', name : '전체'}],
+			cmbSrchDv_dataset:[
+				{value : 'NM', name : '이름'},
+				{value : 'ID', name : '아이디'}
+			],			
 			gridProps : {
 				id : 'grdUserList',
 				areaName : '사용자 목록',
@@ -344,20 +221,17 @@ class View extends React.Component {
 		switch (res.id) {
 			case 'SYS010000_R00': 
 				let dsAuthList   = res.data.dsAuthList;
-				let authData     = state.selectboxProps.cmbAuthCd.dataset;
-				let authSearData = state.selectboxProps.cmbSrchAuth.dataset;
+				let authSearData = state.cmbSrchAuth_dataset;
 
 				for (let i = 0; i < dsAuthList.length; i ++) {
 					let temp = {};
 					temp.value = dsAuthList[i].AUTH_LV;
 					temp.name  = dsAuthList[i].AUTH_NM;
 					authSearData.push(temp)
-					authData.push(temp)
 
 				}
 				
-				state['selectboxProps']['cmbSrchAuth'].dataset = authSearData;
-				state['selectboxProps']['cmbAuthCd'].dataset = authData;
+				state.cmbSrchAuth_dataset = authSearData;
 				
 				this.setState(state);
 				this.transaction('SYS010000_R01');
@@ -410,7 +284,7 @@ class View extends React.Component {
 		},
 		grid: {
 			onBeforeInsertRow: (e) => {				
-				let param = {id: 'test', records: [{USR_ID: "", USR_NM: "", AUTH_LV: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: "Y"}], authList: this.state.selectboxProps.cmbAuthCd.dataset, isNew: true};
+				let param = {id: 'test', records: [{USR_ID: "", USR_NM: "", AUTH_LV: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: "Y"}], authList: this.state.cmbSrchAuth_dataset, isNew: true};
 				let option2 = { width: '600px', height: '300px', modaless: false, param: param}
 				ComLib.openPop('SYS010001', '신규 사용자 등록', option2, this.event.grid.afterAddUser)
 
@@ -443,7 +317,7 @@ class View extends React.Component {
 				userRow.setSelected(true);
 			},
 			onCellDoubleClicked: (e) => {
-				let param = {id: 'test', records: [e.data], authList: this.state.selectboxProps.cmbAuthCd.dataset, isNew: false};
+				let param = {id: 'test', records: [e.data], authList: this.state.cmbSrchAuth_dataset, isNew: false};
 				let option2 = { width: '600px', height: '300px', modaless: false, param: param}
 				ComLib.openPop('SYS010001', '사용자 정보 변경', option2, this.event.grid.afterAddUser)
 			},
@@ -510,7 +384,7 @@ class View extends React.Component {
 								<FlexPanel>
 									<Label value="센터"/>
 									<Selectbox
-										id = {this.state.selectboxProps.cmbSrchCent.id}
+										id = {"cmbSrchCent"}
 										dataset = {ComLib.convComboList(ComLib.getCentList(), newScrmObj.constants.select.argument.all)}
 										value = {this.state.dsSrch.records[0]["CENT_CD"]}
 										width = {200}
@@ -520,7 +394,7 @@ class View extends React.Component {
 									/>
 									<Label value="팀"/>
 									<Selectbox
-										id = {this.state.selectboxProps.cmbSrchTeam.id}
+										id = {"cmbSrchTeam"}
 										dataset = {ComLib.convComboList(ComLib.getTeamList(this.state.dsSrch), newScrmObj.constants.select.argument.all)}
 										value = {this.state.dsSrch.records[0]["TEAM_CD"]}
 										width = {200}
@@ -529,34 +403,32 @@ class View extends React.Component {
 									/>
 									<Label value="권한"/>
 									<Selectbox
-										id = {this.state.selectboxProps.cmbSrchAuth.id}
+										id = {"cmbSrchAuth"}
 										value = {this.state.dsSrch.records[0]["AUTH_LV"]}
-										dataset = {this.state.selectboxProps.cmbSrchAuth.dataset}
+										dataset = {this.state.cmbSrchAuth_dataset}
 										width = {200}
 										disabled = {false}
-										selected = {this.state.selectboxProps.cmbSrchAuth.selected}
 										onChange= {this.event.selectbox.onChange}
 									/>
 									<Label value="사용자"/>
 									<Selectbox
-										id = {this.state.selectboxProps.cmbSrchDv.id}
+										id = {"cmbSrchDv"}
 										value = {this.state.dsSrch.records[0]["SRCH_DV"]}
-										dataset = {this.state.selectboxProps.cmbSrchDv.dataset}
+										dataset = {this.state.cmbSrchDv_dataset}
 										width = {200}
 										disabled = {false}
-										selected = {this.state.selectboxProps.cmbSrchDv.selected}
 										onChange= {this.event.selectbox.onChange}
 									/>
 									<Textfield 
-										width={200}
-										id = {this.state.textFieldProps.textSrchWord.id}
-										name =  {this.state.textFieldProps.textSrchWord.name}
-										value =  {this.state.dsSrch.records[0]["SRCH_VALUE"]}
-										placeholder =  {this.state.textFieldProps.textSrchWord.placeholder}
-										minLength =   {this.state.textFieldProps.textSrchWord.minLength}
-										maxLength =   {this.state.textFieldProps.textSrchWord.maxLength}
-										readOnly =  {this.state.textFieldProps.textSrchWord.readOnly}
-										disabled =  {this.state.textFieldProps.textSrchWord.disabled}
+										id    = {"iptSrchword"}
+										name  = {"iptSrchword"}
+										value = {this.state.dsSrch.records[0]["SRCH_VALUE"]}
+										placeholder = {"이름/아이디"}
+										minLength   = {1}
+										maxLength   = {20}
+										width    = {200}
+										readOnly = {false}
+										disabled = {false}
 										onChange = {this.event.input.onChange}
 									/>
 								</FlexPanel>

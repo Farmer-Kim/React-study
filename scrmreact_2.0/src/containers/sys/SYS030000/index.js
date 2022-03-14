@@ -17,7 +17,6 @@ class View extends React.Component {
 		this.state = {
 			dsSrch: DataLib.datalist.getInstance([{CENT_CD: ComLib.setOrgComboValue("CENT_CD"), TEAM_CD: "", SRCH_DV: "NM", SRCH_VALUE: ""}]),
 			dsConstList : DataLib.datalist.getInstance(),
-			dsConstDetail : DataLib.datalist.getInstance([{CONST_CD: "", CONST_NM: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: "", EXT_NUM: ""}]),
 			
 			btnProps : {
 				btnSearch : {
@@ -26,61 +25,11 @@ class View extends React.Component {
 					value    : '조회',
 					hidden   : false
 				},
-				btnSave : {
-					id       : 'btnSave',
-					disabled : false,
-					value    : '저장',
-					hidden   : false
-				},
-				btnAdd : {
-					id       : 'btnAdd',
-					disabled : false,
-					value    : '신규',
-					hidden   : false
-				},
 			},
-			selectboxProps : {
-				cmbSrchCent : {
-					id : 'cmbSrchCent',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbSrchTeam : {
-					id : 'cmbSrchTeam',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbSrchDv : {
-					id : 'cmbSrchDv',
-					dataset : [
-						{value : 'NM', name : '성명'},
-						{value : 'CD', name : 'CD'}
-					],
-					//value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				// 상세정보 영역
-				cmbCentCd : {
-					id : 'cmbCentCd',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-				cmbTeamCd : {
-					id : 'cmbTeamCd',
-					value : '',
-					width : 200,
-					selected : 1,
-					disabled : false
-				},
-			},
+			cmbSrchDv_dataset : [
+				{value : 'NM', name : '성명'},
+				{value : 'CD', name : 'CD'}
+			],
 			textFieldProps : {
 				iptSrchword : {
 					id          : 'iptSrchword',
@@ -92,45 +41,6 @@ class View extends React.Component {
 					readOnly    : false,
 					disabled    : false
 				},
-				iptConstCd : {
-					id          : 'iptConstCd',
-					name        : 'iptConstCd',
-					value       : '',
-					placeholder : '',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-				iptConstNm : {
-					id          : 'iptConstNm',
-					name        : 'iptConstNm',
-					value       : '',
-					placeholder : '',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-				iptPhoneNb : {
-					id          : 'iptPhoneNb',
-					name        : 'iptPhoneNb',
-					value       : '',
-					placeholder : '',
-					minLength   : 1,
-					maxLength   : 20,
-					readOnly    : false,
-					disabled    : false
-				},
-			},
-			singleCheckProp : {
-				id : 'chkUseYn',
-				index : 0,
-				keyProp : 'SYS090000_chkUseYn',
-				value : '',
-				checked : 'N',
-				readOnly : false,
-				disabled : false
 			},
 			gridProps : {
 				id : 'grdCsList',
@@ -164,7 +74,7 @@ class View extends React.Component {
 	// => 컴포넌트가 마운트된 직후, 호출 ->  해당 함수에서 this.setState를 수행할 시, 갱신이 두번 일어나 render()함수가 두번 발생 -> 성능 저하 가능성
 	/*------------------------------------------------------------------------------------------------*/
 	componentDidMount () { // 조회
-		if(this.validation("SYS090000_R01")) this.transaction("SYS090000_R01");
+		if(this.validation("SYS030000_R01")) this.transaction("SYS030000_R01");
 	}
 
 	/*------------------------------------------------------------------------------------------------*/
@@ -173,31 +83,7 @@ class View extends React.Component {
 	/*------------------------------------------------------------------------------------------------*/
 	validation = (serviceid) => {
 		switch (serviceid) {
-			case 'SYS090000_R01' :
-				break;
-			
-			case 'SYS090000_H01' :
-				// 상담원ID, 성명, 센터, 팀
-				if(StrLib.isNull(this.state.dsConstDetail.getValue(0, 'CONST_CD'))) {
-					ComLib.openDialog('A', 'COMI0062');
-					return false;
-				}
-				if(StrLib.isNull(this.state.dsConstDetail.getValue(0, 'CONST_NM'))) {
-					ComLib.openDialog('A', 'SYSI0201');
-					return false;
-				}
-				if(StrLib.isNull(this.state.dsConstDetail.getValue(0, 'CENT_CD'))) {
-					ComLib.openDialog('A', 'SYSI0203');
-					return false;
-				}
-				if(StrLib.isNull(this.state.dsConstDetail.getValue(0, 'TEAM_CD'))) {
-					ComLib.openDialog('A', 'SYSI0204');
-					return false;
-				}
-				if(StrLib.isNull(this.state.dsConstDetail.getValue(0, 'EXT_NUM'))) {
-					ComLib.openDialog('A', 'SYSI0210');
-					return false;
-				}
+			case 'SYS030000_R01' :
 				break;
 			default :
 				break;
@@ -208,14 +94,14 @@ class View extends React.Component {
 	handler = {
 		setDs : (transId) => {
 			switch (transId) {
-			case "SYS090000_R01" :
+			case "SYS030000_R01" :
 				let state = this.state;
 
 				state['gridProps']['paging'].start = 0;
 				state['gridProps']['paging'].page = 1;
 
 				this.setState(state, () => {
-					this.transaction('SYS090000_R01');
+					this.transaction('SYS030000_R01');
 				});
 				break;
 			default: break;
@@ -241,7 +127,7 @@ class View extends React.Component {
 
 		try  {
 			switch (serviceid) {
-				case 'SYS090000_R01' :
+				case 'SYS030000_R01' :
 					transManager.addConfig  ({
 						dao        : transManager.constants.dao.base,
 						crudh      : transManager.constants.crudh.read,
@@ -268,7 +154,7 @@ class View extends React.Component {
 
 					break;
 
-				case 'SYS090000_R02' :
+				case 'SYS030000_R02' :
 					transManager.addConfig  ({
 						dao        : transManager.constants.dao.base,
 						crudh      : transManager.constants.crudh.read,
@@ -291,52 +177,6 @@ class View extends React.Component {
 
 					break;
 
-				case 'SYS090000_R03' : // 신규일 때, 상담원아이디 및 상담원성명 체크 용도
-					transManager.addConfig({
-						dao: transManager.constants.dao.base,
-						crudh: transManager.constants.crudh.read,
-						sqlmapid: 'SYS.R_getConstCdCheck',
-						datasetsend: 'dsSrch',
-						datasetrecv: 'dsConstCdCheck'
-					});
-					transManager.addConfig({
-						dao: transManager.constants.dao.base,
-						crudh: transManager.constants.crudh.read,
-						sqlmapid: 'SYS.R_getConstNmCheck',
-						datasetsend: 'dsSrch',
-						datasetrecv: 'dsConstNmCheck'
-					});	
-					transManager.addDataset('dsSrch', this.state.dsConstDetail.getRow(0));
-					transManager.agent();
-
-					break;
-
-				case 'SYS090000_R04' : // 수정할 때, 상담원성명 체크 용도
-					transManager.addConfig({
-						dao: transManager.constants.dao.base,
-						crudh: transManager.constants.crudh.read,
-						sqlmapid: 'SYS.R_getConstNmCheck',
-						datasetsend: 'dsSrch',
-						datasetrecv: 'dsConstNmCheck'
-					});					
-					transManager.addDataset('dsSrch', this.state.dsConstDetail.getRow(0));
-					transManager.agent();
-
-					break;
-
-				case 'SYS090000_H01' :
-					transManager.addConfig ({
-						dao        : transManager.constants.dao.base,
-						crudh      : transManager.constants.crudh.create,
-						sqlmapid   : "SYS.C_setConstInfo",
-						datasetsend: "dsSend",
-					});
-										
-					transManager.addDataset('dsSend', this.state.dsConstDetail.getRow(0));
-					transManager.agent();
-
-					break;
-
 				default :
 					break;
 			}
@@ -352,21 +192,20 @@ class View extends React.Component {
 	callback = (res) => {
 		let state = this.state;
 		switch (res.id) {
-			case 'SYS090000_R01':
+			case 'SYS030000_R01':
 				if (res.data.dsConstList.length > 0) {
 					ComLib.setStateInitRecords(this, "dsConstList", res.data.dsConstList);
 				} else {
 					ComLib.setStateRecords(this, "dsConstList", []);	
 				}
 				
-				state.dsConstDetail = DataLib.datalist.getInstance([{CONST_CD: "", CONST_NM: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: "", EXT_NUM: ""}]);
 				state['gridProps']['paging'].loading = false;
 				
 				this.setState(state);
 
 				break; 
 
-			case 'SYS090000_R02':				
+			case 'SYS030000_R02':				
 				ComLib.setStateInitRecords(this, "dsConstList", res.data.dsConstList);
 
 				state['gridProps']['paging'].loading = false;
@@ -375,31 +214,6 @@ class View extends React.Component {
 
 
 				break; 
-				
-			case 'SYS090000_R03': // 신규일 때, 상담원아이디 및 상담원성명 체크 용도
-				if (res.data.dsConstCdCheck[0].CHK_CNT > 0) {
-					ComLib.openDialog('A', 'SYSI0208');
-					return false;
-				} else if (res.data.dsConstNmCheck[0].CHK_CNT > 0) {
-					ComLib.openDialog('A', 'SYSI0209');
-					return false;
-				}
-				else {
-					this.transaction("SYS090000_H01");
-				}
-				break;
-			case 'SYS090000_R04': // 수정할 때, 상담원성명 체크 용도
-				if (res.data.dsConstNmCheck[0].CHK_CNT > 0) {
-					ComLib.openDialog('A', 'SYSI0209');
-					return false;
-				} else {
-					this.transaction("SYS090000_H01");
-				}
-				break;
-			case 'SYS090000_H01':
-				ComLib.openDialog("A", "COMI0003");
-				this.transaction("SYS090000_R01");
-				break;			
 			default : break;
 		}
 	}
@@ -415,49 +229,23 @@ class View extends React.Component {
 				this.clickBtnId = e.target.id;
 				switch (e.target.id) {
 					case "btnSearch" :	// 조회
-						if(this.validation("SYS090000_R01")) this.handler.setDs('SYS090000_R01');
-						break;
-					case "btnAdd" : 	// 신규
-						this.setState({...this.state, radioProps : {...this.state.radioProps, selected : 'A'}});
-						this.setState({...this.state, singleCheckProp: {...this.state.singleCheckProp, checked : 'Y'}});
-						
-						ComLib.setStateRecords(this, "dsConstDetail", [{
-							rowtype: "c",
-							CONST_CD: "", 
-							CONST_NM: "", 
-							CENT_CD: "", 
-							TEAM_CD: "", 
-							USE_FLAG: "Y", 
-							EXT_NUM: "",
-							REG_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID, 
-							CHG_ID: ComLib.getSession("gdsUserInfo")[0].USR_ID}]
-						);
-
-						if(this.csGridApi.getSelectedRows().length > 0){
-							if (this.csGridApi.rowModel.rowsToDisplay.length !== 0) {
-								this.csGridApi.rowModel.rowsToDisplay[this.csGrid.gridDataset.getRecords().findIndex(
-									item => item['CONST_CD'] === this.csGridApi.getSelectedRows()[0].CONST_CD
-								)].setSelected(false);
-							}
-						}
-	
-						break;
-					case "btnSave" : 	// 저장
-						if (this.validation("SYS090000_H01")) {
-							// 기준값 조회
-							let rowtype = this.state.dsConstDetail.records[0]["rowtype"];
-							if(rowtype === 'c') { // 신규이면 사용자 ID와 사용자성명 중복체크
-								this.transaction("SYS090000_R03");
-							}else if (rowtype === 'r') { // 수정시 사용자성명 중복체크
-								this.transaction("SYS090000_R04");
-							}
-						}
+						if(this.validation("SYS030000_R01")) this.handler.setDs('SYS030000_R01');
 						break;
 					default : break;
 				}
 			}
 		},
 		grid: {
+			onBeforeInsertRow: (e) => {				
+				let param = {id: 'test', records: [{CONST_CD: "", CONST_NM: "", EXT_NUM: "", CENT_CD: "", TEAM_CD: "", USE_FLAG: "Y"}], isNew: true};
+				let option2 = { width: '600px', height: '300px', modaless: false, param: param}
+				ComLib.openPop('SYS030001', '신규 상담원 등록', option2, this.event.grid.afterAddCus)
+
+				return {rtn:false};
+			},
+			afterAddCus: (e) => {
+				this.handler.setDs('SYS030000_R01');
+			},
 			onGridReady : (e) => {
 				//this.setState({grdMenuApi : e.gridApi, grdMenu : e.grid});
 				switch(e.id) {
@@ -469,16 +257,6 @@ class View extends React.Component {
 				}
 			},
 			onRowClicked: (e) => {
-				ComLib.setStateRecords(this, "dsConstDetail", [this.csGrid.gridDataset.records[e.index]]);
-				
-				// 상세정보 체크박스 셋팅
-				this.setState({...this.state, singleCheckProp: {...this.state.singleCheckProp, checked : e.data.USE_FLAG}});
-
-				if(e.data.CENT_CD === '' || e.data.CENT_CD === null) {
-					ComLib.setStateValue(this, "dsConstDetail", 0, "CENT_CD", "");
-					ComLib.setStateValue(this, "dsConstDetail", 0, "TEAM_CD", "");
-				}
-
 				// 클릭을 한 번 더 했을 때 그리드에 선택된 인덱스가 풀리지 않도록 하기
 				let constRows = this.csGridApi.rowModel.rowsToDisplay;
 				let constRow;
@@ -491,6 +269,11 @@ class View extends React.Component {
 				}
 				constRow.setSelected(true);
 			},
+			onCellDoubleClicked: (e) => {
+				let param = {id: 'test', records: [e.data], isNew: false};
+				let option2 = { width: '600px', height: '300px', modaless: false, param: param}
+				ComLib.openPop('SYS030001', '상담원 정보 변경', option2, this.event.grid.afterAddCus)
+			},
 			onScrollEnd: (e) => {
 				if (!this.state.gridProps.paging.loading) {
 					this.setState({...this.state
@@ -502,7 +285,7 @@ class View extends React.Component {
 							}
 						}
 					}, () => {
-						this.transaction("SYS090000_R02");
+						this.transaction("SYS030000_R02");
 					});
 				}
 			},
@@ -515,33 +298,8 @@ class View extends React.Component {
 
 					break;
 
-				case 'iptConstCd':
-					ComLib.setStateValue(this, "dsConstDetail", 0, "CONST_CD", e.target.value);
-
-					break;
-
-				case 'iptConstNm':
-					ComLib.setStateValue(this, "dsConstDetail", 0, "CONST_NM", e.target.value);
-					
-					break;
-				
-				case 'iptPhoneNb':
-					ComLib.setStateValue(this, "dsConstDetail", 0, "EXT_NUM", e.target.value);
-					
-					break;
 
 				default : break;
-				}
-			}
-		},
-		checkbox : {
-			onChange : (e) => {
-				switch (e.id) {
-					case 'chkUseYn' :
-						this.setState({...this.state, singleCheckProp: {...this.state.singleCheckProp, checked : (e.checked) ? 'Y' : 'N'}});
-						ComLib.setStateValue(this, "dsConstDetail", 0, "USE_FLAG", (e.checked) ? 'Y' : 'N');
-						break;
-					default : break;
 				}
 			}
 		},
@@ -560,15 +318,6 @@ class View extends React.Component {
 					
 				case 'cmbSrchDv' :
 					ComLib.setStateValue(this, "dsSrch", 0, "SRCH_DV", e.target.value);
-					break;
-					// 상세정보 영역
-				case 'cmbCentCd' : 
-					ComLib.setStateValue(this, "dsConstDetail", 0, "CENT_CD", e.target.value);
-					ComLib.setStateValue(this, "dsConstDetail", 0, "TEAM_CD", "");
-					
-					break;
-				case 'cmbTeamCd' :
-					ComLib.setStateValue(this, "dsConstDetail", 0, "TEAM_CD", e.target.value);
 					break;
 				default : break;
 				}
@@ -590,7 +339,7 @@ class View extends React.Component {
 								<FlexPanel>
 									<Label value="센터"/>
 									<Selectbox
-										id = {this.state.selectboxProps.cmbSrchCent.id}
+										id = {"cmbSrchCent"}
 										dataset = {ComLib.convComboList(ComLib.getCentList(), newScrmObj.constants.select.argument.all)}
 										value = {this.state.dsSrch.records[0]["CENT_CD"]}
 										width = {200}
@@ -600,7 +349,7 @@ class View extends React.Component {
 									/>
 									<Label value="팀"/>
 									<Selectbox
-										id = {this.state.selectboxProps.cmbSrchTeam.id}
+										id = {"cmbSrchTeam"}
 										dataset = {ComLib.convComboList(ComLib.getTeamList(this.state.dsSrch), newScrmObj.constants.select.argument.all)}
 										value = {this.state.dsSrch.records[0]["TEAM_CD"]}
 										width = {200}
@@ -609,24 +358,23 @@ class View extends React.Component {
 									/>
 									<Label value="상담원"/>
 									<Selectbox
-										id = {this.state.selectboxProps.cmbSrchDv.id}
+										id = {"cmbSrchDv"}
 										value = {this.state.dsSrch.records[0]["SRCH_DV"]}
-										dataset = {this.state.selectboxProps.cmbSrchDv.dataset}
+										dataset = {this.state.cmbSrchDv_dataset}
 										width = {200}
 										disabled = {false}
-										selected = {this.state.selectboxProps.cmbSrchDv.selected}
 										onChange= {this.event.selectbox.onChange}
 									/>
 									<Textfield 
-										width={200}
-										id = {this.state.textFieldProps.iptSrchword.id}
-										name =  {this.state.textFieldProps.iptSrchword.name}
-										value =  {this.state.dsSrch.records[0]["SRCH_VALUE"]}
-										placeholder =  {this.state.textFieldProps.iptSrchword.placeholder}
-										minLength =   {this.state.textFieldProps.iptSrchword.minLength}
-										maxLength =   {this.state.textFieldProps.iptSrchword.maxLength}
-										readOnly =  {this.state.textFieldProps.iptSrchword.readOnly}
-										disabled =  {this.state.textFieldProps.iptSrchword.disabled}
+										id    = {"iptSrchword"}
+										name  = {"iptSrchword"}
+										value = {this.state.dsSrch.records[0]["SRCH_VALUE"]}
+										placeholder = {"이름/아이디"}
+										minLength   = {1}
+										maxLength   = {20}
+										width    = {200}
+										readOnly = {false}
+										disabled = {false}
 										onChange = {this.event.input.onChange}
 									/>
 								</FlexPanel>
@@ -651,118 +399,21 @@ class View extends React.Component {
 								ref     = {this.state.gridProps.id} 
 								header  = {this.state.gridProps.header}
 								areaName= {this.state.gridProps.areaName}
-								height  = "465px"
-
-								addRowBtn = {false}
+								height  = "650px"
 								delRowBtn = {false}
-								rowNum    = {true}
+								rowNum    = {true}				
 								paging    = {true}
 								infinite  = {true}
 
 								data = {this.state.dsConstList}
 								totalRowCnt = {(this.state.dsConstList.getRecords().length === 0) ? 0 : this.state.dsConstList.getValue(0, 'totalcount')}
-
-								onGridReady  = {this.event.grid.onGridReady}
-								onRowClicked = {this.event.grid.onRowClicked}
-								onScrollEnd  = {this.event.grid.onScrollEnd}	
+								
+								onBeforeInsertRow  = {this.event.grid.onBeforeInsertRow}
+								onGridReady        = {this.event.grid.onGridReady}
+								onRowClicked       = {this.event.grid.onRowClicked}
+								onScrollEnd        = {this.event.grid.onScrollEnd}
+								onCellDoubleClicked= {this.event.grid.onCellDoubleClicked}	
 							/>									
-						</ComponentPanel>
-					</SubFullPanel>
-					<SubFullPanel>
-						<ComponentPanel>
-							<FullPanel>
-								<FlexPanel>
-									<Table  
-										id="tblUsrDetInfo" 
-										colGrp = {[{width: '6%'}, {width: '10%'}, {width: '6%'}, {width: '10%'}, {width: '6%'}, {width: '10%'}, {width: '6%'}, {width: '6%'}, {width: '6%'}, {width: '10%'}, {width: '6%'}, {width: '4%'}, {width: '4%'}, {width: '4%'} ]}
-										tbData = {[
-											[   {type : 'T', value : '상담원 CD'},
-												{type : 'D', value : <Textfield width='100%' 
-																		id = {this.state.textFieldProps.iptConstCd.id}
-																		name =  {this.state.textFieldProps.iptConstCd.name}
-																		value =  {this.state.dsConstDetail.records[0]["CONST_CD"]}
-																		placeholder =  {this.state.textFieldProps.iptConstCd.placeholder}
-																		minLength =   {this.state.textFieldProps.iptConstCd.minLength}
-																		maxLength =   {this.state.textFieldProps.iptConstCd.maxLength}
-																		readOnly =  {this.state.textFieldProps.iptConstCd.readOnly}
-																		disabled = {this.state.dsConstDetail.records[0]["rowtype"] !== newScrmObj.constants.crud.create ? true : false}
-																		onChange={this.event.input.onChange}
-																	/>},	
-												{type : 'T', value : '상담원 성명'},
-												{type : 'D', value : <Textfield width='100%'
-																		id = {this.state.textFieldProps.iptConstNm.id}
-																		name = {this.state.textFieldProps.iptConstNm.name}
-																		value = {this.state.dsConstDetail.records[0]["CONST_NM"]}
-																		placeholder = {this.state.textFieldProps.iptConstNm.placeholder}
-																		minLength = {this.state.textFieldProps.iptConstNm.minLength}
-																		maxLength = {this.state.textFieldProps.iptConstNm.maxLength}
-																		readOnly = {this.state.textFieldProps.iptConstNm.readOnly}
-																		disabled = {this.state.textFieldProps.iptConstNm.disabled}
-																		onChange = {this.event.input.onChange}
-																	/>},											
-											    {type : 'T', value : '센터'},
-												{type : 'D', value : <Selectbox
-																		id = {this.state.selectboxProps.cmbCentCd.id}
-																		dataset = {ComLib.convComboList(ComLib.getCentList(), newScrmObj.constants.select.argument.select)}
-																		value = {this.state.dsConstDetail.records[0]["CENT_CD"]}
-																		width ={'100%'}
-																		disabled = {false}
-																		onChange = {this.event.selectbox.onChange}
-																	/>},
-												{type : 'T', value : '팀'},
-												{type : 'D', value : <Selectbox
-																		id = {this.state.selectboxProps.cmbTeamCd.id}
-																		dataset = {ComLib.convComboList(ComLib.getTeamList(this.state.dsConstDetail), newScrmObj.constants.select.argument.select)}
-																		value = {this.state.dsConstDetail.records[0]["TEAM_CD"]}
-																		width ={'100%'}
-																		disabled = {false}
-																		onChange = {this.event.selectbox.onChange}
-																	/>},
-												{type : 'T', value : '내선번호'},
-												{type : 'D', value : <Textfield width='100%'
-																		id = {this.state.textFieldProps.iptPhoneNb.id}
-																		name = {this.state.textFieldProps.iptPhoneNb.name}
-																		value = {this.state.dsConstDetail.records[0]["EXT_NUM"]}
-																		placeholder = {this.state.textFieldProps.iptPhoneNb.placeholder}
-																		minLength = {this.state.textFieldProps.iptPhoneNb.minLength}
-																		maxLength = {this.state.textFieldProps.iptPhoneNb.maxLength}
-																		readOnly = {this.state.textFieldProps.iptPhoneNb.readOnly}
-																		disabled = {this.state.textFieldProps.iptPhoneNb.disabled}
-																		onChange = {this.event.input.onChange}
-																		type     = {"onlyNum"}
-																	/>},
-												{type : 'T', value : '사용여부'},
-												{type : 'D', value : <Checkbox
-																		id = {this.state.singleCheckProp.id}
-																		keyProp = {this.state.singleCheckProp.keyProp}
-																		value = {this.state.singleCheckProp.value}
-																		checked = {this.state.singleCheckProp.checked}
-																		disabled = {this.state.singleCheckProp.disabled}
-																		onChange = {this.event.checkbox.onChange}
-																	/>},
-												{type : 'D', value :<Button
-																		color="green" fiiled= {true} 
-																		id = {this.state.btnProps.btnAdd.id}
-																		value = {this.state.btnProps.btnAdd.value}
-																		disabled = {this.state.btnProps.btnAdd.disabled}
-																		hidden = {this.state.btnProps.btnAdd.hidden}
-																		onClick = {this.event.button.onClick}
-																		mr = {5}
-																	/>},
-												{type : 'D', value :<Button
-																		color="purple" fiiled= {true} 
-																		id = {this.state.btnProps.btnSave.id}
-																		value = {this.state.btnProps.btnSave.value}
-																		disabled = {this.state.btnProps.btnSave.disabled}
-																		hidden = {this.state.btnProps.btnSave.hidden}
-																		onClick = {this.event.button.onClick}
-																		mr = {5}
-																	/>}										
-											]
-										]}
-									/>
-								</FlexPanel>
-							</FullPanel>
 						</ComponentPanel>
 					</SubFullPanel>
 				</FullPanel>

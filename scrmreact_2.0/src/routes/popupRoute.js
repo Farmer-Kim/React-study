@@ -19,6 +19,7 @@ import BOT010101 from 'containers/bot/BOT010101';
 
 
 import SYS010001 from 'containers/sys/SYS010001';
+import SYS030001 from 'containers/sys/SYS030001';
 
 import AnswerArea from 'components/Player/AnswerArea';
 
@@ -46,5 +47,6 @@ export const popRoute = [
 	{ id: 'BOT010101',		component: BOT010101 },
 	
 	{ id: 'SYS010001',		component: SYS010001 },
+	{ id: 'SYS030001',		component: SYS030001 },
 
 ];
