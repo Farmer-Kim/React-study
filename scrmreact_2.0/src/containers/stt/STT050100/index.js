@@ -5,7 +5,7 @@ import {
 } from 'components';
 //버튼 컴포넌트
 import {BasicButton as Button} from 'components';
-import {Textfield} from 'components';
+import {Textfield, Textarea} from 'components';
 import {StrLib, ComLib, newScrmObj} from 'common';
 
 
@@ -93,8 +93,11 @@ class View extends React.Component {
 					ComLib.openDialog('A', 'SYSI0010', '추가하실 복합명사를 입력해주세요.');		
 					return false;
 				}
+				
+				if (!/^[가-힣,]+$/.test(targetParams)) {	
+					
+					//return x.toString().replace(/,/g,"");
 
-				if(!/^[가-힣\n]+$/.test(targetParams)) {					
 					ComLib.openDialog('A', 'SYSI0010', '복합 명사 추가에 실패하였습니다. \n한글만 입력해 주세요. \n(영문자, 특수문자, 띄어쓰기 불가능)');
 
 					return false;
@@ -127,24 +130,24 @@ class View extends React.Component {
 
 					if(this.validation('checkCompWord', addWord)){
 
-						let newWordArr = this.props.cmpWordList;
+						// let newWordArr = this.props.cmpWordList;
 							
-						let checkCnt = 0;
-
-						newWordArr.forEach((item, index) => {	
-							if(item.word === addWord && item.rowtype !== newScrmObj.constants.crud.remove){	
-
-								checkCnt++	
-							}
-						});
+						// let checkCnt = 0;
 						
-						if (checkCnt === 0) {
-							this.props.addCombineWord({targetWord : addWord});
+						// newWordArr.forEach((item, index) => {	
+						// 	if(item.word === addWord && item.rowtype !== newScrmObj.constants.crud.remove){	
 
-						} else {
-							ComLib.openDialog('A', 'SYSI0010', '이미 추가된 복합명사 입니다.');
-						}
+						// 		checkCnt++	
+						// 	}
+						// });
+						
+						// if (checkCnt === 0) {
+						// 	this.props.addCombineWord({targetWord : addWord});
 
+						// } else {
+						// 	ComLib.openDialog('A', 'SYSI0010', '이미 추가된 복합명사 입니다.');
+						// }
+						this.props.addCombineWord({targetWord : addWord});
 						state['textFieldProps']['iptAddCW'].value = '';
 						
 						this.setState(state);	
@@ -174,30 +177,35 @@ class View extends React.Component {
 			onKeyPress : (e) => {
 				switch (e.target.id) {
 				case 'iptAddCW' :
-					if(e.key === 'Enter') {							
+					if(e.key === 'Enter') {		
+						e.preventDefault();				
 						let addWord = this.state.textFieldProps.iptAddCW.value;
 
-						if(this.validation('checkCompWord', addWord)){
 
-							let newWordArr = this.props.cmpWordList;
+						if (this.validation('checkCompWord', addWord)){
+
+							// let newWordArr = this.props.cmpWordList;
 								
-							let checkCnt = 0;
+							// let checkCnt = 0;
 
-							newWordArr.forEach((item, index) => {	
-								if(item.word === addWord && item.rowtype !== newScrmObj.constants.crud.remove){	
-									// rowTypd 에 따라 update 시킬껀지 아니명 그냥 중복 확인해서 카운트 늘릴껀지 확인 로직
+							// newWordArr.forEach((item, index) => {	
+							// 	if(item.word === addWord && item.rowtype !== newScrmObj.constants.crud.remove){	
+							// 		// rowTypd 에 따라 update 시킬껀지 아니명 그냥 중복 확인해서 카운트 늘릴껀지 확인 로직
 
-									checkCnt++	
-								}
-							});
+							// 		checkCnt++	
+							// 	}
+							// });
 							
-							if (checkCnt === 0) {
-								this.props.addCombineWord({targetWord : addWord});
+							// if (checkCnt === 0) {
+							// 	this.props.addCombineWord({targetWord : addWord});
 
-							} else {
-								ComLib.openDialog('A', 'SYSI0010', '중복 처리 되었습니다.');
-							}
+							// } else {
+							// 	ComLib.openDialog('A', 'SYSI0010', '중복 처리 되었습니다.');
+							// }
 							
+							
+							this.props.addCombineWord({targetWord : addWord});
+						
 							let state = this.state;
 							state['textFieldProps']['iptAddCW'].value = '';
 							this.setState(state);	
@@ -295,14 +303,13 @@ class View extends React.Component {
 					<ComponentPanel>
 						<RelativeGroup>
 							<LFloatArea>
-								<Textfield								
-									width = {300}
+								<Textarea		
+									width        = {"600px"}	
 									id          = {this.state.textFieldProps.iptAddCW.id}
 									name        = {this.state.textFieldProps.iptAddCW.name}
 									value       = {this.state.textFieldProps.iptAddCW.value}
 									placeholder = {this.state.textFieldProps.iptAddCW.placeholder}
-									minLength   = {1}
-									maxLength   = {10}
+									rows        = {4}
 									readOnly    = {this.state.textFieldProps.iptAddCW.readOnly}
 									disabled    = {this.state.textFieldProps.iptAddCW.disabled}
 									onChange    = {this.event.input.onChange}

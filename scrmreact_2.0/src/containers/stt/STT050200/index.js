@@ -5,7 +5,7 @@ import {
 } from 'components';
 //버튼 컴포넌트
 import {BasicButton as Button} from 'components';
-import {Textfield} from 'components';
+import {Textfield, Textarea} from 'components';
 import {ComLib, DataLib, newScrmObj, StrLib} from 'common';
 
 class View extends React.Component {
@@ -85,7 +85,7 @@ class View extends React.Component {
 					return false;
 				}
 
-				if(!/^[가-힣\s]+$/.test(targetParams)) {					
+				if(!/^[가-힣\s,]+$/.test(targetParams)) {					
 					ComLib.openDialog('A', 'SYSI0010', '문장 추가에 실패하였습니다. \n 한글만 입력해주세요. \n(영문자, 특수문자 불가능)');
 
 					return false;
@@ -116,23 +116,24 @@ class View extends React.Component {
 
 						if(this.validation('checkSentence', addSentence)){
 
-							let newSentenceArr = this.props.sentenceList;
+							// let newSentenceArr = this.props.sentenceList;
 								
-							let checkCnt = 0;
+							// let checkCnt = 0;
 
-							newSentenceArr.forEach((item, index) => {	
-								if(item.sentence === addSentence && item.rowtype !== newScrmObj.constants.crud.remove){	
+							// newSentenceArr.forEach((item, index) => {	
+							// 	if(item.sentence === addSentence && item.rowtype !== newScrmObj.constants.crud.remove){	
 
-									checkCnt++	
-								}
-							});
+							// 		checkCnt++	
+							// 	}
+							// });
 							
-							if (checkCnt === 0) {
-								this.props.addSentence({targetSentence : addSentence});
+							// if (checkCnt === 0) {
+							// 	this.props.addSentence({targetSentence : addSentence});
 
-							} else {
-								ComLib.openDialog('A', 'SYSI0010', '중복 처리 되었습니다.');
-							}
+							// } else {
+							// 	ComLib.openDialog('A', 'SYSI0010', '중복 처리 되었습니다.');
+							// }
+							this.props.addSentence({targetSentence : addSentence});
 
 							state['textFieldProps']['iptAddSentence'].value = '';
 							
@@ -175,23 +176,24 @@ class View extends React.Component {
 
 						if(this.validation('checkSentence', addSentence)){
 
-							let newSentenceArr = this.props.sentenceList;
+							// let newSentenceArr = this.props.sentenceList;
 								
-							let checkCnt = 0;
+							// let checkCnt = 0;
 
-							newSentenceArr.forEach((item, index) => {	
-								if(item.sentence === addSentence && item.rowtype !== newScrmObj.constants.crud.remove){	
+							// newSentenceArr.forEach((item, index) => {	
+							// 	if(item.sentence === addSentence && item.rowtype !== newScrmObj.constants.crud.remove){	
 
-									checkCnt++	
-								}
-							});
+							// 		checkCnt++	
+							// 	}
+							// });
 							
-							if (checkCnt === 0) {
-								this.props.addSentence({targetSentence : addSentence});
+							// if (checkCnt === 0) {
+							// 	this.props.addSentence({targetSentence : addSentence});
 
-							} else {
-								ComLib.openDialog('A', 'SYSI0010', '이미 추가된 문장 입니다.');
-							}
+							// } else {
+							// 	ComLib.openDialog('A', 'SYSI0010', '이미 추가된 문장 입니다.');
+							// }
+							this.props.addSentence({targetSentence : addSentence});
 
 							state['textFieldProps']['iptAddSentence'].value = '';
 							
@@ -291,14 +293,13 @@ class View extends React.Component {
 					<ComponentPanel>
 						<RelativeGroup>
 						<LFloatArea>
-							<Textfield								
-								width       = {300}
+							<Textarea								
+								width       = {"600px"}
+								rows        = {4}
 								id          = {this.state.textFieldProps.iptAddSentence.id}
 								name        = {this.state.textFieldProps.iptAddSentence.name}
 								value       = {this.state.textFieldProps.iptAddSentence.value}
 								placeholder = {this.state.textFieldProps.iptAddSentence.placeholder}
-								minLength   = {3}
-								maxLength   = {100}
 								readOnly    = {this.state.textFieldProps.iptAddSentence.readOnly}
 								disabled    = {this.state.textFieldProps.iptAddSentence.disabled}
 								onChange    = {this.event.input.onChange}

@@ -2,6 +2,9 @@ import React from 'react';
 import { StrLib } from 'common';
 
 class Textarea extends React.Component {
+	static defaultProps = {
+		width : "100px",
+	}
 	rtnVal = (value) => {
 		switch (this.props.type) {
 			case 'onlyNum' :
@@ -23,7 +26,7 @@ class Textarea extends React.Component {
 	}
 	render () {
 		return (
-			<div className='scrm-textarea-div'>
+			<div className='scrm-textarea-div' style={{width: this.props.width}}>
 				<textarea className="scrm-textarea-input"
 					type		="text"
 					id			= {this.props.id}

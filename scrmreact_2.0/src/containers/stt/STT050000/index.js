@@ -521,31 +521,48 @@ class View extends React.Component {
 		},
 		addCombineWord : (e) => {
 			let wordList = this.state.dsWordList;
-			let index = wordList.indexOf('word', e.targetWord);
+			let newTarget = e.targetWord;
+			let newTargetList = newTarget.split(",");
 
-			if (index === -1) {
-				index = wordList.addRow();			
+			let newWordList = JSON.parse(JSON.stringify(wordList.records))
 
-				wordList.setValue(index, 'word', e.targetWord)
+			let chkCnt = 0;
 
-			} else {	
-				let newWordList = JSON.parse(JSON.stringify(wordList.records))
-				let filteredOrgRecord = wordList.orgrecords.filter( row => (
-					row.word === e.targetWord 
-				))
+			for (let i = 0; i < newTargetList.length; i ++) {
+				let newWord = newTargetList[i];
+				let index = wordList.indexOf('word', newTargetList[i]);
+				if (!StrLib.isNull(newWord)) {
 
-				if (filteredOrgRecord.length > 0) {
-					newWordList[index]['rowtype'] = newScrmObj.constants.crud.read;
+					if (index === -1) {					
+						newWordList.push({recid:newWordList.length, rowtype: newScrmObj.constants.crud.create, word: newWord})
+						chkCnt ++;
 
-				} else {
-					newWordList[index]['rowtype'] = newScrmObj.constants.crud.create;
-
+					} else {	
+						let filteredOrgRecord = wordList.orgrecords.filter( row => (
+							row.word === newWord
+						))
+		
+						if (filteredOrgRecord.length > 0) {
+							if (newWordList[index]['rowtype'] !== newScrmObj.constants.crud.read) {
+								newWordList[index]['rowtype'] = newScrmObj.constants.crud.read;
+								chkCnt ++;
+							}	
+						} else {
+							newWordList[index]['rowtype'] = newScrmObj.constants.crud.create;
+							chkCnt ++;
+						}	
+					}
 				}
-
-				ComLib.setStateRecords(this, "dsWordList", newWordList)
 			}
-			this.setState({...this.state, updateFlag: !this.state.updateFlag})
-			
+
+			if (chkCnt > 0) {
+				ComLib.setStateRecords(this, "dsWordList", newWordList)
+				this.setState({...this.state, updateFlag: !this.state.updateFlag})
+
+			} else {
+				ComLib.openDialog('A', 'SYSI0010', '이미 추가된 복합명사(들) 입니다.');
+			}
+	
 		},
 		delCombineWord : (e) => {
 			let wordList = this.state.dsWordList;
@@ -561,29 +578,46 @@ class View extends React.Component {
 		},
 		addSentence : (e) => {
 			let sentenceList = this.state.dsSentenceList;
-			let index = sentenceList.indexOf('sentence', e.targetSentence);
+			let newTarget = e.targetSentence;
+			let newTargetList = newTarget.split(",");
+			let newSentanceList = JSON.parse(JSON.stringify(sentenceList.records))
+		
+			let chkCnt = 0;
 
-			if (index === -1) {
-				index = sentenceList.addRow();			
-
-				sentenceList.setValue(index, 'sentence', e.targetSentence)
-
-			} else {	
-				let newSentenceList = JSON.parse(JSON.stringify(sentenceList.records))
-				let filteredOrgRecord = sentenceList.orgrecords.filter( row => (
-					row.sentence === e.targetSentence 
-				))
-
-				if (filteredOrgRecord.length > 0) {
-					newSentenceList[index]['rowtype'] = newScrmObj.constants.crud.read;
-
-				} else {
-					newSentenceList[index]['rowtype'] = newScrmObj.constants.crud.create;
-
-				}
-
+			for (let i = 0; i < newTargetList.length; i ++) {
+				let newSentance = newTargetList[i];
+				let index = sentenceList.indexOf('word', newTargetList[i]);
+				if (!StrLib.isNull(newSentance)) {
+					if (index === -1) {					
+						newSentanceList.push({recid:newSentanceList.length, rowtype: newScrmObj.constants.crud.create, sentence: newSentance})
+						chkCnt ++;
+	
+					} else {	
+						let filteredOrgRecord = sentenceList.orgrecords.filter( row => (
+							row.sentence === newSentance
+						))
+		
+						if (filteredOrgRecord.length > 0) {
+							if (newSentanceList[index]['rowtype'] !== newScrmObj.constants.crud.read) {
+								newSentanceList[index]['rowtype'] = newScrmObj.constants.crud.read;
+								chkCnt ++;
+							}	
+						} else {
+							newSentanceList[index]['rowtype'] = newScrmObj.constants.crud.create;
+							chkCnt ++;
+						}	
+					}
+				}				
 			}
-			this.setState({...this.state, updateFlag: !this.state.updateFlag})
+			
+			if (chkCnt > 0) {
+				ComLib.setStateRecords(this, "dsSentenceList", newSentanceList)
+				this.setState({...this.state, updateFlag: !this.state.updateFlag})
+
+			} else {
+				ComLib.openDialog('A', 'SYSI0010', '이미 추가된 문장(들) 입니다.');
+			}
+
 		},
 		delSentence : (e) => {
 			let sentenceList = this.state.dsSentenceList;
