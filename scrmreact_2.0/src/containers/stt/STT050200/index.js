@@ -85,7 +85,7 @@ class View extends React.Component {
 					return false;
 				}
 
-				if(!/^[가-힣\s,]+$/.test(targetParams)) {					
+				if(!/^[가-힣\s\n]+$/.test(targetParams)) {					
 					ComLib.openDialog('A', 'SYSI0010', '문장 추가에 실패하였습니다. \n 한글만 입력해주세요. \n(영문자, 특수문자 불가능)');
 
 					return false;
@@ -133,7 +133,15 @@ class View extends React.Component {
 							// } else {
 							// 	ComLib.openDialog('A', 'SYSI0010', '중복 처리 되었습니다.');
 							// }
-							this.props.addSentence({targetSentence : addSentence});
+							let dupChkArr = addSentence.split("\n");
+							let uniqueArr = [];
+							dupChkArr.forEach((element) => {
+								if (!uniqueArr.includes(element)) {
+									uniqueArr.push(element);
+								}
+							});
+
+							this.props.addSentence({targetSentence : uniqueArr});
 
 							state['textFieldProps']['iptAddSentence'].value = '';
 							
@@ -170,37 +178,37 @@ class View extends React.Component {
 			onKeyPress : (e) => {
 				switch (e.target.id) {
 				case 'iptAddSentence' :
-					if(e.key === 'Enter') {							
-						let state = this.state;
-						let addSentence = state.textFieldProps.iptAddSentence.value;
+					// if(e.key === 'Enter') {							
+					// 	let state = this.state;
+					// 	let addSentence = state.textFieldProps.iptAddSentence.value;
 
-						if(this.validation('checkSentence', addSentence)){
+					// 	if(this.validation('checkSentence', addSentence)){
 
-							// let newSentenceArr = this.props.sentenceList;
+					// 		// let newSentenceArr = this.props.sentenceList;
 								
-							// let checkCnt = 0;
+					// 		// let checkCnt = 0;
 
-							// newSentenceArr.forEach((item, index) => {	
-							// 	if(item.sentence === addSentence && item.rowtype !== newScrmObj.constants.crud.remove){	
+					// 		// newSentenceArr.forEach((item, index) => {	
+					// 		// 	if(item.sentence === addSentence && item.rowtype !== newScrmObj.constants.crud.remove){	
 
-							// 		checkCnt++	
-							// 	}
-							// });
+					// 		// 		checkCnt++	
+					// 		// 	}
+					// 		// });
 							
-							// if (checkCnt === 0) {
-							// 	this.props.addSentence({targetSentence : addSentence});
+					// 		// if (checkCnt === 0) {
+					// 		// 	this.props.addSentence({targetSentence : addSentence});
 
-							// } else {
-							// 	ComLib.openDialog('A', 'SYSI0010', '이미 추가된 문장 입니다.');
-							// }
-							this.props.addSentence({targetSentence : addSentence});
+					// 		// } else {
+					// 		// 	ComLib.openDialog('A', 'SYSI0010', '이미 추가된 문장 입니다.');
+					// 		// }
+					// 		this.props.addSentence({targetSentence : addSentence});
 
-							state['textFieldProps']['iptAddSentence'].value = '';
+					// 		state['textFieldProps']['iptAddSentence'].value = '';
 							
-							this.setState(state);	
+					// 		this.setState(state);	
 
-						}
-					}
+					// 	}
+					// }
 
 					break;
 

@@ -521,8 +521,7 @@ class View extends React.Component {
 		},
 		addCombineWord : (e) => {
 			let wordList = this.state.dsWordList;
-			let newTarget = e.targetWord;
-			let newTargetList = newTarget.split(",");
+			let newTargetList = e.targetWord;
 
 			let newWordList = JSON.parse(JSON.stringify(wordList.records))
 
@@ -530,7 +529,9 @@ class View extends React.Component {
 
 			for (let i = 0; i < newTargetList.length; i ++) {
 				let newWord = newTargetList[i];
+				
 				let index = wordList.indexOf('word', newTargetList[i]);
+
 				if (!StrLib.isNull(newWord)) {
 
 					if (index === -1) {					
@@ -578,8 +579,7 @@ class View extends React.Component {
 		},
 		addSentence : (e) => {
 			let sentenceList = this.state.dsSentenceList;
-			let newTarget = e.targetSentence;
-			let newTargetList = newTarget.split(",");
+			let newTargetList = e.targetSentence;
 			let newSentanceList = JSON.parse(JSON.stringify(sentenceList.records))
 		
 			let chkCnt = 0;

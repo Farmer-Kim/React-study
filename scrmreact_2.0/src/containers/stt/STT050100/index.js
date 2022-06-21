@@ -94,7 +94,7 @@ class View extends React.Component {
 					return false;
 				}
 				
-				if (!/^[가-힣,]+$/.test(targetParams)) {	
+				if (!/^[가-힣\n]+$/.test(targetParams)) {	
 					
 					//return x.toString().replace(/,/g,"");
 
@@ -147,7 +147,15 @@ class View extends React.Component {
 						// } else {
 						// 	ComLib.openDialog('A', 'SYSI0010', '이미 추가된 복합명사 입니다.');
 						// }
-						this.props.addCombineWord({targetWord : addWord});
+						let dupChkArr = addWord.split("\n");
+						let uniqueArr = [];
+						dupChkArr.forEach((element) => {
+							if (!uniqueArr.includes(element)) {
+								uniqueArr.push(element);
+							}
+						});
+
+						this.props.addCombineWord({targetWord : uniqueArr});
 						state['textFieldProps']['iptAddCW'].value = '';
 						
 						this.setState(state);	
@@ -177,40 +185,40 @@ class View extends React.Component {
 			onKeyPress : (e) => {
 				switch (e.target.id) {
 				case 'iptAddCW' :
-					if(e.key === 'Enter') {		
-						e.preventDefault();				
-						let addWord = this.state.textFieldProps.iptAddCW.value;
+					// if(e.key === 'Enter') {		
+					// 	e.preventDefault();				
+					// 	let addWord = this.state.textFieldProps.iptAddCW.value;
 
 
-						if (this.validation('checkCompWord', addWord)){
+					// 	if (this.validation('checkCompWord', addWord)){
 
-							// let newWordArr = this.props.cmpWordList;
+					// 		// let newWordArr = this.props.cmpWordList;
 								
-							// let checkCnt = 0;
+					// 		// let checkCnt = 0;
 
-							// newWordArr.forEach((item, index) => {	
-							// 	if(item.word === addWord && item.rowtype !== newScrmObj.constants.crud.remove){	
-							// 		// rowTypd 에 따라 update 시킬껀지 아니명 그냥 중복 확인해서 카운트 늘릴껀지 확인 로직
+					// 		// newWordArr.forEach((item, index) => {	
+					// 		// 	if(item.word === addWord && item.rowtype !== newScrmObj.constants.crud.remove){	
+					// 		// 		// rowTypd 에 따라 update 시킬껀지 아니명 그냥 중복 확인해서 카운트 늘릴껀지 확인 로직
 
-							// 		checkCnt++	
-							// 	}
-							// });
+					// 		// 		checkCnt++	
+					// 		// 	}
+					// 		// });
 							
-							// if (checkCnt === 0) {
-							// 	this.props.addCombineWord({targetWord : addWord});
+					// 		// if (checkCnt === 0) {
+					// 		// 	this.props.addCombineWord({targetWord : addWord});
 
-							// } else {
-							// 	ComLib.openDialog('A', 'SYSI0010', '중복 처리 되었습니다.');
-							// }
+					// 		// } else {
+					// 		// 	ComLib.openDialog('A', 'SYSI0010', '중복 처리 되었습니다.');
+					// 		// }
 							
 							
-							this.props.addCombineWord({targetWord : addWord});
+					// 		this.props.addCombineWord({targetWord : addWord});
 						
-							let state = this.state;
-							state['textFieldProps']['iptAddCW'].value = '';
-							this.setState(state);	
-						}
-					}
+					// 		let state = this.state;
+					// 		state['textFieldProps']['iptAddCW'].value = '';
+					// 		this.setState(state);	
+					// 	}
+					// }
 
 					break;
 
