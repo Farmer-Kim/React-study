@@ -1,5 +1,8 @@
 import PwdInit   from 'containers/base/common/pwdInit.js';
 import pwdChg   from 'containers/base/common/pwdChg.js';
+import userChg   from 'containers/base/common/userChg.js';
+
+
 import COM010001 from 'containers/com/COM010001';
 import COM010010 from 'containers/com/COM010010';
 import COM010020 from 'containers/com/COM010020';
@@ -26,6 +29,7 @@ import AnswerArea from 'components/Player/AnswerArea';
 export const popRoute = [
 	{ id: 'pwdInit',		component: PwdInit },
 	{ id: 'pwdChg',			component: pwdChg },
+	{ id: 'userChg',		component: userChg },
 	{ id: 'AnswerArea',		component: AnswerArea },
 	
 	

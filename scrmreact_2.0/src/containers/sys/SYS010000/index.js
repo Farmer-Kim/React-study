@@ -81,9 +81,7 @@ class View extends React.Component {
 	/*------------------------------------------------------------------------------------------------*/
 	componentDidMount () { // 조회
 		this.transaction("SYS010000_R00");
-
-		
-
+	
 	}
 
 
@@ -466,6 +464,7 @@ class View extends React.Component {
 								onScrollEnd        = {this.event.grid.onScrollEnd}		
 								onRowClicked       = {this.event.grid.onRowClicked}
 								onCellDoubleClicked= {this.event.grid.onCellDoubleClicked}
+
 							/>
 						</ComponentPanel>
 					</SubFullPanel>

@@ -1247,7 +1247,7 @@ const FileLib = {
 	*--------------------------------------------------------------------------------------*/
 };
 const ExcelLib = {
-	exportToExcel : (header, data, rtn, grdId) => {
+	exportToExcel : (header, data, rtn, grdId, menuID) => {
 		if (rtn) {
 			let fileName = "[" + DateLib.getTodayTime() + "]_" + grdId + '.xls';
 			let excelComponent = document.createElement('a');
@@ -1260,6 +1260,20 @@ const ExcelLib = {
 			document.getElementById('root').appendChild(excelComponent);
 			document.getElementById('_aExcelExport').click();
 			document.getElementById('root').removeChild(document.getElementById('_aExcelExport'));
+
+			let transManager = new TransManager();
+			transManager.setTransId("ExcelLib_C01");
+			transManager.setTransUrl(transManager.constants.url.common);
+		
+			transManager.addConfig({
+				dao        : transManager.constants.dao.base,
+				crudh      : transManager.constants.crudh.create,
+				sqlmapid   : "SUP.C_setFileLog",
+				datasetsend: "dsFileLog",
+			});
+			transManager.addDataset('dsFileLog', [{MNU_ID:menuID, TP_CD:"DL", FILE_NM: fileName}]);			
+			transManager.agent();
+			
 		}
 	},
 	getHeaderDepth : (header) => {

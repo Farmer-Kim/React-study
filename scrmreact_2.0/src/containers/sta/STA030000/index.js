@@ -584,7 +584,8 @@ class View extends React.Component {
 									rowNum      = {false}
 									addRowBtn   = {false}
 									delRowBtn   = {false}
-									dnlExcelBtn = {true}						
+									dnlExcelBtn = {true}	
+									orgMenu = {this.props.tray.MNU_ID}							
 								/>
 								
 								<Grid
@@ -596,7 +597,8 @@ class View extends React.Component {
 									rowNum      = {false}
 									addRowBtn   = {false}
 									delRowBtn   = {false}
-									dnlExcelBtn = {true}						
+									dnlExcelBtn = {true}	
+									orgMenu = {this.props.tray.MNU_ID}							
 								/>
 							</ComponentPanel>
 						</FlexPanel>

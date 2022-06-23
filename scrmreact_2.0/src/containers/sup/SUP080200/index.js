@@ -4,13 +4,14 @@ import {
 	ComponentPanel, FlexPanel, SearchPanel, LFloatArea, RFloatArea, RelativeGroup, Grid
 } from 'components';
 //버튼 컴포넌트
-import {BasicButton as Button, Label, RangeInputCalendar} from 'components';
-import {StrLib, DateLib, ComLib, TransManager} from 'common';
+import {BasicButton as Button, Label, RangeInputCalendar, Selectbox, Textfield} from 'components';
+import {StrLib, DateLib, ComLib, TransManager, DataLib} from 'common';
 
 class View extends React.Component {
 	constructor(props) {
 		super();
 		this.state = {
+			dsSrch: DataLib.datalist.getInstance([{SRH_STR: "", SRH_TP:"ID"}]),
 			btnProps : {
 				btnSearch : {
 					id : 'btnSearch',
@@ -21,6 +22,8 @@ class View extends React.Component {
 			},
 			lastStartDate: "",
 			lastEndDate  : "",
+			lastSchStr   : "",
+			lastSchTp    : "",
 			grdProps : {
 				grdUserLog : {
 					id : 'grdUserLog',
@@ -141,6 +144,8 @@ class View extends React.Component {
 					,  END_DATE    : this.state.rangeCalendarProps.endDate 
 					,  QUERY_START : pageStart
 					,  QUERY_LIMIT : pageLimit
+					,  SRH_STR      : this.state.dsSrch.records[0].SRH_STR
+					,  SRH_TP       : this.state.dsSrch.records[0].SRH_TP
 					}]);
 				transManager.agent();
 
@@ -160,7 +165,10 @@ class View extends React.Component {
 					,  END_DATE    : this.state.lastEndDate 
 					,  QUERY_START : pageStart
 					,  QUERY_LIMIT : pageLimit
+					,  SRH_STR      : this.state.lastSchStr
+					,  SRH_TP       : this.state.lastSchTp
 					}]);
+
 				transManager.agent();
 				
 				break;			
@@ -183,6 +191,8 @@ class View extends React.Component {
 
 				state.lastStartDate = state['rangeCalendarProps'].startDate;
 				state.lastEndDate   = state['rangeCalendarProps'].endDate;
+				state.lastSchTp     = state.dsSrch.records[0].SRH_TP
+				state.lastSchStr    = state.dsSrch.records[0].SRH_STR;
 
 				state['grdProps']['grdUserLog']['paging'].loading = false;
 
@@ -243,7 +253,31 @@ class View extends React.Component {
 					});
 				}
 			},
-		}
+		},
+		selectbox: {
+			onChange: (e) => {
+				switch (e.id) {					
+				case 'selUsrTP' :
+					ComLib.setStateValue(this, "dsSrch", 0, "SRH_TP", e.target.value);
+
+					break;			
+				default : break;
+				}
+			}
+		},		
+		input : {
+			onChange: (e) => {
+				switch (e.target.id) {
+				case 'iptSchStr':					
+					ComLib.setStateValue(this, "dsSrch", 0, "SRH_STR", e.target.value);
+
+					
+					break;
+
+				default: break;
+				}
+			},
+		},
 	}
 		
 	render () {
@@ -253,15 +287,36 @@ class View extends React.Component {
 					<RelativeGroup>
 						<LFloatArea>
 							<FlexPanel>
-							<Label value = {this.state.rangeCalendarProps.label} req={true} />
-							<RangeInputCalendar
-								id        = {this.state.rangeCalendarProps.id}
-								startDate = {this.state.rangeCalendarProps.startDate}
-								endDate   = {this.state.rangeCalendarProps.endDate}
-								onChange  = {this.event.inputcalendar.onChange}
-								strtId    = {this.state.rangeCalendarProps.strtId}
-								endId     = {this.state.rangeCalendarProps.endId}
-							/>
+								<Label value = {this.state.rangeCalendarProps.label} req={true} />
+								<RangeInputCalendar
+									id        = {this.state.rangeCalendarProps.id}
+									startDate = {this.state.rangeCalendarProps.startDate}
+									endDate   = {this.state.rangeCalendarProps.endDate}
+									onChange  = {this.event.inputcalendar.onChange}
+									strtId    = {this.state.rangeCalendarProps.strtId}
+									endId     = {this.state.rangeCalendarProps.endId}
+								/>
+								<Label value="사용자"/>
+								<Selectbox
+									id       = {'selUsrTP'}
+									value    = {this.state.dsSrch.records[0]["SRH_TP"]}
+									dataset  = {ComLib.convComboList([{CODE:"ID",CODE_NM:"아이디"},{CODE:"NM",CODE_NM:"이름"}])}
+									width    = {80}
+									disabled = {false}
+									onChange = {this.event.selectbox.onChange}
+								/>
+								<Textfield
+									width       = {300}
+									id          = {"iptSchStr"}
+									name        = {"iptSchStr"}
+									value       = {this.state.dsSrch.records[0]["SRH_STR"]}
+									placeholder = {""}
+									minLength   = {0}
+									maxLength   = {20}
+									readOnly    = {false}
+									disabled    = {false}
+									onChange    = {this.event.input.onChange}
+								/>
 							</FlexPanel>
 						</LFloatArea>
 						<RFloatArea>

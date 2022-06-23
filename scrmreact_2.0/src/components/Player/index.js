@@ -112,9 +112,9 @@ class Player extends React.Component {
 		default : break;
 		}
 	}
-
-	transaction = (serviceid) => {
+	transaction = (...params) => {
 		let transManager = new TransManager();
+		let serviceid = params[0];
 		switch (serviceid) {
 		case 'PLAYER_R00': 
 			transManager.setTransId(serviceid);
@@ -216,7 +216,25 @@ class Player extends React.Component {
 			transManager.agent();
 
 			break;
+			
+		case 'PLAYER_C02':
+			transManager.setTransId(serviceid);
+			transManager.setTransUrl(transManager.constants.url.common);
+		
+			transManager.addConfig({
+				dao        : transManager.constants.dao.base,
+				crudh      : transManager.constants.crudh.create,
+				sqlmapid   : "SUP.C_setFileLog",
+				datasetsend: "dsFileLog",
+			});
+			let tp = params[1];
+			let nm = params[2];
+			transManager.addDataset('dsFileLog', [{MNU_ID:"PLAYER",TP_CD:tp, FILE_NM: nm}]);
+			
+			transManager.agent();
 
+			break;
+			
 		case 'PLAYER_R02':
 			transManager.setTransId(serviceid);
 			transManager.setTransUrl(transManager.constants.url.sftp);
@@ -671,7 +689,8 @@ class Player extends React.Component {
 						return false;
 					} else {
 						let txtArr = this.state.dsRcvSttJobData[0]['STT_RSLT'];
-						if (txtArr === undefined || txtArr.length === 0) return false;						
+						if (txtArr === undefined || txtArr.length === 0) return false;		
+
 						ComLib.copyText(JSON.parse(txtArr).map((item, key) => {
 							let text = "";
 							text += (item["SPK"] === "A" ? "[상담사]" : "[고객]");
@@ -679,8 +698,13 @@ class Player extends React.Component {
 							text += item['VALUE'];
 							return text;
 						}))
-						
-						
+						if (!this.props.options.useUuid) {
+							this.transaction("PLAYER_C02","CP","CALL_ID_" + this.props.options.callId);
+
+						} else {
+							this.transaction("PLAYER_C02","CP","UUID_" + this.props.options.UUID);
+
+						}
 					}
 					break;
 				case 'btnSaveAllText' :
@@ -698,7 +722,8 @@ class Player extends React.Component {
 								text += "[" + this.handler.format(item["POS_START"]/100) + "]";
 								text += item['VALUE'];
 								return text;
-							}).join("\r\n"), this.props.options.callId + ".txt" )
+							}).join("\r\n"), "CALL_ID_" + this.props.options.callId + ".txt" )
+							this.transaction("PLAYER_C02","DL","CALL_ID_" + this.props.options.callId + '.txt');
 
 						} else {
 							ComLib.writeTxtFile(JSON.parse(txtArr).map((item, key) => {
@@ -707,8 +732,11 @@ class Player extends React.Component {
 								text += "[" + this.handler.format(item["POS_START"]/100) + "]";
 								text += item['VALUE'];
 								return text;
-							}).join("\r\n"), this.props.options.UUID + ".txt" )
-						}						
+							}).join("\r\n"), "UUID_" + this.props.options.UUID + ".txt" )
+							this.transaction("PLAYER_C02","DL","UUID_" + this.props.options.UUID + '.txt');
+						}	
+						
+						// 텍스트 파일 저장 DB 추가
 					}
 					break;
 				case 'btnOpenGrid' :

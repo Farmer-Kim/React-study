@@ -45,6 +45,22 @@ class Header extends React.Component{
 				}
 			}
 		},
+		divUser: {
+			onClick: () => {
+				let userInfo = ComLib.getSession("gdsUserInfo")[0];
+				
+				let infoOption = { width: '600px', height: '315px', modaless: false ,param: [{
+					USR_ID: userInfo.USR_ID,
+					USR_NM: userInfo.USR_NM,
+					CENT_NM: userInfo.CENT_NM + "/" + userInfo.TEAM_NM,
+					AUTH_NM: userInfo.AUTH_NM,
+					CUR_PWD: '',
+					NEW_PWD: '',
+					CON_PWD: '',
+				}],}
+				ComLib.openPop('userChg', '사용자 정보 변경', infoOption);
+			}
+		}
 	}
 
 	/*******************************************************************
@@ -144,7 +160,7 @@ class Header extends React.Component{
 				</RFloatArea>
 				<div style={{float : 'right',  position: 'absolute', right: 55}}>
 					<div style={{alignContent: 'bottom', verticalAlign: 'center', height: '100%'}}>
-						<div>
+						<div onClick={this.event.divUser.onClick}>
 							<Label color={'white'} value={"소속 : [" + ComLib.getSession("gdsUserInfo")[0]['CENT_NM'] + ']' + ((ComLib.getSession("gdsUserInfo")[0]['TEAM_NM'] !== undefined ) ? ' / ['+ComLib.getSession("gdsUserInfo")[0]['TEAM_NM'] +']': '')}> </Label>
 							<Label color={'white'} value={"사용자 : [" + ComLib.getSession("gdsUserInfo")[0]['USR_NM'] + ']'}> </Label>
 						</div>

@@ -13,7 +13,7 @@ class View extends React.Component {
 		this.chennelGrid = null;
 		this.chennelGridApi = null;
 		this.state = {
-			dsSrch: DataLib.datalist.getInstance([{CENT_CD: ComLib.setOrgComboValue("CENT_CD"), TEAM_CD: "", SRCH_VALUE: "", USE_FLAG: ""}]),
+			dsSrch: DataLib.datalist.getInstance([{SRH_STR: "", USE_FLAG: "",SRH_TP:"1"}]),
 			dsChennelList : DataLib.datalist.getInstance(),
 			
 			btnProps : {
@@ -128,16 +128,16 @@ class View extends React.Component {
 							
 							let isDup = false;
 							let dupType = ""; 
-							if (String(chennelRecord[intA].CONST_IP) === String(chennelRecord[intB].CONST_IP)) {
+							if (chennelRecord[intA].USE_FLAG === "Y" && String(chennelRecord[intA].CONST_IP) === String(chennelRecord[intB].CONST_IP)) {
 								isDup = true;
 								dupType = "IP"; 
 	
-							} else if (String(chennelRecord[intA].EXT_NUM) === String(chennelRecord[intB].EXT_NUM)) {
+							} else if (chennelRecord[intA].USE_FLAG === "Y" && String(chennelRecord[intA].EXT_NUM) === String(chennelRecord[intB].EXT_NUM)) {
 								isDup = true;
 								dupType = "내선 번호"; 
-	
+
 							}
-	
+
 							if (isDup) {
 								let chennelRows = this.chennelGridApi.rowModel.rowsToDisplay;
 								let chennelNum = 0;
@@ -211,12 +211,21 @@ class View extends React.Component {
 					// 	datasetsend: "dsSend",
 					// 	datasetrecv: "dsNewChennelList",
 					// });
-					
-					let param = {
-						USE_FLAG   : state.dsSrch.records[0]["USE_FLAG"],		
-					};
+					// {SRH_STR: "", USE_FLAG: "",SRH_TP:"1"}
+	
+					let param = [{}];
+					param[0].USE_FLAG = state.dsSrch.records[0].USE_FLAG
+					if (!StrLib.isNull(state.dsSrch.records[0].SRH_STR)) {
+						if (state.dsSrch.records[0].SRH_TP === "1") {
+							param[0].EXT_NUM = state.dsSrch.records[0].SRH_STR
 
-					transManager.addDataset('dsSend', [ param ]);
+						} else {
+							param[0].CONST_IP = state.dsSrch.records[0].SRH_STR
+
+						}
+					}
+
+					transManager.addDataset('dsSend', param);
 					transManager.agent();
 
 					break;
@@ -250,30 +259,34 @@ class View extends React.Component {
 		switch (res.id) {
 			case 'SUP080000_R01':
 				let cnList = res.data.dsChennelList;
-				
-				let cntUse = 0;
-				for (let i = 0; i < cnList.length; i ++) {
-					if (cnList[i].USE_FLAG === 'Y'){
-						cntUse += 1;
+				if (cnList.length > 0) {
+					let cntUse = 0;
+					for (let i = 0; i < cnList.length; i ++) {
+						if (cnList[i].USE_FLAG === 'Y'){
+							cntUse += 1;
+						}
 					}
-				}
-				
-				let cnt = 0;
-				for (let j = 0; j < cnList.length; j ++) {
-					cnList[j].TEMP = cnt;
-					cnt += 1;
-				}
+					
+					let cnt = 0;
+					for (let j = 0; j < cnList.length; j ++) {
+						cnList[j].TEMP = cnt;
+						cnt += 1;
+					}
+	
+					ComLib.setStateInitRecords(this, "dsChennelList", cnList);
+					
+					let chennelRow = this.chennelGridApi.rowModel.rowsToDisplay[0];
+					this.chennelGridApi.ensureIndexVisible(0, 'middle');	
+					
+					if (chennelRow.selected !== true) {
+						chennelRow.setSelected(true);
+					}	
+	
+					this.currntChennel = chennelRow.data.TEMP
 
-				ComLib.setStateInitRecords(this, "dsChennelList", cnList);
-				
-				let chennelRow = this.chennelGridApi.rowModel.rowsToDisplay[0];
-				this.chennelGridApi.ensureIndexVisible(0, 'middle');	
-				
-				if (chennelRow.selected !== true) {
-					chennelRow.setSelected(true);
-				}	
-
-				this.currntChennel = chennelRow.data.TEMP
+				} else {
+					ComLib.setStateInitRecords(this, "dsChennelList", []);
+				}
 				
 				break; 
 
@@ -284,6 +297,10 @@ class View extends React.Component {
 			default : break;
 		}
 	}
+
+
+ 
+
 
 	/*------------------------------------------------------------------------------------------------*/
 	// [6. event Zone]
@@ -394,11 +411,29 @@ class View extends React.Component {
 				case 'cmbSrchUseYn' :
 					ComLib.setStateValue(this, "dsSrch", 0, "USE_FLAG", e.target.value);
 
-					break;					
+					break;		
+					
+				case 'selSchTP' :
+					ComLib.setStateValue(this, "dsSrch", 0, "SRH_TP", e.target.value);
+
+					break;			
 				default : break;
 				}
 			}
-		}
+		},
+		input : {
+			onChange: (e) => {
+				switch (e.target.id) {
+				case 'iptSchStr':					
+					ComLib.setStateValue(this, "dsSrch", 0, "SRH_STR", e.target.value);
+
+					
+					break;
+
+				default: break;
+				}
+			},
+		},
 	}
 
 	/*------------------------------------------------------------------------------------------------*/
@@ -413,6 +448,27 @@ class View extends React.Component {
 						<RelativeGroup>
 							<LFloatArea>
 								<FlexPanel>
+									<Label value="채널구분"/>
+									<Selectbox
+										id       = {'selSchTP'}
+										value    = {this.state.dsSrch.records[0]["SRH_TP"]}
+										dataset  = {ComLib.convComboList([{CODE:"1",CODE_NM:"내선번호"},{CODE:"2",CODE_NM:"아이피"}])}
+										width    = {80}
+										disabled = {false}
+										onChange = {this.event.selectbox.onChange}
+									/>
+									<Textfield
+										width       = {300}
+										id          = {"iptSchStr"}
+										name        = {"iptSchStr"}
+										value       = {this.state.dsSrch.records[0]["SRH_STR"]}
+										placeholder = {""}
+										minLength   = {0}
+										maxLength   = {20}
+										readOnly    = {false}
+										disabled    = {false}
+										onChange    = {this.event.input.onChange}
+									/>
 									<Label value="사용여부"/>
 									<Selectbox
 										id       = {this.state.selectboxProps.cmbSrchUseYn.id}
@@ -457,6 +513,7 @@ class View extends React.Component {
 								onBeforeInsertRow = {this.event.grid.onBeforeInsertRow}	
 								onInsertRow       = {this.event.grid.onInsertRow}
 								onDeleteRow       = {this.event.grid.onDeleteRow}	
+								orgMenu = {this.props.tray.MNU_ID}
 							/>	
 							<RelativeGroup>
 								<RFloatArea>

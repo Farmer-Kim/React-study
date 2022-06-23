@@ -489,7 +489,8 @@ class View extends React.Component {
 
 							onGridReady        = {this.event.grid.onGridReady}	
 							onScrollEnd        = {this.event.grid.onScrollEnd}		
-							onActionCellClicked= {this.event.grid.onActionCellClicked}							
+							onActionCellClicked= {this.event.grid.onActionCellClicked}
+							orgMenu = {this.props.tray.MNU_ID}									
 											
 						/>
 					</ComponentPanel>

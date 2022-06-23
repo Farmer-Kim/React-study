@@ -716,11 +716,11 @@ class View extends React.Component {
 	onExelDownLoad = async() => {	
 		if (this.state.activeTab === 0) {
 			let header = [{headerName:  '학습_복합명사',	field: 'word', colId: 'word'}]
-			ExcelLib.exportToExcel(header, this.state.dsWordList.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy), true, "복합명사");
+			ExcelLib.exportToExcel(header, this.state.dsWordList.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy), true, "복합명사", this.props.tray.MNU_ID);
 			
 		} else {
 			let header = [{headerName:  '학습_문장',	field: 'sentence', colId: 'sentence'}]
-			ExcelLib.exportToExcel(header, this.state.dsSentenceList.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy), true, "문장");
+			ExcelLib.exportToExcel(header, this.state.dsSentenceList.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy), true, "문장", this.props.tray.MNU_ID);
 			
 
 		}
@@ -811,6 +811,7 @@ class View extends React.Component {
 								onGridReady       = {this.event.grid.onGridReady}			
 								onRowClicked      = {this.event.grid.onRowClicked}
 								onBeforeDeleteRow = {this.event.grid.onBeforeDeleteRow}
+								orgMenu = {this.props.tray.MNU_ID}		
 							/>
 							{/* <RelativeGroup>
 								<RFloatArea>

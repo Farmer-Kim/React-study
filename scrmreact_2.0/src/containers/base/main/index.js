@@ -62,7 +62,7 @@ class Main extends React.Component{
 								<div id={tray.MNU_ID} style={{display : (this.props.selected.MNU_ID === tray.MNU_ID) ? 'block' : 'none'}} key={'_menu_div_' + tray.MNU_ID}>
 									{
 										appRoute.filter(item => item.id === tray.MNU_ID).map((prop) => {
-											return <prop.component key = {'_menu_comp_' + prop.id}/>
+											return <prop.component key = {'_menu_comp_' + prop.id} tray={tray}/>
 										})
 									}
 								</div>
