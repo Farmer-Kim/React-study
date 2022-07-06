@@ -292,7 +292,7 @@ class View extends React.Component {
 						</RFloatArea>
 					</RelativeGroup>
 				</ComponentPanel>
-				<ComponentPanel height ={"400px"}>						
+				<ComponentPanel height ={"400px"} overFlowYScroll={true}>						
 					<div style={{display: 'inline-block'}}>
 						{this.state.sentenceList}
 					</div>

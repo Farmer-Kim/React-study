@@ -27,7 +27,10 @@ class ComponentPanel extends React.Component {
 	static propTypes = { children: PropTypes.oneOfType([PropTypes.element, PropTypes.func, PropTypes.array, PropTypes.object]).isRequired };
 	render () { 
 		let className = "";
-		(this.props.sizeVar) ? className="scrm-component-size-var-panel" : className="scrm-component-panel";
+		(this.props.sizeVar) ? className="scrm-component-size-var-panel" : className="scrm-component-panel";		
+		if (this.props.overFlowYScroll) {
+			className += " overFlowYScroll";
+		}
 		return (
 			<div className ={className} style={{width: this.props.width, height: this.props.height}}>
 				{this.props.children}

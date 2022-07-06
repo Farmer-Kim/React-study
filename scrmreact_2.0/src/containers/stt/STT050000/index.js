@@ -691,6 +691,8 @@ class View extends React.Component {
 			}
 		  } catch(err) {
 			ComLib.openDialog('A', 'SYSI0010', '파일 업로드를 실패하였습니다.\n파일을 확인해 주세요.');	
+		  } finally {
+			ComLib.openDialog('A', 'SYSI0010', '파일 업로드를 성공하였습니다.');	
 		  }
 		};
 		reader.readAsArrayBuffer(targetFile);
