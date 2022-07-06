@@ -9,6 +9,7 @@ import STT030000 from 'containers/stt/STT030000';
 import STT040000 from 'containers/stt/STT040000';
 import STT050000 from 'containers/stt/STT050000';
 import STT060000 from 'containers/stt/STT060000';
+import STT070000 from 'containers/stt/STT070000';
 
 import SYS010000 from 'containers/sys/SYS010000';
 import SYS020000 from 'containers/sys/SYS020000';
@@ -43,6 +44,7 @@ export const appRoute = [
 	{ id: 'STT040000',	path: "/stt/STT040000",		exact: true,	component: STT040000 },
 	{ id: 'STT050000',	path: "/stt/STT050000",		exact: true,	component: STT050000 },
 	{ id: 'STT060000',	path: "/stt/STT060000",		exact: true,	component: STT060000 },
+	{ id: 'STT070000',	path: "/stt/STT070000",		exact: true,	component: STT070000 },
 
 
 	{ id: 'SYS010000',	path: "/sys/SYS010000",		exact: true,	component: SYS010000 },
