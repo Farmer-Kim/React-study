@@ -35,7 +35,7 @@ class InputFileUpload extends React.Component {
 		onUploadComplete  : () => { return; },
 		uploadValidation  : () => { return true; }
 	}
-	getUploadParams = (e) => {
+	getUploadParams = () => {
 		return { url: 'https://httpbin.org/post' }
 	}
 	onChangeStatus = ({ meta }, status) => { this.props.onChangeStatus({ id : this.state.id, data : {status : status, mete: meta}}) }
@@ -47,7 +47,6 @@ class InputFileUpload extends React.Component {
 		}
 	}
 	handleSubmit = (files, allFiles) => {
-		console.log("File Upload Handle Submit");
 		if (this.validate(files, allFiles)) {
 			this.allFiles = allFiles;
 			this.setState({...this.state, showProgressbar: false, files: files
@@ -84,7 +83,6 @@ class InputFileUpload extends React.Component {
 			Array.from(this.state.files).forEach((f, index) => {
 				if (index >= this.index && index < this.index + this.page) {					
 					formData.append("files", f.file)
-					
 				}
 			});
 	
@@ -110,7 +108,6 @@ class InputFileUpload extends React.Component {
 		try {
 			switch (res.id) {
 			case "_FILEUPLOAD":
-				console.log(res)
 				if (res.result === '0') {
 					if ((this.index + this.page) < Array.from(this.state.files).length) {
 						this.allFiles.forEach((f, index) => { if (index < this.page) { f.remove() } });

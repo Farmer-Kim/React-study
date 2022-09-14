@@ -166,24 +166,23 @@ class Textfield extends React.Component {
 	}
 	render () {
 		return (
-				<div className='scrm-input-div' style={{width: this.props.width}}>
-					<input	className = "scrm-input-text"
-							type="text"
-							id = {this.props.id}
-							name = {this.props.name}
-							value = {this.rtnVal(this.props.value)}
-							placeholder = {this.props.placeholder}
-							minLength =  {this.props.minLength}
-							maxLength = {this.props.maxLength}
-							readOnly = {this.props.readOnly}
-							disabled = {this.props.disabled}
-							onChange = {(e) => this.props.onChange(e)}
-							onKeyPress= {(e) => this.props.onKeyPress(e)}
-							onBlur = {(e) => {this.props.onBlur(e)}}
-							autoComplete  = 'off'
-							tooltip="ss"
-					/>
-				</div>
+			<div className='scrm-input-div' style={{width: this.props.width}}>
+				<input	className = "scrm-input-text"
+						type="text"
+						id = {this.props.id}
+						name = {this.props.name}
+						value = {this.rtnVal(this.props.value)}
+						placeholder = {this.props.placeholder}
+						minLength =  {this.props.minLength}
+						maxLength = {this.props.maxLength}
+						readOnly = {this.props.readOnly}
+						disabled = {this.props.disabled}
+						onChange = {(e) => this.props.onChange(e)}
+						onKeyPress= {(e) => this.props.onKeyPress(e)}
+						onBlur = {(e) => {this.props.onBlur(e)}}
+						autoComplete  = 'off'
+				/>
+			</div>
 		);
 	}
 }
@@ -216,6 +215,12 @@ class InputCalendar extends React.Component {
 			focused: null,
 		};
 	}
+	static defaultProps = {
+		allowTextEdit: false,
+	}
+	componentDidMount() {
+				
+	}
 	render () {
 		return (
 			<React.Fragment>
@@ -227,12 +232,15 @@ class InputCalendar extends React.Component {
 					monthFormat = {"YYYY년 MM월"}
 					isOutsideRange = {(e) => {return ;}}
 					disabled = {this.props.disabled}
-					showClearDate = {true}
+					showClearDate = {false}
 					showDefaultInputIcon
 					openDirection = {this.props.direction ? this.props.direction : 'down'}
 					verticalSpacing={0}
+					appendToBody={false}
   					inputIconPosition="after"
 					displayFormat = {'YYYY-MM-DD'}
+					keepOpenOnDateSelect={false}
+					readOnly={!this.props.allowTextEdit}
 					onDateChange={(date) => {
 						this.props.onChange({
 							target : {
@@ -241,6 +249,7 @@ class InputCalendar extends React.Component {
 							}
 						})
 					}}
+					small={true}
 					focused={this.state.focused}
 					onFocusChange={({ focused }) => this.setState({ focused })}
 				/>
@@ -258,6 +267,8 @@ class RangeInputCalendar extends React.Component {
 	static defaultProps = {
 		startDate: null,
 		endDate: null,
+		allowTextEdit: false,
+		showClearDates: true
 	}
 	render () {
 		return (
@@ -265,7 +276,7 @@ class RangeInputCalendar extends React.Component {
 				<DateRangePicker
 					enableOutsideDays = {true}
 					disabled = {this.props.disabled}
-					showClearDates = {true}
+					showClearDates = {this.props.showClearDates}
 					showDefaultInputIcon
 					isOutsideRange = {(e) => {return ;}}
 					minimumNights={0}
@@ -280,6 +291,7 @@ class RangeInputCalendar extends React.Component {
 					endDatePlaceholderText = {"종료일자"}
 					startDate={convertDate(this.props.startDate)}
 					endDate={convertDate(this.props.endDate)}
+					readOnly={!this.props.allowTextEdit}
 					onDatesChange={({ startDate, endDate }) => {
 						this.props.onChange({
 							target : {

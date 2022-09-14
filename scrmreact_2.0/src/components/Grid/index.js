@@ -1,9 +1,9 @@
 import React from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import {ComLib, newScrmObj, StrLib, ExcelLib, DataLib} from 'common';
-import {LFloatArea, RFloatArea, BasicButton as Button} from 'components';
+import {LFloatArea, RFloatArea, BasicButton as Button, Checkbox} from 'components';
 import {DateComponent, TimeComponent, CheckboxRenderer, RangeDateComponent, RangeTimeComponent, DelRowButton, SelectboxRenderer, CustomEditor, ActionButton, CustomToolTip} from './components';
-
+import _ from 'lodash';
 import {setGridHeader, checkHeaderProp} from './utils';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import "flatpickr/dist/themes/dark.css";
@@ -14,6 +14,8 @@ class Grid extends React.Component {
 		this.initFlag = false;
 		this.pageDataset = [];
 		this.propDataset = [];
+		this.pageHeader     = [];
+		this.orgPageHeader  =  _.cloneDeep(this.props.header);
 		this.gridDataset = DataLib.datalist.getInstance();
 		this.state = { gridApi : null, columnApi : {}, columnDefs: [], rowData: [] };
 		this.onActionCellClicked  = this.onActionCellClicked.bind(this);
@@ -36,15 +38,18 @@ class Grid extends React.Component {
 		this.onGridSizeChanged	  = this.onGridSizeChanged.bind(this);
 		this.onColumnResized	  = this.onColumnResized.bind(this);
 		this.onColumnGroupOpened  = this.onColumnGroupOpened.bind(this);
+		this.onFilterHeadClick    = this.onFilterHeadClick.bind(this);
+		this.expandAllRow         = this.expandAllRow.bind(this);
+		this.contractAllRow       = this.contractAllRow.bind(this);
 	}
 	// checkboxSelection: false,
 	static defaultProps = {
 		id : null,
 		data : [],
 		header : [],
-		suppressMovableColumns : true,
 		rowDrag : false,
 		doNotScrollTop : true,
+		suppressMovableColumns : true,
 		suppressRowClickSelection : false,
 		sort : true,
 		filter : false,
@@ -57,6 +62,7 @@ class Grid extends React.Component {
 			use : false,
 			colId : null,
 		},
+		headerToggle   : false,
 		onGridReady : () => {return;},
 		onGridSizeChanged : () => {return;},
 		onRowClicked : () => {return;},
@@ -70,6 +76,7 @@ class Grid extends React.Component {
 		onSelectionChanged  : () => {return;},
 		onRowSelected  : () => {return;},
 		onDeleteRow : () => {return;},
+		onInsertRow : () => {return;},
 		onPaginationChanged : () => {return;},
 		onBodyScroll : () => {return;},
 		onScrollEnd : () => {return;},
@@ -80,16 +87,20 @@ class Grid extends React.Component {
 	};
 	componentDidMount () { 
 	};
-	shouldComponentUpdate (nextProps) {
+	shouldComponentUpdate (nextProps) {		
 		if (!this.props.infinite) {
 			// 화면에서 setState시, 다른 컴포넌트의 데이터가 변경되는 경우에 prop 데이터의 변경이 없으면 render 하지 않음
-			if (nextProps.data.records === this.propDataset && nextProps.data.records === this.props.data.records && this.props.data.records === this.propDataset) {
+			if (nextProps.data.records === this.propDataset && nextProps.data.records === this.props.data.records && this.props.data.records === this.propDataset && this.props.header === nextProps.header) {
 				return false;
 			}
 		} else {
-			if (nextProps.data.records === this.pageDataset && nextProps.data.records === this.props.data.records && this.props.data.records === this.pageDataset) {
+			if (nextProps.data.records === this.pageDataset && nextProps.data.records === this.props.data.records && this.props.data.records === this.pageDataset && this.props.header === nextProps.header) {
 				return false;
 			}
+		}
+		if (this.props.headerToggle && this.pageHeader !== nextProps.header) {
+			
+			this.pageHeader = _.cloneDeep(nextProps.header);
 		}
 		return true;
 
@@ -116,31 +127,32 @@ class Grid extends React.Component {
 					if (this.props.tree !== undefined && this.props.tree.isTree) {
 						this.gridDataset.initRecords(this.makeTreeData(this.props.data.getRecords()));
 						this.state.gridApi.setRowData(this.getTreeData(this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy)));
+						
 					} else {
 						this.gridDataset.initRecords(this.props.data.getRecords());
 						this.state.gridApi.setRowData(this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+						
 					}
 				} else {
 					// 최초 그리드 셋팅
 					if (this.gridDataset.getRecords().length === 0 || this.propDataset.length === 0) {
 						this.setInfiniteGridData('R');
 					} else {
-							// infinte 데이터 추가 시, 현재 페이지 데이터의 recid와 props recid 더 큰 경우에는 page 데이터 갱신						
-							if (this.propDataset[0]['recid'] === this.props.data.getRecords()[0]['recid']) {
+						// infinte 데이터 추가 시, 현재 페이지 데이터의 recid와 props recid 더 큰 경우에는 page 데이터 갱신
+						if (this.propDataset[0]['recid'] === this.props.data.getRecords()[0]['recid']) {
+							this.setInfiniteGridData('R');
+						} else {
+							if (this.pageDataset[0]['recid'] === this.props.data.getRecords()[0]['recid']) {
+								// recid가 같은 경우는 재조회로 간주하고 데이터 재 셋팅
 								this.setInfiniteGridData('R');
 							} else {
-								if (this.pageDataset[0]['recid'] === this.props.data.getRecords()[0]['recid']) {
-									// recid가 같은 경우는 재조회로 간주하고 데이터 재 셋팅
-									this.setInfiniteGridData('R');
-								} else {
-									this.setInfiniteGridData('A');
-								}
+								this.setInfiniteGridData('A');
 							}
+						}
 					}
 				}
 			}
 		}
-		
 	}
 	/* Event Zone */
 	onGridReady = (event) => {
@@ -148,14 +160,16 @@ class Grid extends React.Component {
 			...this.state, gridApi: event.api, columnApi: event.columnApi
 		}, () => {
 			if (this.state.gridApi !== undefined && this.state.gridApi !== null && Object.keys(this.state.gridApi).length !== 0) this.pageDataset = this.props.data.getRecords();
-			this.state.gridApi.sizeColumnsToFit(); 
+
 			this.props.onGridReady({id : this.props.id, gridApi : this.state.gridApi, grid : this , columnApi : this.state.columnApi});
-		});
-	};
+		})
+	}
 	onColumnResized = (e) => { }
-	onGridSizeChanged = (e) => { e.api.sizeColumnsToFit(); }
+	onGridSizeChanged = (e) => { 
+		//e.api.sizeColumnsToFit(); 
+	}
 	onRowDataUpdated = (e) => {
-		e.api.sizeColumnsToFit(); 
+		// e.api.sizeColumnsToFit(); 
 	}
 	onBodyScroll = (e) => {
 		if (this.props.infinite) {
@@ -173,10 +187,8 @@ class Grid extends React.Component {
 	onPaginationChanged = (e) => {
 
 	};
-
 	onCellValueChanged = (e) => {
 		let _newValue = e.newValue;
-
 		if (e.oldValue !== _newValue) {
 			if (e.data['rowtype'] !== newScrmObj.constants.crud.create) {
 				this.gridDataset.setValue(this.gridDataset.indexOf('recid', e.data.recid), e.column.colId, _newValue);
@@ -212,24 +224,33 @@ class Grid extends React.Component {
 				if (gridDataset[intA]['PARENT_ID'] === e.data['ID'] ) {
 					gridDataset[intA]['_display'] = !gridDataset[intA]['_display'];	
 					if (gridDataset[intA]['EXPAND']) {
-						gridDataset = this.doDisplayChange({gridDataset: gridDataset, data: gridDataset[intA], isSub: true});	
+						gridDataset = this.doDisplayChange({gridDataset: gridDataset, data: gridDataset[intA], isSub: true});
 					}
 				}
 			}
-		}		
-		
+		}
 		return gridDataset;
 	}
 	onActionCellClicked = (e) => {
 		if (this.props.id === null || this.props.id === undefined) { return; }
 
 		if (this.props.tree !== undefined && this.props.tree.isTree) {
-			if (e.column.colId === '_HIERARCHY') {
-				let gridDataset = this.gridDataset.getRecords();
-				let newDataset = this.doDisplayChange({gridDataset: gridDataset, data: e.data, isSub: false});
-				
-				this.gridDataset.setRecords(newDataset);
-				e.api.setRowData(this.getTreeData(this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy)));
+			if (e.column.colId === '_TREE') {				
+				if (e.data.childCNT !== 0) {		
+					let gridDataset = this.makeTreeData(this.props.data.records);
+					let newDataset  = this.doDisplayChange({gridDataset: gridDataset, data: e.data, isSub: false});
+					
+					this.gridDataset.setRecords(newDataset);
+					e.api.setRowData(this.getTreeData(this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy)));
+
+					if (this.props.rowSelection === "multiple") {
+						this.state.gridApi.forEachNode((node) => { 
+							if (node.data.CHK === 'Y') { 
+								node.setSelected(true); 
+							}
+						});
+					}
+				}
 			}
 		}
 		this.props.onActionCellClicked({ id : this.props.id, data : e.data, index : e.node.id, col : e.column.colId});
@@ -238,15 +259,25 @@ class Grid extends React.Component {
 		if (this.props.id === null || this.props.id === undefined) { return; }
 
 		if (this.props.tree !== undefined && this.props.tree.isTree) {
-			if (e.column.colId === '_HIERARCHY') {
-				let gridDataset = this.gridDataset.getRecords();
-				let newDataset = this.doDisplayChange({gridDataset: gridDataset, data: e.data, isSub: false});
-				
-				this.gridDataset.setRecords(newDataset);
-				e.api.setRowData(this.getTreeData(this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy)));
+			if (e.column.colId === '_TREE') {		
+				if (e.data.childCNT !== 0) {
+					let gridDataset = this.makeTreeData(this.props.data.records);
+					let newDataset  = this.doDisplayChange({gridDataset: gridDataset, data: e.data, isSub: false});
+					
+					this.gridDataset.setRecords(newDataset);
+					e.api.setRowData(this.getTreeData(this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy)));					
+					
+					if (this.props.rowSelection === "multiple") {
+						this.state.gridApi.forEachNode((node) => { 
+							if (node.data.CHK === 'Y') { 
+								node.setSelected(true); 
+							}
+						});
+					}
+				}
 			}
 		}
-		this.props.onCellClicked({ id : this.props.id, data : e.data, index : e.node.id, col : e.column.colId});
+		this.props.onCellClicked({ id : this.props.id, data : e.data, index : e.node.id, col : e.column.colId, node: e.node});
 	};
 	onCellDoubleClicked = (e) => {
 		if (this.props.id === null || this.props.id === undefined) { return; }
@@ -258,7 +289,7 @@ class Grid extends React.Component {
 	};
 	onRowClicked = (e) => {
 		if (this.props.id === null || this.props.id === undefined) { return; }
-		this.props.onRowClicked({ id : this.props.id, data : e.data, index : e.node.id });
+		this.props.onRowClicked({ id : this.props.id, data : e.data, index : e.node.id, node: e.node });
 	};
 	onRowDoubleClicked = (e) => {
 		if (this.props.id === null || this.props.id === undefined) { return; }
@@ -279,7 +310,7 @@ class Grid extends React.Component {
 	};
 	onRowSelected = (e) => {
 		if (this.props.id === null || this.props.id === undefined) { return; }
-		this.props.onRowSelected({ id : this.props.id, data : e.data, index : e.node.id, event : e});
+		this.props.onRowSelected({ id : this.props.id, data : e.data, index : e.node.id, event : e, node: e.node});
 	}
 	onSortChanged = (e) => {
 		if (this.props.rowNum) {
@@ -348,7 +379,6 @@ class Grid extends React.Component {
 		}
 		return rtnArr;
 	}
-
 	makeTreeData = (data) => {
 		let rtnVal = data;
 		if (this.props.tree.isTree) {
@@ -358,8 +388,9 @@ class Grid extends React.Component {
 						if (this.props.tree.open) {
 							rtnVal[intA]['_display'] = true;
 							rtnVal[intA]['EXPAND'] = true;
+
 						} else {
-							if (rtnVal[intA]['LEVEL'] !== 1) {
+							if (rtnVal[intA]['LEVEL'] !== "1") {
 								rtnVal[intA]['_display'] = false;
 								rtnVal[intA]['EXPAND'] = false;
 							} else {
@@ -367,14 +398,16 @@ class Grid extends React.Component {
 								rtnVal[intA]['EXPAND'] = false;
 							}
 						}
+									
 						let childCnt = 0;
 
-						for (let intB = 0; intB < rtnVal.length; intB++) {
+						for (let intB = 0; intB < rtnVal.length; intB++) {									
 							if (rtnVal[intB]['PARENT_ID'] === rtnVal[intA]['ID']) {
-								childCnt += 1;
+								childCnt ++;
 								
 							}
 						}
+
 						rtnVal[intA]['childCNT'] = childCnt;
 					}
 				}
@@ -382,7 +415,6 @@ class Grid extends React.Component {
 		}
 		return rtnVal;
 	};
-
 	getTreeData = (data) => {
 		let rtnVal = [];
 		for (let intA = 0; intA < data.length; intA++ ) {
@@ -398,7 +430,6 @@ class Grid extends React.Component {
 		}
 		return rtnVal;
 	};
-
 	setTreeOrder = (records, needTomove, parentID) => {
 		let changed = [];
 
@@ -430,9 +461,9 @@ class Grid extends React.Component {
 				if (!isMoved) {
 					changed.push(records[i]);
 				}
-			} 
+			}
 		}
-		
+
 		for(let i = 0; i < changed.length; i ++) {
 			let cnt = 0;
 			for(let j = 0; j < changed.length; j ++) {
@@ -455,9 +486,9 @@ class Grid extends React.Component {
 			let parentID = standardNode === '' ? "0" : standardNode.data["ID"];
 
 			const records = JSON.parse(JSON.stringify(gridData));
-				
+
 			let needTomove = this.findRowToMove ({org: records, target: e.nodes, parentLV: parentLV, parentID: parentID, isSub: false})
-		
+
 			let changed = this.setTreeOrder(records, needTomove, parentID);
 
 			for(let i = 0; i < changed.length; i ++) {
@@ -469,15 +500,14 @@ class Grid extends React.Component {
 					if (node['data']['rowtype'] === newScrmObj.constants.crud.read) {
 						if (node['rowIndex'] !== Number(node['id'])) {
 							node['data']['rowtype'] = newScrmObj.constants.crud.update;
-							
+
 						}
 					}
 				}
 				Object.assign(gridData.filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy)[index], node['data']);
 			});
 		}
-		
-	
+
 		if (this.gridDataset.orgrecords.length > 0) {
 			this.gridDataset.orgrecords.forEach(
 				(item, index) => {
@@ -515,7 +545,6 @@ class Grid extends React.Component {
 
 		this.props.onRowDragEnd({ id : this.props.id, data : gridData,  dragData : e.nodes});
 	}
-
 	/* Method Zone */
 	doFilter = (value) => {
 		this.state.gridApi.setQuickFilter(value);
@@ -534,7 +563,7 @@ class Grid extends React.Component {
 	};
 	getDeSelectedRows = () => {
 		let deSelectRows = [];
-		this.state.gridApi.forEachNode((node, index) => {  
+		this.state.gridApi.forEachNode((node, index) => {
 			if (!node.isSelected()) deSelectRows.push(node.data);
 		});
 		return deSelectRows;
@@ -549,7 +578,7 @@ class Grid extends React.Component {
 
 	addGridRow = () => {
 		let rtnJson = this.props.onBeforeInsertRow({ id : this.props.id });
-		
+
 		if (rtnJson['rtn'] !== false) rtnJson['rtn'] = true;
 
 		if (rtnJson['rtn']) {
@@ -606,7 +635,7 @@ class Grid extends React.Component {
 				}
 				this.gridDataset.setRecords(rtnVal.filter(item => item['rowtype'] !== newScrmObj.constants.crud.remove));
 				this.state.gridApi.setRowData(this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
-				
+
 				this.moveRow(index, true);
 
 				if (this.props.id === null || this.props.id === undefined) { return; }
@@ -631,7 +660,7 @@ class Grid extends React.Component {
 		}
 
 	}
-	downExcelData = () => {		
+	downExcelData = () => {
 		let exelData = [];
 		this.state.gridApi.forEachNode((item) => {
 			if (item['data']['rowtype'] !== newScrmObj.constants.crud.destroy)  {
@@ -643,23 +672,17 @@ class Grid extends React.Component {
 
 		let lengthCheck = this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.create)
 
-		if (this.props.infinite && Number(this.props.totalRowCnt) > 1000) {
-			ComLib.openDialog('A', 'SYSI0010', ['1000건 이내의 결과만 엑셀다운 가능합니다. 검색 조건을 변경하여 다시 시도 부탁드립니다.']);
+		if (this.props.infinite && this.props.totalRowCnt <= lengthCheck.length) {	
+			ExcelLib.exportToExcel(setGridHeader(this.props.header, this.props), exelData, true, this.props.areaName, this.state.gridApi);
 
-		} else if (this.props.infinite && this.props.totalRowCnt <= lengthCheck.length) {	
-			ExcelLib.exportToExcel(setGridHeader(this.props.header, this.props), exelData, true, this.props.areaName, this.props.orgMenu);
-			// 엑셀 파일 저장 DB 추가
 		} else if (this.props.infinite) {
 			this.props.onScrollEnd({ id : this.props.id, excelLoadAll: true});
-			
 		} else {
-			ExcelLib.exportToExcel(setGridHeader(this.props.header, this.props), exelData, true, this.props.areaName, this.props.orgMenu);
-			// 엑셀 파일 저장 DB 추가
+
+			ExcelLib.exportToExcel(setGridHeader(this.props.header, this.props), exelData, true, this.props.areaName, this.state.gridApi);
 		}
 		// ExcelLib.exportToExcel(setGridHeader(this.props.header, this.props), this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy), true, this.props.areaName);
-		
 	}
-
 	moveRow = (index, selected) => {
 		let data, rtnNode;
 		this.state.gridApi.forEachNode((node, idx) => {if (idx === index) data = node;});
@@ -702,10 +725,63 @@ class Grid extends React.Component {
 			this.state.gridApi.ensureIndexVisible(0, 'top');
 		}
 	}
+	onFilterHeadClick =(e) => {
+		let newHeader = _.cloneDeep(this.pageHeader);
+		// this.propDataset = this.gridDataset.getRecords()
+		newHeader.map((header, key) => {
+			if (header.filterToggle === 'Y') {
+				if (key === e.index) {					
+					this.state.columnApi.setColumnVisible(header.colId, !header.filterVal)
+					this.state.gridApi.sizeColumnsToFit();
+					header.filterVal = !header.filterVal;
+				}
+			}
+			return null;
+		})
+		this.props.onHeaderChange({ id : this.props.id, newHeader: newHeader})
+	}
+	expandAllRow = () => {
+		let orgRecord = this.makeTreeData(this.props.data.records);
+		
+		for (let i = 0; i < orgRecord.length; i ++) {
+			orgRecord[i].EXPAND = true;
+		}
+
+		this.gridDataset.setRecords(orgRecord.filter(item => item['rowtype'] !== newScrmObj.constants.crud.remove));
+		this.state.gridApi.setRowData(this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy));
+		if (this.props.rowSelection === "multiple") {
+			this.state.gridApi.forEachNode((node) => { 
+				if (node.data.CHK === 'Y') { 
+					node.setSelected(true); 
+				}
+			});
+		}
+	}
+	contractAllRow = () => {
+		let orgRecord = this.makeTreeData(this.props.data.records);
+		
+		for (let i = 0; i < orgRecord.length; i ++) {
+			orgRecord[i].EXPAND = false;
+
+			if (orgRecord[i].LEVEL !== "1") {
+				orgRecord[i]._display = false;
+			}
+		}
+
+		this.gridDataset.setRecords(orgRecord.filter(item => item['rowtype'] !== newScrmObj.constants.crud.remove));
+		this.state.gridApi.setRowData(this.gridDataset.getRecords().filter(item => item['rowtype'] !== newScrmObj.constants.crud.destroy && item._display));
+		if (this.props.rowSelection === "multiple") {
+			this.state.gridApi.forEachNode((node) => { 
+				if (node.data.CHK === 'Y') { 
+					node.setSelected(true); 
+				}
+			});
+		}
+	}
 	render () {
 		return (
 			<React.Fragment>
-				{	(this.props.noName && !this.props.addRowBtn && !this.props.delRowBtn && !this.props.dnlExcelBtn) ?
+				{	(this.props.noName && !this.props.addRowBtn && !this.props.delRowBtn && !this.props.dnlExcelBtn && !this.props.infinite) ?
 						null
 					:	<div style={{display : 'block', width:'100%', height : '30px'}}>
 							<LFloatArea>
@@ -732,10 +808,39 @@ class Grid extends React.Component {
 									null
 
 								}
+								{
+									(this.props.headerToggle && this.props.data.records.length > 0) 
+									?
+									<div className="grid_RFloatArea" style={{paddingLeft: "10px"}}>
+										{
+											this.props.header.map((header, key) => {
+												if (header.filterToggle === 'Y') {
+													return (<Checkbox
+														key = {'checkbox_' + this.props.id + "_header_"+ key}
+														id  = {'checkbox_' + this.props.id + "_header_"+ key}
+														index = {key}
+														value = {header.headerName}
+														keyProp =  {header.field}
+														checked = {header.filterVal? 'Y': 'N'}
+														onClick = {this.onFilterHeadClick}
+													/>)
+												} else {
+													return null
+												}
+											})
+										}
+									</div>
+									:
+									null
+									
+								}
 							</LFloatArea>
-							<RFloatArea>								
+							<RFloatArea>
 								{/* <button className="scrm-btn xs grey-o i"onClick={this.undoCellEditng}><i className="xi-undo"/></button>
 								<button className="scrm-btn xs grey-o i"onClick={this.redoCellEditng}><i className="xi-redo"/></button> */}
+								{(this.props.tree) ? <Button onClick={this.expandAllRow}   size="xs" innerImage={true} icon = {'arrowDn'} ml="5px"/> : null}
+								{(this.props.tree) ? <Button onClick={this.contractAllRow} size="xs" innerImage={true} icon = {'arrowUp'} ml="5px"/> : null}
+
 								{(this.props.addRowBtn) ? <Button onClick={this.addGridRow} size="xs" innerImage={true} icon = {'add'} ml="5px" tooltip={"추가"}/> : null}
 								{(this.props.delRowBtn) ? <Button onClick={this.delGridRow} size="xs" innerImage={true} icon = {'del'} ml="5px" tooltip={"삭제"}/> : null}
 								{(this.props.dnlExcelBtn) ? <Button onClick={this.downExcelData} size="xs" innerImage={true} icon = {'save'} ml="5px" tooltip={"엑셀다운로드"}/> : null}
@@ -744,10 +849,12 @@ class Grid extends React.Component {
 				}
 				<div className= {"ag-theme-alpine"} style={ {width:'100%', height: this.props.height} }>
 					<AgGridReact 
+						// pagination = {true}
+						// paginationPageSize = {3}
 						onGridReady={this.onGridReady}
 						alwaysShowVerticalScroll = { false }
 						frameworkComponents = {{
-							date : DateComponent,
+							dates : DateComponent,
 							rangeDate : RangeDateComponent,
 							rangeTime : RangeTimeComponent,
 							time : TimeComponent,
@@ -755,20 +862,21 @@ class Grid extends React.Component {
 							selectbox : SelectboxRenderer,
 							delButton : DelRowButton,
 							customEditor : CustomEditor,
-							actionButton : ActionButton,							
+							actionButton : ActionButton,
 							customTooltip: CustomToolTip,
 						}}
 						tooltipShowDelay={0}
-
 						// cellRender 전용 추후 컴토후 컴포넌트화
 						// domLayout = {'autoHeight'}
 						components = { this.props.components }
 						context = {{ componentParent : this }}
 						suppressMovableColumns = {this.props.suppressMovableColumns}
+						suppressPropertyNamesCheck = {true}
+						stopEditingWhenCellsLoseFocus={false}
 						multiSortKey = {'ctrl'}
 						headerHeight = {30}
 						rowHeight = {30}
-						defaultColDef = {{ 
+						defaultColDef = {{
 								resizable: true
 							,	sortable : this.props.sort
 							,	editable : false
@@ -779,25 +887,24 @@ class Grid extends React.Component {
 						rowDragManaged = {this.props.rowDrag}
 						enableMultiRowDragging = {true}
 
-
 						suppressDragLeaveHidesColumns={true}
 						suppressRowClickSelection = {this.props.suppressRowClickSelection}
 						suppressRowDeselection = {(this.props.suppressRowDeselection) ? this.props.suppressRowDeselection : false}
 						stopEditingWhenGridLosesFocus = {true}
 
-						columnDefs = { setGridHeader(this.props.header, this.props) }
+						columnDefs = { setGridHeader(this.orgPageHeader, this.props) }
 						rowBuffer = {100}
-
+						
 						undoRedoCellEditing = {true}
 						enableCellChangeFlash = {false}
 						undoRedoCellEditingLimit = {10}
-						
+
 						localeText = {{noRowsToShow: '조회된 결과가 존재하지 않습니다.'}}
 						rowSelection= {this.props.rowSelection}
 						colResizeDefault= {'shift'}
 
 						// 로우 스판
-						suppressRowTransform={checkHeaderProp(this.props.header, 'rowSpan')}
+						suppressRowTransform={checkHeaderProp(this.orgPageHeader, 'rowSpan')}
 						// 로우 스크롤 시, 신규 데이터에 대한 Scroll Top이동을 막을 건지 설정
 						suppressScrollOnNewData={this.props.doNotScrollTop}
 
@@ -825,7 +932,6 @@ class Grid extends React.Component {
 					/>
 				</div>
 			</React.Fragment>
-			
 		)
 	}
 }

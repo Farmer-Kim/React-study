@@ -10,12 +10,12 @@ import {
 	AppPanel, HeadPanel, MiddlePanel, SidePanel, MainPanel, ComponentPanel, FooterPanel
 ,	FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup, TrayPanel, SearchPanel
 } from './Layout';
-import {Menu, HeaderMenu} from './Menu';
+import {HeaderMenu} from './Menu';
 import Player from './Player';
 import RealTimeViewer from './RealTimeViewer';
 
 import ProgressBar from './Progressbar';
-import {Selectbox, MulitSelectBox, CentListSelectBox, TeamListSelectBox, UsrListSelectBox} from './SelectBox';
+import {Selectbox, MulitSelectBox, CentListSelectBox, TeamListSelectBox, UsrListSelectBox, TreeSelectbox} from './SelectBox';
 import CustomSlide from './Slide'
 import Switch from './Switch'
 import {Tabs, TabPanel} from './Tab';
@@ -24,6 +24,7 @@ import Textarea from './Textarea';
 import {TrayDiv} from './Tray';
 import CsState from './CsState';
 import Diagram from './Diagram';
+import Tree from './Tree';
 
 export {
 	BasicButton, IconButton,
@@ -35,10 +36,10 @@ export {
 	Checkbox, Radio, Textfield, InputCalendar, TextPasswdfield, RangeInputCalendar, MultiCheckBox,
 	Label,
 	AppPanel, HeadPanel, MiddlePanel, SidePanel, MainPanel, ComponentPanel, FooterPanel, FlexPanel, FullPanel, SubFullPanel, LFloatArea, RFloatArea, RelativeGroup, TrayPanel, SearchPanel,
-	Menu, HeaderMenu,
+	HeaderMenu,
 	Player,
 	ProgressBar,
-	Selectbox, MulitSelectBox, CentListSelectBox, TeamListSelectBox, UsrListSelectBox,
+	Selectbox, MulitSelectBox, CentListSelectBox, TeamListSelectBox, UsrListSelectBox, TreeSelectbox,
 	CustomSlide,
 	Switch,
 	Tabs, TabPanel,
@@ -48,5 +49,6 @@ export {
 	CsState,
 	RealTimeViewer,
 	CsButton,
-	Diagram
+	Diagram,	
+	Tree
 };

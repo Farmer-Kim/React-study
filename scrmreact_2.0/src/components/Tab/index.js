@@ -35,14 +35,17 @@ class Tabs extends React.Component {
 						}
 					</ul>
 				</div>
-				<div className='scrm-tab-container' style={{height: this.props.height}}>
+				
 					{   
-						React.Children.toArray(this.props.children).filter(child => child.props.display !== 'none').map((child) => {
-							if (child.props.index !== this.state.active) return undefined;
-							return child.props.children;
+						React.Children.toArray(this.props.children).filter(child => child.props.display !== 'none').map((child, index) => {
+							let display = "block";
+							if (child.props.index !== this.state.active) {
+								display = "none";
+							}
+							return <div key={index} className='scrm-tab-container' style={{height: this.props.height, display: display}}>{child.props.children}</div>;
 						})
 					}
-				</div>
+				
 			</React.Fragment>
 		);
 	}

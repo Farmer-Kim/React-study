@@ -116,6 +116,9 @@
 	  content: "\f117"; }
 	.ag-theme-alpine .ag-right-arrow:before {
 	  content: "\f126"; }
+	.ag-root-wrapper {
+		overflow: inherit !important;
+	}
 	.ag-theme-alpine .ag-root-wrapper {
 	  background-color: #fff;
 	  background-color: var(--ag-background-color, #fff); }

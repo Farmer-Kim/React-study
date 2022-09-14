@@ -1,4 +1,5 @@
 import React from 'react';
+import 'assets/styles/component.css';
 
 class Table extends React.Component {
 	setColGroup = (colGrp) => {

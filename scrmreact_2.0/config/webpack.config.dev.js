@@ -28,6 +28,7 @@ const env = getClientEnvironment(publicUrl);
 // It is focused on developer experience and fast rebuilds.
 // The production configuration is different and lives in a separate file.
 module.exports = {
+  mode: 'none',
   // You may want 'eval' instead if you prefer to see the compiled output in DevTools.
   // See the discussion in https://github.com/facebookincubator/create-react-app/issues/343.
   devtool: 'cheap-module-source-map',
@@ -84,7 +85,7 @@ module.exports = {
     // https://github.com/facebookincubator/create-react-app/issues/290
     // `web` extension prefixes have been added for better support
     // for React Native Web.
-    extensions: ['.ts', '.tsx','.web.js', '.mjs', '.js', '.json', '.web.jsx', '.jsx'],
+    extensions: ['.web.js', '.mjs', '.js', '.json', '.web.jsx', '.jsx'],
     alias: {
 
       // Support React Native Web
@@ -123,19 +124,6 @@ module.exports = {
           },
         ],
         include: paths.appSrc,
-      },
-			{
-        test: /\.(ts|tsx)$/,
-        include: paths.appSrc,
-        use: [
-          {
-            loader: require.resolve('ts-loader'),
-            options: {
-              // disable type checker - we will use it in fork plugin
-              transpileOnly: true,
-            },
-          },
-        ],
       },
       {
         // "oneOf" will traverse all following loaders until one will

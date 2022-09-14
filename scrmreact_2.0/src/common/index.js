@@ -54,7 +54,9 @@ const newScrmObj = {
 		},
 		rowtype: {
 			CREATE_OR_UPDATE: 'cu',
-			DESTROY: 'd'
+			DESTROY: 'd',
+			CREATE: 'c',
+			UPDATE: 'u'
 		}
 	}
 };
@@ -90,13 +92,16 @@ const ComLib = {
 			dialog.id = newScrmObj.constants.mdi.DIALOG;
 			document.body.appendChild(dialog);
 		}
+
+		let sendMessage = ComLib.getMsgCont(msgcd, msg);
+
 		if (type === 'C') {
 			if (typeof callback === undefined || typeof callback !== 'function') { return false; }
-			ReactDOM.render( <Dialog.ConfirmDialog open={true} message={ComLib.getMsgCont(msgcd, msg)}  onReturnVal = {callback}
+			ReactDOM.render( <Dialog.ConfirmDialog open={true} message={sendMessage}  onReturnVal = {callback}
 											onClose={ () => { document.body.removeChild(document.getElementById(newScrmObj.constants.mdi.DIALOG));} }/>
 			, document.getElementById(newScrmObj.constants.mdi.DIALOG) );
 		} else {
-			ReactDOM.render( <Dialog.AlertDialog   open={true} message={ComLib.getMsgCont(msgcd, msg)}
+			ReactDOM.render( <Dialog.AlertDialog   open={true} message={sendMessage}
 											onClose={ () => { document.body.removeChild(document.getElementById(newScrmObj.constants.mdi.DIALOG));} }/>
 			, document.getElementById(newScrmObj.constants.mdi.DIALOG) );
 		}
@@ -428,7 +433,7 @@ const ComLib = {
 	getCommCodeList: (sBigCtgCd, sMdlCtgCd) => {
 		let commCodeList = [];
 		if (!StrLib.isNull(sessionStorage.getItem('gdsCommCode'))) {
-			commCodeList = JSON.parse(sessionStorage.getItem('gdsCommCode'));
+			commCodeList = JSON.parse(sessionStorage.getItem('gdsCommCode'));	
 			if (!StrLib.isNull(sMdlCtgCd)) commCodeList = commCodeList.filter(item => item.LAG_CD === sBigCtgCd && item.MDM_CD === sMdlCtgCd);
 			else commCodeList = commCodeList.filter(item => item.LAG_CD === sBigCtgCd);
 		}
@@ -548,7 +553,91 @@ const ComLib = {
 		}
 		return arr;
 	},
+/*----------------------------------------------------------------------------------------
+	* [조직 TreeSelectbox List로 조회]
+	* @param	:	string args
+	* @return	:	array
+	* @see		:	1. 조직종류 (q = qa, c = cs, a = all)
+	*--------------------------------------------------------------------------------------*/
+	convOrgList: (args, family, orgId) => {
+		let arr     = [];		
+		let orgList = [];
+		
+		if (args === "all") {
+			orgList = ComLib.getSession("gdsOrgList");
 
+		} else if (args === "c") {
+			orgList = ComLib.getSession("gdsOrgList").filter(org => org.ORG_CS === "Y");
+
+		} else if (args === "q") {
+			orgList = ComLib.getSession("gdsOrgList").filter(org => org.ORG_QA === "Y");
+
+		}
+		
+		for (let i = 0; i < orgList.length; i++) {
+			arr.push({ID: orgList[i]["ID"], PARENT_ID: orgList[i]["PARENT_ID"], LABEL: orgList[i]["ORG_NM"]});
+		}
+
+		if (family !== undefined) {
+			if (family === "I") {
+				console.log(orgId)
+				let parentArr = ComLib.findParentOrg(orgId, [], arr);
+				let childArr  = ComLib.findChildrenOrg(orgId, [], arr);				
+				let familyArr = [];
+
+				for (let i = 0; i < arr.length; i ++) {
+					for (let j = 0; j < parentArr.length; j ++) {
+						if (arr[i].ID === parentArr[j] && arr[i].ID !== orgId) {
+							familyArr.push({ID: arr[i]["ID"], PARENT_ID: arr[i]["PARENT_ID"], LABEL: arr[i]["LABEL"], DISABLED: true})
+							break;
+						} else if (arr[i].ID === parentArr[j] && arr[i].ID === orgId) {
+							familyArr.push({ID: arr[i]["ID"], PARENT_ID: arr[i]["PARENT_ID"], LABEL: arr[i]["LABEL"], DISABLED: false})
+							break;
+						} 
+					}	
+					for (let j = 0; j < childArr.length; j ++) {
+						if (arr[i].ID === childArr[j]) {
+							familyArr.push({ID: arr[i]["ID"], PARENT_ID: arr[i]["PARENT_ID"], LABEL: arr[i]["LABEL"], DISABLED: false})
+							break;
+						} 
+					}					
+				}
+				arr = familyArr;
+			}
+		}
+		return arr;
+	},
+	findParentOrg: (expandId, parentArr, data) => {
+		parentArr.push(expandId);
+
+		let propData = data;
+		
+		for (let i = 0; i < propData.length; i ++) {
+			if (propData[i].ID === expandId) {
+				if (propData[i].PARENT_ID !== null) {
+					parentArr = ComLib.findParentOrg(propData[i].PARENT_ID, parentArr, data)
+					
+				}
+				
+				break;
+			} 
+		}
+
+		return parentArr;
+	},
+	findChildrenOrg: (parentId, ChildArr, data) => {
+		let propData = data;
+		
+		for (let i = 0; i < propData.length; i ++) {
+			if (propData[i].PARENT_ID === parentId) {
+				ChildArr.push(propData[i].ID)
+				ChildArr = ComLib.findChildrenOrg(propData[i].ID, ChildArr, data)
+					
+			} 
+		}
+
+		return ChildArr;
+	},
 	/*----------------------------------------------------------------------------------------
 	* [메시지 코드에 해당하는 메시지 내용을 갖고 온다]
 	* @param	:	string msgcd, array args
@@ -634,6 +723,16 @@ const ComLib = {
 			arrUsrList = arrUsrList.filter(usr => usr.ACT_STA_CD === 'A');
 
 		return arrUsrList;
+	},
+	getFuncAuth: (strFuncKey) => {
+		const hasAuth = ComLib.getSession("gdsFuncInfo").filter(func => func.FUNC_ID === strFuncKey).length > 0;
+		
+		if (hasAuth) {
+			return true;
+			
+		} else {
+			return false;
+		}
 	},
 	getConstList: (objDs, blnActive) => { //Active Filtering
 		if (ComLib.isNull(blnActive)) blnActive = true;
@@ -1099,10 +1198,10 @@ const StrLib = {
 					   실패 => "" return
 	*--------------------------------------------------------------------------------------*/
 	getTrim: (arg) => {
-		var str = new String(arg);
+		var str = String(arg);
 		if (str === null || str === "null") return "";
-		if (new String(str).valueOf() === "undefined") return "";
-		if (new String(str) === null) return "";
+		if (String(str).valueOf() === "undefined") return "";
+		if (String(str) === null) return "";
 		return str.replace(/(^\s*)|(\s*$)/g, "");
 	},
 
@@ -1158,31 +1257,6 @@ const StrLib = {
 
 		sRet += sNum.substr(nEnd);
 		return sRet;
-	},
-	/*----------------------------------------------------------------------------------------
-	* [Array에 있는 값들을 Distinct(중복제거)한다]
-	* @param	:	array aOrg
-	* @return	:	array
-	* @see		: 	1. aOrg : 중복을 제거할 원래 Array ( 예 : (1,1,2,2,3,4,5) )
-					2. 성공 => 중복이 제거된 Array ( 예 : (1,2,3,4,5) ) return,
-					   실패 => 빈 Array return
-	*--------------------------------------------------------------------------------------*/
-	getDistinct: (aOrg) => {
-		var aDist = new Array();
-		if (StrLib.isNull(aOrg)) return aDist;
-
-		for (var i = 0; i < aOrg.length; i++) {
-			var vDist = aOrg[i];
-			var flag = false;
-			for (var j = 0; j < aDist.length; j++) {
-				if ("x" + aDist[j] === "x" + vDist) {
-					flag = true;
-					break;
-				}
-			}
-			if (flag === false) aDist[aDist.length] = vDist;
-		}
-		return aDist;
 	},
 	/*----------------------------------------------------------------------------------------
 	* [넘겨받은  String 데이터를 Date Format으로 변경한다.]
@@ -1247,33 +1321,17 @@ const FileLib = {
 	*--------------------------------------------------------------------------------------*/
 };
 const ExcelLib = {
-	exportToExcel : (header, data, rtn, grdId, menuID) => {
+	exportToExcel : (header, data, rtn, grdId, gridApi) => {
 		if (rtn) {
-			let fileName = "[" + DateLib.getTodayTime() + "]_" + grdId + '.xls';
+			let fileName = "[" + DateLib.getTodayTime() + "]_" + grdId + '_excel.xls';
 			let excelComponent = document.createElement('a');
 			excelComponent.setAttribute('id', '_aExcelExport');
 			excelComponent.setAttribute('download', fileName);
 			excelComponent.setAttribute('style', "display:none");
-			excelComponent.setAttribute('href', "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + ExcelLib.base64(ExcelLib.export(ExcelLib.convertDataStructureToTable(header, data))));
-			// excelComponent.setAttribute('href', "data:application/vnd.ms-excel;base64," + ExcelLib.base64(ExcelLib.export(ExcelLib.convertDataStructureToTable(header, data))));
-			
+			excelComponent.setAttribute('href', "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + ExcelLib.base64(ExcelLib.export(ExcelLib.convertDataStructureToTable(header, data, gridApi))));
 			document.getElementById('root').appendChild(excelComponent);
 			document.getElementById('_aExcelExport').click();
 			document.getElementById('root').removeChild(document.getElementById('_aExcelExport'));
-
-			let transManager = new TransManager();
-			transManager.setTransId("ExcelLib_C01");
-			transManager.setTransUrl(transManager.constants.url.common);
-		
-			transManager.addConfig({
-				dao        : transManager.constants.dao.base,
-				crudh      : transManager.constants.crudh.create,
-				sqlmapid   : "SUP.C_setFileLog",
-				datasetsend: "dsFileLog",
-			});
-			transManager.addDataset('dsFileLog', [{MNU_ID:menuID, TP_CD:"DL", FILE_NM: fileName}]);			
-			transManager.agent();
-			
 		}
 	},
 	getHeaderDepth : (header) => {
@@ -1317,6 +1375,16 @@ const ExcelLib = {
 					result += ">";
 					result += header[intB]['headerName'].replace(/\*/g,'');
 					result += "</th>";
+				} else if (header[intB]['hide'] && header[intB]['showExcel']){
+					result += "<th style= text-align: 'center'; ";
+					if (header[intB].hasOwnProperty('children')) {
+						result += "colspan='" + header[intB]['children'].length + "';";
+					} else {
+						result += "rowspan='" + getMaxDepth + "';";
+					}
+					result += ">";
+					result += header[intB]['headerName'].replace(/\*/g,'');
+					result += "</th>";
 				}
 			}
 			result += "</tr>";
@@ -1349,7 +1417,7 @@ const ExcelLib = {
 		setColumn(header, bodyHeader);
 		return bodyHeader;
 	},
-	convertDataStructureToTable : (header, data) => {
+	convertDataStructureToTable : (header, data, gridApi) => {
 		let result;
 
 		try {
@@ -1391,6 +1459,38 @@ const ExcelLib = {
 											data : item
 										,	value : item[head['field']]
 										,	node : item['node']
+										,   column: {colId: head['field']}
+										,   api: gridApi
+								});
+							} else {
+								result += item[head['field']];
+							}
+							result += "</td>";
+						}
+					} else if (head['hide'] && head['showExcel']) {
+						if (item.hasOwnProperty(head['field'])) {
+							// 데이터 미 존재시 null로 찍히는걸 방지
+							if (item[head['field']] === null ) { item[head['field']] = ''; }
+							if (head['width'] !== undefined && head['width'] !== null && head['width'] !== '') {
+								result += "<td style= 'mso-number-format: \\@; width: " + head['width'] + "px;";
+								if (head['textAlign'] !== undefined && head['textAlign'] !== null && head['textAlign'] !== ''){
+									result += "text-align: " + head['textAlign'] + ";";
+								}
+							} else {
+								if (head['textAlign'] !== undefined && head['textAlign'] !== null && head['textAlign'] !== ''){
+									result += "<td style= 'mso-number-format: \\@; text-align: " + head['textAlign'] + ";";
+								} else {
+									result += "<td style= 'mso-number-format: \\@;";
+								}
+							}
+							result += "'>";
+							if (typeof head['valueFormatter'] === 'function') {
+								result += head['valueFormatter']({ 
+											data : item
+										,	value : item[head['field']]
+										,	node : item['node']
+										,   column: {colId: head['field']}
+										,   api: gridApi
 								});
 							} else {
 								result += item[head['field']];
@@ -1460,7 +1560,7 @@ const DateLib = {
 					   실패 => -1 return
 	*--------------------------------------------------------------------------------------*/
 	getLastDateNum: (sDate) => {
-		if (typeof sDate !== "string") sDate = new String(sDate);
+		if (typeof sDate !== "string") sDate = String(sDate);
 		let nMonth, nLastDate;
 
 		if (StrLib.isNull(sDate)) return -1;
@@ -1487,7 +1587,7 @@ const DateLib = {
 					   sDate가 입력되지 않은 경우	=> false return
 	*--------------------------------------------------------------------------------------*/
 	isLeapYear: (sDate) => {
-		if (typeof sDate !== "string") sDate = new String(sDate);
+		if (typeof sDate !== "string") sDate = String(sDate);
 		let ret, nY;
 
 		if (StrLib.isNull(sDate)) return false;
@@ -1511,7 +1611,7 @@ const DateLib = {
 					   실패 => "" return
 	*--------------------------------------------------------------------------------------*/
 	getLastDate: (sDate) => {
-		if (typeof sDate !== "string") sDate = new String(sDate);
+		if (typeof sDate !== "string") sDate = String(sDate);
 		if (StrLib.isNull(sDate)) return "";
 		let nLastDate = DateLib.getLastDateNum(sDate);
 		return sDate.substr(0,6) + nLastDate.toString();
@@ -1527,7 +1627,7 @@ const DateLib = {
 					   실패 => "" return
 	*--------------------------------------------------------------------------------------*/
 	getAddDate: (sDate, nOffset) => {
-		if (typeof sDate !== "string") sDate = new String(sDate);
+		if (typeof sDate !== "string") sDate = String(sDate);
 
 		if (StrLib.isNull(sDate) || StrLib.isNull(nOffset)) return "";
 
@@ -1556,7 +1656,7 @@ const DateLib = {
 					예를 들어, sDate="20120531", nOffset=-1일 경우 return="20120430" 이 된다.
 	*--------------------------------------------------------------------------------------*/
 	getAddMonth: (sDate, nOffset) => {
-		if (typeof sDate !== "string") sDate = new String(sDate);
+		if (typeof sDate !== "string") sDate = String(sDate);
 
 		if (StrLib.isNull(sDate) || StrLib.isNull(nOffset)) return "";
 		sDate = StrLib.getTrim(sDate);
@@ -1697,6 +1797,19 @@ const DateLib = {
 		if (sDate.length === 8) return new Date(parseInt(sDate.substring(0, 4)), parseInt(sDate.substring(4, 6)) - 1, parseInt(sDate.substring(6, 8)));
 		else return '';
 	},
+	/*----------------------------------------------------------------------------------------
+	* [string => YYYY-MM-DD]
+	* @param	:	string sDate
+	* @return	:	date
+	* @see		:	1. sDate : yyyyMMdd 형태의 날짜 문자열
+					2. 성공 => Date ObjectYYYY-MM-DD 형태로 return
+					   실패 => '' return
+	*--------------------------------------------------------------------------------------*/
+	getStringYymmdd: (sDate) => {
+		if (StrLib.isNull(sDate)) return '';
+		if (sDate.length === 8) return sDate.substring(0, 4) + "-" + sDate.substring(4, 6) + "-" + sDate.substring(6, 8);
+		else return '';
+	},
 };
 
 const DataLib = {
@@ -1762,6 +1875,8 @@ const DataLib = {
 
 			if (strRowType !== null && (strRowType === newScrmObj.constants.rowtype.CREATE_OR_UPDATE)) arrRecords = arrRecords.filter(item => item.rowtype === 'c' || item.rowtype === 'u');
 			else if (strRowType !== null && strRowType === newScrmObj.constants.rowtype.DESTROY) arrRecords = arrRecords.filter(item => item.rowtype === 'd');
+			else if (strRowType !== null && strRowType === newScrmObj.constants.rowtype.CREATE) arrRecords = arrRecords.filter(item => item.rowtype === 'c');
+			else if (strRowType !== null && strRowType === newScrmObj.constants.rowtype.UPDATE) arrRecords = arrRecords.filter(item => item.rowtype === 'u');
 
 			for (var idxA = 0; idxA < arrRecords.length; idxA++) {
 				for (var idxB = 0; idxB < arrOrgRecs.length; idxB++) {
@@ -1796,8 +1911,10 @@ const DataLib = {
 					if (this.orgrecords[idxA].recid === recid) {
 						for (var idxB = 0; idxB < arrCol.length; idxB++) {
 							if (this.records[index][arrCol[idxB]] !== this.orgrecords[idxA][arrCol[idxB]]) {
-								blnModified = true;
-								break;
+								if (arrCol[idxB] !== "recid") {
+									blnModified = true;
+									break;
+								}
 							}
 						}
 					}
@@ -1855,20 +1972,13 @@ const DataLib = {
 			return index;
 		},
 		find: function(column, value) {
-			return this.records.filter((new Function(`return obj => obj.${column}=='${value}'`))());
+			return this.records.filter(record => record[column] === value);
 		},
 		findFirst: function(column, value) {
 			return this.getRow(this.indexOf(column, value));
 		},
 		findLast: function(column, value) {
 			return this.getRow(this.lastIndexOf(column, value));
-		},
-		filter: function(filterexpr) {
-			return this.records.filter((new Function(`return ds => ${filterexpr}`))());
-		},
-		lookup: function(column, value, target) {
-			var record = this.findFirst(column, value);
-			return record === undefined ? undefined : record[target];
 		},
 		isUpdated: function() {
 			if (this.records.filter(obj => obj.rowtype !== 'r').length > 0) return true;
@@ -1881,8 +1991,8 @@ const DataLib = {
 			}
 			if (records.length > 0) {
 				var arrCol = Object.keys(records[0]);
-				for (var idx = 0; idx < arrCol.length; idx++) {
-					this.header[arrCol[idx]] = "";
+				for (var idxB = 0; idxB < arrCol.length; idxB++) {
+					this.header[arrCol[idxB]] = "";
 				}
 			} else {
 				this.header = {};
@@ -1949,7 +2059,7 @@ class TransManager {
 				base: '0'
 			},
 			config: {
-				dao: '',
+				dao: '0',
 				crudh: '',
 				sqlmapid: '',
 				datasetmap: '',
@@ -1971,7 +2081,7 @@ class TransManager {
 			epytwor: newScrmObj.constants.crud,
 			gifnoc: [],
 			datasets: {},
-			reyolpme: { "CENT_CD": "", "TEAM_CD": "", "USR_CD" : "", "AUTH_LV": "", "LOG_IP": "" },
+			reyolpme: { "CENT_CD": "", "TEAM_CD": "", "USR_CD" : "", "AUTH_CD": "", "CONN_IP": "" },
 			noisivid: ComLib.getSession("SYSTEM_DV"),
 		};
 		this.datatype = {
@@ -1984,7 +2094,7 @@ class TransManager {
 	initialize = () => {
 		this.transdata.epytwor = newScrmObj.constants.crud;
 		this.transdata.gifnoc = [];
-		this.transdata.reyolpme = { "CENT_CD": "", "TEAM_CD": "", "USR_CD" : "", "AUTH_LV": "", "LGN_IP": "" };
+		this.transdata.reyolpme = { "CENT_CD": "", "TEAM_CD": "", "USR_CD" : "", "AUTH_CD": "", "CONN_IP": "" };
 		this.transdata.datasets = {};
 		this.setAccessToken(ComLib.getSession('accessToken'));
 	};
@@ -1995,9 +2105,9 @@ class TransManager {
 			reyolpme = {
 				"CENT_CD": arrUser[0]["CENT_CD"],
 				"TEAM_CD": arrUser[0]["TEAM_CD"],
-				"USR_CD" : arrUser[0]["USR_ID"],
-				"AUTH_LV": arrUser[0]["AUTH_LV"],
-				"LGN_IP": arrUser[0]["LGN_IP"],
+				"USR_CD" : arrUser[0]["USR_CD"],
+				"AUTH_CD": arrUser[0]["AUTH_CD"],
+				"CONN_IP": arrUser[0]["CONN_IP"],
 			};
 		}
 		return reyolpme;

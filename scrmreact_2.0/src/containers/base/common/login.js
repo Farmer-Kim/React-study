@@ -284,6 +284,16 @@ class Login extends React.Component {
 					datasetsend:"dsSendData",
 					datasetrecv:"dsCentStvlInfo"
 				});
+						
+				// 조직 정보 조회
+				transManager.addConfig({
+					dao        : transManager.constants.dao.base,
+					crudh      : transManager.constants.crudh.read,
+					sqlmapid   : "COM.R_getOrgList",
+					datasetsend: "dsSendData",
+					datasetrecv: "dsOrgList"
+				});
+
 				transManager.addConfig({
 					dao: transManager.constants.dao.base,
 					crudh: transManager.constants.crudh.read,
@@ -435,6 +445,9 @@ class Login extends React.Component {
 			ComLib.setSession('gdsMsgList',		res.data.dsMsgList);
 			ComLib.setSession('gdsConstList',	res.data.dsConstList);
 
+			
+			ComLib.setSession('gdsOrgList',	res.data.dsOrgList);
+			
 			this.transaction('LOGIN_R03');
 
 			break;

@@ -24,6 +24,13 @@ class AlertDialog extends React.Component {
 	onClose = () => { this.props.onClose();};
 
 	render () {
+		let span = this.props.message[0].split("\n").map((item, key) => {
+			if (key + 1 !== this.props.message[0].split("\n").length) {
+				return <div className="scrm-label-div-div" key={key}><span>{item}</span><br/></div>;
+			} else {
+				return <div className="scrm-label-div-div" key={key}><span>{item}</span></div>;
+			}							
+		})
 		return (
 			<DialogBox
 				isOpen={this.props.open}
@@ -39,10 +46,13 @@ class AlertDialog extends React.Component {
 					</div>
 					<div className = "scrm-alert-modal-content-body">
 						<div className="scrm-label-div">
-							<span>{this.props.message}</span>
+							{this.props.message[0].split("\n").length > 1 ?
+								span
+								:
+								<span>{this.props.message}</span>
+							}
 						</div>							
 					</div>
-					{/* </div> */}
 				</div>
 			</DialogBox>
 		);
@@ -80,6 +90,13 @@ class ConfirmDialog extends React.Component {
 	};
 
 	render () {
+		let span = this.props.message[0].split("\n").map((item, key) => {
+			if (key + 1 !== this.props.message[0].split("\n").length) {
+				return <div className="scrm-label-div-div" key={key}><span>{item}</span><br/></div>;
+			} else {
+				return <div className="scrm-label-div-div" key={key}><span>{item}</span></div>;
+			}							
+		})
 		return (
 			<DialogBox
 				isOpen={this.props.open}
@@ -93,7 +110,11 @@ class ConfirmDialog extends React.Component {
 					</div>
 					<div className = "scrm-alert-modal-content-body">
 						<div className="scrm-label-div">
-							<span>{this.props.message}</span>
+							{this.props.message[0].split("\n").length > 1 ?
+								span
+								:
+								<span>{this.props.message}</span>
+							}						
 						</div>
 					</div>
 					<div style={{position: 'absolute', bottom: '5px', textAlign: 'center', width: '100%', padding: '5px'}}>
@@ -206,7 +227,7 @@ class PopupDialog extends React.Component {
 									: null
 							}
 						</div>
-						<div className = "scrm-popup-modal-content-body" style={{overflow: 'auto'}}>
+						<div className = "scrm-popup-modal-content-body" style={{overflow: 'visible'}}>
 							{
 								popRoute.filter(item => item.id === this.props.url).map((comp, key) => {
 									return <comp.component popupdivid={this.props.popupdivid} onCallbackFunc={this.onCallbackFunc} key={'pop_' + comp.id + '_' + key} onClose={this.onClose} options = {this.props.options}/>

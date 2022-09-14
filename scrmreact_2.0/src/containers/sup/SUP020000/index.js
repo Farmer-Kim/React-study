@@ -80,6 +80,8 @@ class View extends React.Component {
 		=> 컴포넌트가 마운트된 직후, 호출 ->  해당 함수에서 this.setState를 수행할 시, 갱신이 두번 일어나 render()함수가 두번 발생 -> 성능 저하 가능성
 	------------------------------------------------------------------------------------------------*/
 	componentDidMount() {
+		console.log(ComLib.getCommCodeList('STT_SYS_MNU', 'MNU_TP'))
+		
 		if (this.validation("SUP020000_R01")) this.transaction("SUP020000_R01");
 	}
 	/*------------------------------------------------------------------------------------------------*/

@@ -3,7 +3,8 @@ import { StrLib } from 'common';
 
 class Textarea extends React.Component {
 	static defaultProps = {
-		width : "100px",
+		onKeyPress : () => {return;},
+		onChange : () => {return;},
 	}
 	rtnVal = (value) => {
 		switch (this.props.type) {
@@ -26,7 +27,7 @@ class Textarea extends React.Component {
 	}
 	render () {
 		return (
-			<div className='scrm-textarea-div' style={{width: this.props.width}}>
+			<div className='scrm-textarea-div'>
 				<textarea className="scrm-textarea-input"
 					type		="text"
 					id			= {this.props.id}

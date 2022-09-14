@@ -2,6 +2,129 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {TransManager, ComLib, StrLib} from 'common';
 import {Checkbox, MultiCheckBox} from 'components';
+import DropdownTreeSelect from 'react-dropdown-tree-select'
+
+class TreeSelectbox extends React.Component {	
+	constructor(props) {
+		super(props);
+		
+		this.onChange = this.onChange.bind(this);
+		this.onAction = this.onAction.bind(this);
+		this.onNodeToggle = this.onNodeToggle.bind(this);
+		this.state = {
+			disabled: true,
+			
+		}
+	}
+	static defaultProps = {
+		onChange : () => {return;},
+		onAction : () => {return;},
+		onNodeToggle : () => {return;},
+		showPartiallySelected: false,
+		noMatches: "조회된 결과가 존재하지 않습니다.",
+		disabled: false,
+		readOnly: false,
+		mode: "radioSelect",
+		width: "200px"
+	}
+	
+	onChange = (e) => {
+		let rowId = "";
+
+		if (e.checked) {
+			rowId = e.value;
+		}
+
+		this.props.onChange({id: this.props.id, event: e, rowId: rowId});
+	}
+	onAction = (e) => {
+		this.props.onAction({id: this.props.id, event: e});
+		
+	}
+	onNodeToggle = (e) => {
+		this.props.onNodeToggle({id: this.props.id, event: e});
+		
+	}
+	changeToTreeSelectData = (data, parentId, expandArr) => {
+		const records = data;
+		let newTreeData = [];
+
+		for (let i = 0; i < records.length; i ++) {
+			if (records[i].PARENT_ID === parentId) {
+				let expand = false;
+
+				for (let j = 0; j < expandArr.length; j ++) {
+					if (records[i].ID === expandArr[j] && records[i].ID !== this.props.value) {
+						expand = true;
+
+						break;
+					}
+				}
+
+				let checked = records[i].ID === this.props.value;
+				let temp = {label: records[i].LABEL, value: records[i].ID, children: [], isDefaultValue: records[i].DEFAULT, disabled: records[i].DISABLED, checked: checked, expanded: expand}
+				newTreeData.push(temp)
+			}
+		}
+		
+		for (let i = 0; i < newTreeData.length; i ++) {
+			let tempChild = [];
+
+			for (let j = 0; j < records.length; j ++) {
+				if (records[j].PARENT_ID === newTreeData[i].value) {
+					tempChild = this.changeToTreeSelectData(data, newTreeData[i].value, expandArr)
+					break;
+				}	
+			}
+			newTreeData[i].children	= tempChild;						
+		}
+
+		return newTreeData;
+	}
+	makeData = (data) => {
+		let parentArr = [];
+
+		if (this.props.value !== "") {
+			parentArr = ComLib.findParentOrg(this.props.value, [], data);
+			
+		}
+		
+		let treeData = this.changeToTreeSelectData(data, null, parentArr)
+			
+		return treeData;
+	}
+
+
+	render () {		
+		const {noMatches, placeholder, data, showPartiallySelected, disabled, readOnly, mode, value} = this.props;
+		let text = {noMatches: noMatches};
+
+		if (value === "") {
+			text.placeholder = placeholder;
+		} else {
+			text.placeholder = " ";
+		}
+
+		return (
+			
+			<div style={{width: this.props.width, height: "31px", paddingRight: "5px"}}>
+				<DropdownTreeSelect
+					data = {data.length > 0 ? this.makeData(data) : []} 
+					onChange = {this.onChange} 
+					onAction = {this.onAction} 
+					onNodeToggle = {this.onNodeToggle} 
+					showPartiallySelected = {showPartiallySelected}
+					disabled={disabled}
+					readOnly={readOnly}
+					texts = {text}
+					mode={mode} 
+					inlineSearchInput = {true}
+					showDropdown={true}
+				/>
+			</div>
+		)
+	}
+}
 
 class Selectbox extends React.Component {
 	constructor(props) {
@@ -13,7 +136,7 @@ class Selectbox extends React.Component {
 		color: null,
 		onChange : () => {return;},
 		tooltip : false
-	}
+		}
 	onChange = (e) => {
 		this.props.onChange({target : e.target, id : this.props.id});
 	}
@@ -264,8 +387,10 @@ class MulitSelectBox extends React.Component {
 	onChange = (e) => {
 		switch (e.target.id) {
 			case  "multiselect_" + this.props.id + '_head' :
+				console.log('all check box');
 				break;
 			case  "multiselect_" + this.props.id :
+				console.log('single check box');
 				break;
 			default : break;
 		}
@@ -339,4 +464,4 @@ class MulitSelectBox extends React.Component {
 	}
 }
 
-export {Selectbox, MulitSelectBox, CentListSelectBox, TeamListSelectBox, UsrListSelectBox};
+export {Selectbox, MulitSelectBox, CentListSelectBox, TeamListSelectBox, UsrListSelectBox, TreeSelectbox};

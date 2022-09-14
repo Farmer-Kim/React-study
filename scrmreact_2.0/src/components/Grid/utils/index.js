@@ -3,7 +3,7 @@
  *	written by hw.lee
  * ***************************************************/
 
-const rowSpan = (params) => {
+ const rowSpan = (params) => {
 	let cnt = 0;
 	let api = params.api;
 	// index 위의 데이터 찾기
@@ -46,7 +46,6 @@ const rowSpan = (params) => {
 	return cnt;
 }
 const valueRowSpan = (params) => {
-	
 	if (params['node']['rowIndex'] > 0) {
 		let beforeData = params.api.getValue(params.column.colId, params.api.getDisplayedRowAtIndex(params['node']['rowIndex'] - 1));
 		if (beforeData === null || beforeData === undefined) {
@@ -80,7 +79,6 @@ const setColumnProperty = (ele) => {
 }
 
 const setGridHeader = (header, props) => {
-	
 	if (header === null || header === undefined) {
 		return null;
 	}
@@ -89,7 +87,8 @@ const setGridHeader = (header, props) => {
 	}
 	let rtnHeader;
 	
-	let _depthCol = [{	headerName: '_HIERARCHY', field: '_HIERARCHY',	colId: '_HIERARCHY', filter: false, resizable: false, lockPosition: true, cellStyle: {paddingLeft: '20px'}}];
+	let _depthCol = [{headerName: '_HIERARCHY', field: '_HIERARCHY', colId: '_HIERARCHY', filter: false, resizable: false, lockPosition: true, cellStyle: {paddingLeft: '20px'}}];
+	let treeCol   = [{headerName: '_TREE', field: '_TREE', colId: '_TREE', filter: false, resizable: false, sortable: false, lockPosition: true, defaultWidth: 45, minWidth: 45, maxWidth: 45}];
 	let numCol =	[{	headerName: 'No.', field: '_No', colId: '_No', defaultWidth: 60, minWidth: 60, maxWidth: 70, sortable: false, filter: false, resizable: false, lockPosition: true,
 						valueGetter: function(params) { return params.node.rowIndex + 1;}, cellStyle: {'text-align' : 'right'}
 					}];
@@ -115,12 +114,11 @@ const setGridHeader = (header, props) => {
 	}
 
 	rtnHeader = checkHeaderDepth(header, setColumnProperty);
-
-	// tree 형태의 그리드인 경우, number 컬럼은 제외
+	
 	if (props.tree !== undefined && props.tree['isTree']) {
-		_depthCol[0]['headerName'] = props.tree.headerName || _depthCol[0]['headerName'];
-		_depthCol[0]['cellRenderer'] = 'test';
-		rtnHeader = _depthCol.concat(rtnHeader);
+		treeCol[0]['headerName']   = "";
+		treeCol[0]['cellRenderer'] = 'treeRenderer';
+		rtnHeader = treeCol.concat(rtnHeader);
 	} else {
 		if (props.rowNum) {
 			rtnHeader = numCol.concat(rtnHeader);
@@ -174,10 +172,6 @@ const compareArray = (arr1, arr2) => {
 	} else {
 		return false;
 	}
-}
-
-const setSubTotalRow = (data, column) => {
-
 }
 
 export { rowSpan, setGridHeader, checkHeaderDepth, compareArray, checkHeaderProp };

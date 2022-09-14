@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import 'assets/styles/component.css';
 
 class AppPanel extends React.Component {
 	static defaultProps = { width: '100%'}
@@ -28,9 +29,6 @@ class ComponentPanel extends React.Component {
 	render () { 
 		let className = "";
 		(this.props.sizeVar) ? className="scrm-component-size-var-panel" : className="scrm-component-panel";		
-		if (this.props.overFlowYScroll) {
-			className += " overFlowYScroll";
-		}
 		return (
 			<div className ={className} style={{width: this.props.width, height: this.props.height}}>
 				{this.props.children}

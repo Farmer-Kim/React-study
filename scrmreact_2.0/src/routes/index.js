@@ -28,9 +28,10 @@ import SUP060000 from 'containers/sup/SUP060000';
 import SUP070000 from 'containers/sup/SUP070000';
 import SUP080000 from 'containers/sup/SUP080000';
 
-
-
 import BOT010000 from 'containers/bot/BOT010000';
+
+import SAM010000 from 'containers/sam/SAM010000';
+import SAM020000 from 'containers/sam/SAM020000';
 
 export const appRoute = [
 	{ id: 'COM010000',	path: "/com/COM010000",		exact: true,	component: COM010000 },
@@ -64,5 +65,8 @@ export const appRoute = [
 	{ id: 'SUP080000',	path: "/sup/SUP080000",		exact: true,	component: SUP080000 },
 
 	{ id: 'BOT010000',	path: "/bot/BOT010000",	exact: true,	component: BOT010000 },
+	
+	{ id: 'SAM010000',	path: "/sam/SAM010000",	exact: true,	component: SAM010000 },
+	{ id: 'SAM020000',	path: "/sam/SAM020000",	exact: true,	component: SAM020000 },
 
 ];

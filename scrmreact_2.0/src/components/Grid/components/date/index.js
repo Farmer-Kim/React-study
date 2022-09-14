@@ -1,25 +1,38 @@
 import React from 'react';
-import DatePicker from 'react-date-picker';
+// import DatePicker from 'react-date-picker';
 import TimePicker from 'react-time-picker';
 import {StrLib, DateLib} from 'common';
-
+import {InputCalendar, RangeInputCalendar} from 'components'
 
 class DateComponent extends React.Component {
-	state = { date: new Date() }
+	state = { date: null }
 	componentDidMount() {
-		if (this.props.value === null || this.props.value === undefined) {
-
-		}
+		this.setState({ date:this.props.value});
 	}
-	onChange = date => this.setState({ date })
+	onChange = (e) => {
+		this.setState({ date: e.target.value });
+	}
 	getValue () {
-		return DateLib.getStringDate(this.state.date);
+		return this.state.date;
 	}
 	isPopup() {return true;}
-	render() {
-		return ( <DatePicker onChange={this.onChange} value={this.state.date} />);
-	}
 
+	render() {
+		let rangeBottom = this.props.api.getVerticalPixelRange().bottom;
+		let rtn = "down";
+		
+		if ((rangeBottom - this.props.node.rowTop + this.props.bottom) < 330) {
+			rtn = "up"
+		} 
+
+		return (<InputCalendar
+					id={"gridCal"}
+					value={this.state.date}
+					disabled={false}
+					onChange={this.onChange}
+					direction={rtn}
+				/>);
+	}
 }
 class TimeComponent extends React.Component {
 	state = { time: '00:00'}
@@ -33,49 +46,107 @@ class TimeComponent extends React.Component {
 class RangeDateComponent extends React.Component {
 	constructor (props) {
 		super(props);
-		this.state = { strtDate: '', endDate : '' }
-	}
-	static defaultProps = {
-		STRT_DT : '', END_DT : ''
+		this.state = { startDate: null, endDate : null, oldStartDate: null, oldEndDate: null }
 	}
 	
+	
 	isPopup() {return true;}
-	onStrtDtChange = date => this.setState({ ...this.state, strtDate : date });
-	onEndDtChange = date => this.setState({ ...this.state, endDate : date });
-	getValue () {
-		let strtDate = DateLib.getStringDate(this.state.strtDate);
-		let endDate = DateLib.getStringDate(this.state.endDate);
+	// onStrtDtChange = date => this.setState({ ...this.state, startDate : date });
+	// onEndDtChange = date => this.setState({ ...this.state, endDate : date });
 
-		if (StrLib.isNull(endDate) && StrLib.isNull(strtDate)) {
-			this.props.data.STRT_DT = '';
-			this.props.data.END_DT = '';
-			return '';
+	componentDidMount () {
+		this.setState({startDate   : this.props.data[this.props.sColId]
+					 , endDate     : this.props.data[this.props.eColId]
+					 , oldStartDate: this.props.data[this.props.sColId]
+					 , oldEndDate  : this.props.data[this.props.eColId]});
+	}
+
+	onChangeDate= (e) => {
+		this.setState({startDate : e.startDate, endDate : e.endDate});
+	}
+
+	getValue () {
+		let startDate = this.state.startDate;
+		let endDate   = this.state.endDate;
+
+		let node = this.props.node;
+		let sCol = this.props.sColId;
+		let eCol = this.props.eColId;
+
+		if (this.props.outputCheckFn) {
+			
+			let oldStartDate = this.state.oldStartDate;
+			let oldEndDate   = this.state.oldEndDate;
+
+			let rtn = this.props.outputCheckFn(node, startDate, endDate, oldStartDate, oldEndDate);
+		
+			startDate = rtn.startDate;
+			endDate   = rtn.endDate;
+			
+			node.setDataValue(sCol,startDate);
+			node.setDataValue(eCol,endDate);
+	
+			if (this.props.curState) {
+				let today = Number(DateLib.getToday());
+				let sDate = Number(startDate);
+				let eDate = Number(endDate);
+				let nowState = "NOW";
+	
+				if (sDate > today) {
+					nowState = "BEFORE";
+				} else if (eDate < today) {
+					nowState = "AFTER";
+				}
+				node.setDataValue(this.props.curState, nowState);
+			}
+					
+			return DateLib.getStringYymmdd(startDate) + " ~ " + DateLib.getStringYymmdd(endDate);
 		} else {
-			if (StrLib.isNull(endDate)) {
-				this.props.data.STRT_DT = strtDate;
-				return strtDate;
+			node.setDataValue(sCol,startDate);
+			node.setDataValue(eCol,endDate);
+	
+			if (this.props.curState) {
+				let today = Number(DateLib.getToday());
+				let sDate = Number(startDate);
+				let eDate = Number(endDate);
+				let nowState = "NOW";
+	
+				if (sDate > today) {
+					nowState = "BEFORE";
+				} else if (eDate < today) {
+					nowState = "AFTER";
+				}
+				node.setDataValue(this.props.curState, nowState);
 			}
-			if (StrLib.isNull(strtDate)) {
-				this.props.data.END_DT = endDate;
-				return endDate;
-			}
-			this.props.data.STRT_DT = strtDate;
-			this.props.data.END_DT = endDate;
-			return strtDate + endDate;
+					
+			return DateLib.getStringYymmdd(startDate) + " ~ " + DateLib.getStringYymmdd(endDate);
 		}
 	}
-	componentDidMount () {
-		this.setState({strtDate : DateLib.getDateYymmdd(this.props.data.STRT_DT), endDate : DateLib.getDateYymmdd(this.props.data.END_DT)});
+	afterGuiAttached() {
+		document.getElementsByClassName("ag-react-container")[0].children[0].children[0].children[0].children[0].children[0].focus();
+
 	}
+
 	render () {
+		let rangeBottom = this.props.api.getVerticalPixelRange().bottom;
+		let rtn = "down";
+		
+		if ((rangeBottom - this.props.node.rowTop + this.props.bottom) < 330) {
+			rtn = "up"
+		} 
+
 		return (
-			<div style={{display : 'flex'}}>
-				<span style={{marginRight : '5px'}}><b> 시작일자 : </b></span>
-				<DatePicker onChange={this.onStrtDtChange} value={this.state.strtDate} />
-				<span style={{marginLeft: '5px', marginRight : '5px'}}> ~ </span>
-				<span style={{marginRight : '5px'}}><b> 종료일자 :  </b></span>
-				<DatePicker onChange={this.onEndDtChange} value={this.state.endDate} />
-			</div>
+			<RangeInputCalendar
+				id             = {"calGridRangeDate"} 
+				strtId         = {"calGridRangeDateStr"}
+				endId          = {"calGridRangeDateEnd"}
+				startDate      = {this.state.startDate} 
+				endDate        = {this.state.endDate} 
+				width          = {200}
+				showClearDates = {false}
+				onChange       = {this.onChangeDate}
+				direction={rtn}
+			/>			
 		);
 	}
 }

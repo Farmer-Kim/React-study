@@ -1,8 +1,4 @@
 import React from 'react';
-import {Label} from 'components';
-import {
-	ComponentPanel, SearchPanel, FullPanel, SubFullPanel, RFloatArea, RelativeGroup, LFloatArea, FlexPanel
-} from 'components';
 
 class BasicButton extends React.Component{
 	constructor (props) {
@@ -19,44 +15,42 @@ class BasicButton extends React.Component{
 		size : 'md',
 		color : 'grey',
 		filled : false,
-		innerImage : false,
+		hidden: false,
 		onClick : (e) => {return;}
 	}
 	render () {
 		let fiiled, innerImage, btnClass, iconClass;
 
 		fiiled = (this.props.fiiled) ? '' : '-o';
-		innerImage = (this.props.innerImage) ? ' i' : '';
+		innerImage = (this.props.icon) ? ' i' : '';
 
 		btnClass =  (this.props.value) ? 'scrm-btn ' + this.props.size + ' ' + this.props.color + fiiled : btnClass = 'scrm-btn ' + this.props.size + ' ' + this.props.color + fiiled + innerImage;
 
-		if (this.props.innerImage) {
-			switch (this.props.icon) {
-				case "save"    : iconClass = 'xi-diskette xi-x'; break;
-				case "add"     : iconClass = 'xi-plus xi-x';     break;
-				case "del"     : iconClass = 'xi-minus xi-x';    break;
-				case "check"   : iconClass = 'xi-check xi-x';    break;
-				case "trash"   : iconClass = 'xi-trash-o xi-x';  break;				
-				case "undo"    : iconClass = 'xi-undo';          break;
-				case "redo"    : iconClass = 'xi-redo';          break;
-				case "arrowUp" : iconClass = 'xi-arrow-up';      break;
-				case "arrowDn" : iconClass = 'xi-arrow-down';    break;
-				case "close"   : iconClass = 'xi-close';         break;
-				case "play"    : iconClass = 'xi-play xi-x';     break;
-				case "pause"   : iconClass = 'xi-pause xi-x';    break;
-				case "left"    : iconClass = 'xi-arrow-left xi-x c-grey-6';   break;
-				case "right"   : iconClass = 'xi-arrow-right xi-x c-grey-6';  break;
-				case "copy"    : iconClass = (this.props.fiiled) ? 'xi-documents xi-x'  : 'xi-documents-o xi-x'; break;
-				case "down"    : iconClass = (this.props.fiiled) ? 'xi-download xi-x'   : 'xi-download-o xi-x';  break;
-				case "srch"    : iconClass = (this.props.fiiled) ? 'xi-search xi-x'     : 'xi-search-o xi-x';    break;
-				default : iconClass = null; break;
-			}
+		switch (this.props.icon) {
+			case "save"    : iconClass = 'xi-diskette xi-x'; break;
+			case "add"     : iconClass = 'xi-plus xi-x';     break;
+			case "del"     : iconClass = 'xi-minus xi-x';    break;
+			case "check"   : iconClass = 'xi-check xi-x';    break;
+			case "trash"   : iconClass = 'xi-trash-o xi-x';  break;				
+			case "undo"    : iconClass = 'xi-undo';          break;
+			case "redo"    : iconClass = 'xi-redo';          break;
+			case "arrowUp" : iconClass = 'xi-arrow-up';      break;
+			case "arrowDn" : iconClass = 'xi-arrow-down';    break;
+			case "close"   : iconClass = 'xi-close';         break;
+			case "play"    : iconClass = 'xi-play xi-x';     break;
+			case "pause"   : iconClass = 'xi-pause xi-x';    break;
+			case "left"    : iconClass = 'xi-arrow-left xi-x c-grey-6';   break;
+			case "right"   : iconClass = 'xi-arrow-right xi-x c-grey-6';  break;
+			case "copy"    : iconClass = (this.props.fiiled) ? 'xi-documents xi-x'  : 'xi-documents-o xi-x'; break;
+			case "down"    : iconClass = (this.props.fiiled) ? 'xi-download xi-x'   : 'xi-download-o xi-x';  break;
+			case "srch"    : iconClass = (this.props.fiiled) ? 'xi-search xi-x'     : 'xi-search-o xi-x';    break;
+			default : iconClass = null; break;
 		}
 		return (
 			<button className = {btnClass} ref = { (ref) => this.button = ref } id = {this.props.id} onClick = {(e) => { e.target.blur(); this.props.onClick(e);} } disabled={ this.props.disabled }
 					tooltip = {this.props.tooltip} style={{ marginTop: this.props.mt, marginRight: this.props.mr, marginBottom: this.props.mb, marginLeft: this.props.ml, visibility : (this.props.hidden) ? 'hidden' :  'visible'}}
 			>
-				{(this.props.innerImage && iconClass !== null) ? <i onClick= {(e) => { e.stopPropagation(); this.button.click(); }} className={ iconClass }></i> :  null}
+				{iconClass !== null ? <i onClick= {(e) => { e.stopPropagation(); this.button.click(); }} className={ iconClass }></i> :  null}
 				{this.props.value}
 			</button>
 		);

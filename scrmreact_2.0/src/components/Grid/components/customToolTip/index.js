@@ -20,7 +20,7 @@ export default forwardRef((props, ref) => {
 			style={{ backgroundColor: props.color || 'white'}}
 			
 		>
-			{data[props.colDef.tooltipField]}
+			<div style={{display: "inline-block", width: "300px"}}>{data[props.colDef.tooltipField]}</div>
 		</div>
 	);
 });

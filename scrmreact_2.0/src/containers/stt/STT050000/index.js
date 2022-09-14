@@ -9,7 +9,7 @@ import ReactFileReader from 'react-file-reader';
 
 import STT050100 from '../STT050100';
 import STT050200 from '../STT050200';
-import excel           from 'xlsx';
+import * as excel           from 'xlsx';
 
 class View extends React.Component {
 	constructor(props) {

@@ -1,5 +1,4 @@
 import React from 'react';
-import { StrLib } from '../../../../common';
 const KEY_BACKSPACE = 8;
 const KEY_DELETE = 46;
 const KEY_F2 = 113;
@@ -47,8 +46,8 @@ class CustomEditor extends React.Component {
 
 		let inputType  = 'none';
 
-		if (this.props.colDef['type'] !== null || this.props.colDef['type'] !== undefined) {
-			inputType = this.props.colDef['type'];
+		if (this.props.colDef['inputType'] !== null || this.props.colDef['inputType'] !== undefined) {
+			inputType = this.props.colDef['inputType'];
 		}
 
 		if (inputType !== 'none') {
@@ -122,8 +121,8 @@ class CustomEditor extends React.Component {
 		let inputType  = 'none';
 		let inputValue = event.target.value;
 
-		if (this.props.colDef['type'] !== null || this.props.colDef['type'] !== undefined) {
-			inputType = this.props.colDef['type'];
+		if (this.props.colDef['inputType'] !== null || this.props.colDef['inputType'] !== undefined) {
+			inputType = this.props.colDef['inputType'];
 		}
 
 		if (inputType !== 'none') {
